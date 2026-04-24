@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       devServer({
         entry: 'src/worker.ts',
+        exclude: [
+          /^\/(?!api\/).*/,
+          /^\/$/,
+        ],
         cf: {
           d1Databases: ['DB'],
           d1Persist: true

@@ -4,10 +4,10 @@ export interface Env {
   DB: D1Database;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env }>().basePath('/api');
 
 // Basic health check
-app.get('/api/health', async (c) => {
+app.get('/health', async (c) => {
   const dbCheck = await c.env.DB.prepare("SELECT 1 as ok").first();
   return c.json({
     status: 'ok',
@@ -17,12 +17,12 @@ app.get('/api/health', async (c) => {
 });
 
 // Residents API
-app.get('/api/residents', async (c) => {
+app.get('/residents', async (c) => {
   const { results } = await c.env.DB.prepare("SELECT * FROM residents ORDER BY name ASC").all();
   return c.json(results);
 });
 
-app.post('/api/residents', async (c) => {
+app.post('/residents', async (c) => {
   const res = await c.req.json() as any;
   await c.env.DB.prepare(`
     INSERT INTO residents (id, name, mrn, lastName, firstName, age, floor, unit, roomNumber, sex, admissionDate, allergies, doctor, diagnosis, notes, lastVisit)
@@ -34,7 +34,7 @@ app.post('/api/residents', async (c) => {
   return c.json({ success: true, resident: res }, 201);
 });
 
-app.patch('/api/residents/:id', async (c) => {
+app.patch('/residents/:id', async (c) => {
   const id = c.req.param('id');
   const updates = await c.req.json() as any;
   const keys = Object.keys(updates);
@@ -47,19 +47,19 @@ app.patch('/api/residents/:id', async (c) => {
   return c.json({ success: true });
 });
 
-app.delete('/api/residents/:id', async (c) => {
+app.delete('/residents/:id', async (c) => {
   const id = c.req.param('id');
   await c.env.DB.prepare("DELETE FROM residents WHERE id = ?").bind(id).run();
   return new Response(null, { status: 204 });
 });
 
 // Appointments API
-app.get('/api/appointments', async (c) => {
+app.get('/appointments', async (c) => {
   const { results } = await c.env.DB.prepare("SELECT * FROM appointments ORDER BY date DESC, time DESC").all();
   return c.json(results);
 });
 
-app.post('/api/appointments', async (c) => {
+app.post('/appointments', async (c) => {
   const apt = await c.req.json() as any;
   await c.env.DB.prepare(`
     INSERT INTO appointments (
@@ -79,7 +79,7 @@ app.post('/api/appointments', async (c) => {
   return c.json({ success: true, appointment: apt }, 201);
 });
 
-app.patch('/api/appointments/:id', async (c) => {
+app.patch('/appointments/:id', async (c) => {
   const id = c.req.param('id');
   const updates = await c.req.json() as any;
   const keys = Object.keys(updates);
@@ -92,7 +92,7 @@ app.patch('/api/appointments/:id', async (c) => {
   return c.json({ success: true });
 });
 
-app.delete('/api/appointments/:id', async (c) => {
+app.delete('/appointments/:id', async (c) => {
   const id = c.req.param('id');
   await c.env.DB.prepare("DELETE FROM appointments WHERE id = ?").bind(id).run();
   return new Response(null, { status: 204 });
