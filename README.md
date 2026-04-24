@@ -1,11 +1,29 @@
-<div align="center">
+# HealthSync Medical Appointment Tracker
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Visual refresh adapted from the Transportation Tracker style system.
 
-  <h1>Built with AI Studio</h2>
+## What changed
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- Added Transportation-style medical blue gradient header and sidebar.
+- Added rounded card surfaces, softer shadows, and cleaner spacing.
+- Added a secondary top page navigation strip for Dashboard, Appointments, Doctors, and Records.
+- Improved mobile menu overlay and active page states.
+- Improved appointment log rows, doctor cards, empty states, and modal styling.
+- Kept the existing useHealthData localStorage workflow intact.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Run locally
 
-</div>
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Notes
+
+This update is focused on CSS/visual layout and page presentation. It does not migrate the app to D1 or replace the existing localStorage data hook.

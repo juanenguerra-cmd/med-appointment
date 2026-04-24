@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #0b2a6f;
+  --color-brand-2: #4b6cb7;
+  --color-brand-light: #e8eefc;
+  --color-soft-bg: #f3f6fb;
+}
+
+:root {
+  --app-bg: #f3f6fb;
+  --app-card: #ffffff;
+  --app-ink: #1f2a37;
+  --app-muted: #475569;
+  --app-brand: #0b2a6f;
+  --app-brand-2: #4b6cb7;
+  --app-line: #d6deeb;
+  --app-shadow: 0 10px 30px rgba(11, 42, 111, .12);
+  --app-shadow-soft: 0 6px 16px rgba(11, 42, 111, .10);
+  --app-radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  @apply text-slate-900 antialiased;
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(75,108,183,.16), transparent 34rem),
+    linear-gradient(180deg, #f8fbff 0%, var(--app-bg) 42%, #edf3fb 100%);
+  color: var(--app-ink);
+}
+
+button, input, select, textarea { font: inherit; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(75, 108, 183, .35);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.transport-card {
+  background: var(--app-card);
+  border: 1px solid var(--app-line);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow-soft);
+}
+
+.transport-gradient {
+  background: linear-gradient(135deg, var(--app-brand), var(--app-brand-2));
+}
+
+.transport-pill {
+  border: 1px solid rgba(214, 222, 235, .95);
+  border-radius: 999px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 4px 12px rgba(11,42,111,.08);
+}
+
+.page-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+.page-scrollbar::-webkit-scrollbar-thumb { background: #c9d4e5; border-radius: 999px; }
+.page-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
