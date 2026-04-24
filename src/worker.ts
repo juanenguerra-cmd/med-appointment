@@ -6,6 +6,18 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>().basePath('/api');
 
+// Middleware to check for DB binding
+app.use('*', async (c, next) => {
+  if (!c.env.DB) {
+    console.error("D1 DB binding is missing. Check wrangler.toml and dev setup.");
+    return c.json({ 
+      success: false, 
+      error: "Database configuration error. Please check backend bindings." 
+    }, 500);
+  }
+  await next();
+});
+
 // Basic health check
 app.get('/health', async (c) => {
   const dbCheck = await c.env.DB.prepare("SELECT 1 as ok").first();

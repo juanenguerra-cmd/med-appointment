@@ -1,4 +1,3 @@
-import devServer from '@hono/vite-dev-server';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -14,17 +13,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(), 
       tailwindcss(),
-      devServer({
-        entry: 'src/worker.ts',
-        exclude: [
-          /^\/(?!api\/).*/,
-          /^\/$/,
-        ],
-        cf: {
-          d1Databases: ['DB'],
-          d1Persist: true
-        }
-      })
     ],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -38,6 +26,12 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       hmr: process.env.DISABLE_HMR !== 'true',
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:3001',
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

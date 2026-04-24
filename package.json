@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
     "build": "vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
