@@ -465,7 +465,18 @@ export default function App() {
     if (!newAppt.residentName) return;
     
     if (editingId && updateAppointment) {
-      updateAppointment(editingId, newAppt as Appointment);
+      const original = appointments.find(a => a.id === editingId);
+      if (original) {
+        const updates: Partial<Appointment> = {};
+        (Object.keys(newAppt) as Array<keyof typeof newAppt>).forEach(key => {
+          if (newAppt[key] !== (original as any)[key]) {
+            (updates as any)[key] = newAppt[key];
+          }
+        });
+        if (Object.keys(updates).length > 0) {
+          updateAppointment(editingId, updates);
+        }
+      }
     } else {
       addAppointment(newAppt as Omit<Appointment, 'id'>);
     }
