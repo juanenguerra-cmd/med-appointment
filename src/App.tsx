@@ -5,6 +5,7 @@
 
 import React, { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { generateAppointmentPDF } from './services/pdfService';
 import {
   Calendar,
   Users,
@@ -599,7 +600,15 @@ export default function App() {
               <Card title="Planned Appointments" subtitle={`${upcomingAppointments.length} item${upcomingAppointments.length === 1 ? '' : 's'} scheduled`} className="xl:col-span-2">
                   <div className="space-y-3">
                     {upcomingAppointments.length > 0 ? (
-                      upcomingAppointments.map((apt) => <AppointmentItem key={apt.id} appointment={apt} doctorName={getDoctorNameDisplay(apt)} onClick={() => handleOpenEdit(apt)} />)
+                      upcomingAppointments.map((apt) => (
+                        <AppointmentItem 
+                          key={apt.id} 
+                          appointment={apt} 
+                          residents={residents}
+                          doctorName={getDoctorNameDisplay(apt)} 
+                          onClick={() => handleOpenEdit(apt)} 
+                        />
+                      ))
                     ) : (
                       <EmptyState icon={<Calendar size={44} />} title="No upcoming appointments" text="Use Add Appointment to start a new entry." action={<Button size="sm" variant="secondary" onClick={handleOpenAdd}>New Record</Button>} />
                     )}
@@ -637,6 +646,7 @@ export default function App() {
                   {appointments.length > 0 ? (
                     <WideAppointmentTable 
                       appointments={appointments.sort((a,b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())}
+                      residents={residents}
                       onEdit={handleOpenEdit}
                     />
                   ) : (
@@ -736,6 +746,7 @@ export default function App() {
                       {appointments.length > 0 ? (
                         <WideAppointmentTable 
                           appointments={appointments.slice(0, 10)} 
+                          residents={residents}
                           onEdit={handleOpenEdit} 
                         />
                       ) : (
@@ -1281,14 +1292,26 @@ export default function App() {
                                 <p className="text-[10px] font-medium text-slate-400 mt-0.5">{apt.providerName} • {apt.location}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                                 apt.status === 'Completed' ? 'bg-green-100 text-green-600' : 
-                                 apt.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
-                                 'bg-brand-light text-brand'
-                               }`}>
-                                 {apt.status}
-                               </span>
+                              <div className="text-right">
+                               <div className="flex items-center gap-2 justify-end">
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     generateAppointmentPDF(apt, selectedResident);
+                                   }}
+                                   className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                   title="Download Forms"
+                                 >
+                                   <FileDown size={14} />
+                                 </button>
+                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                                   apt.status === 'Completed' ? 'bg-green-100 text-green-600' : 
+                                   apt.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
+                                   'bg-brand-light text-brand'
+                                 }`}>
+                                   {apt.status}
+                                 </span>
+                               </div>
                                {apt.notes && <p className="text-[10px] text-slate-400 mt-1 italic truncate max-w-[150px]">"{apt.notes}"</p>}
                             </div>
                           </div>
@@ -1366,10 +1389,23 @@ function StatCard({ label, value, hint, icon, onClick }: { label: string; value:
   );
 }
 
-function AppointmentItem({ appointment, doctorName, onClick }: { appointment: Appointment; doctorName: string; key?: string; onClick?: () => void }) {
+function AppointmentItem({ appointment, residents, doctorName, onClick }: { appointment: Appointment; residents: Resident[]; doctorName: string; key?: string; onClick?: () => void }) {
   const date = new Date(appointment.date);
   return (
-    <div onClick={onClick} className="flex items-start gap-4 p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand/40 hover:bg-brand-light/20 transition-all hover:shadow-[0_10px_26px_rgba(11,42,111,.12)] group cursor-pointer">
+    <div onClick={onClick} className="flex items-start gap-4 p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand-light/40 hover:bg-white transition-all hover:shadow-[0_10px_26px_rgba(11,42,111,.08)] group cursor-pointer relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            const res = residents.find(r => r.name === appointment.residentName);
+            generateAppointmentPDF(appointment, res);
+          }}
+          className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm"
+          title="Download Visit Form"
+        >
+          <FileDown size={14} />
+        </button>
+      </div>
       <DateBadge date={date} />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-3 mb-1">
@@ -1386,7 +1422,7 @@ function AppointmentItem({ appointment, doctorName, onClick }: { appointment: Ap
   );
 }
 
-function WideAppointmentTable({ appointments, onEdit }: { appointments: Appointment[]; onEdit: (apt: Appointment) => void }) {
+function WideAppointmentTable({ appointments, residents, onEdit }: { appointments: Appointment[]; residents: Resident[]; onEdit: (apt: Appointment) => void }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-[#d6deeb] bg-white shadow-sm">
       <table className="w-full text-left border-collapse min-w-[1400px]">
@@ -1404,6 +1440,7 @@ function WideAppointmentTable({ appointments, onEdit }: { appointments: Appointm
             <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Due By</th>
             <th className="px-4 py-4 border-r border-white/10">Status</th>
             <th className="px-4 py-4 border-r border-white/10">Transport</th>
+            <th className="px-4 py-4 border-r border-white/10">Form</th>
             <th className="px-4 py-4 border-r border-white/10">Payer</th>
             <th className="px-4 py-4 border-r border-white/10">Round Trip</th>
             <th className="px-4 py-4 border-r border-white/10">Escort</th>
@@ -1443,6 +1480,19 @@ function WideAppointmentTable({ appointments, onEdit }: { appointments: Appointm
                 </span>
               </td>
               <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.transportType}</td>
+              <td className="px-4 py-4 border-r border-[#d6deeb]">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const resident = residents.find(r => r.name === apt.residentName);
+                    generateAppointmentPDF(apt, resident);
+                  }}
+                  className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                  title="Generate Visit Form"
+                >
+                  <FileDown size={18} />
+                </button>
+              </td>
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.payerForRide}</td>
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.roundTrip}</td>
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.escort}</td>
