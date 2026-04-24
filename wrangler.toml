@@ -1,11 +1,12 @@
-name = "med-appointment-app"
-main = "server.js"
-compatibility_date = "2024-04-24"
+name = "med-appointment"
+main = "src/worker.ts"
+compatibility_date = "2026-04-24"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "med-appointment"
+database_name = "med_appointment_db"
 database_id = "479dea3e-3075-49db-a0c1-22d7781e05a4"
 
-[site]
-bucket = "./dist"
+[assets]
+directory = "./dist"
+binding = "ASSETS"

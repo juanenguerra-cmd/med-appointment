@@ -43,7 +43,7 @@ import { Card } from './components/Card';
 import { Button } from './components/Button';
 import { Appointment, Resident } from './types';
 
-type Tab = 'dashboard' | 'appointments' | 'trends' | 'reports' | 'census';
+type Tab = 'dashboard' | 'appointments' | 'trends' | 'reports' | 'census' | 'help';
 
 const TAB_META: Record<Tab, { title: string; subtitle: string; badge: string }> = {
   dashboard: {
@@ -70,6 +70,11 @@ const TAB_META: Record<Tab, { title: string; subtitle: string; badge: string }> 
     title: 'Patient Census',
     subtitle: 'Manage resident data, unit assignments, and room allocations for auto-fill.',
     badge: 'Registry'
+  },
+  help: {
+    title: 'System Guide',
+    subtitle: 'Version history, user instructions, and technical documentation.',
+    badge: 'Support'
   }
 };
 
@@ -560,6 +565,7 @@ export default function App() {
             <NavItem active={activeTab === 'trends'} onClick={() => goToTab('trends')} icon={<BarChart3 size={20} />} label="Trends" />
             <NavItem active={activeTab === 'reports'} onClick={() => goToTab('reports')} icon={<FileText size={20} />} label="Reports" />
             <NavItem active={activeTab === 'census'} onClick={() => goToTab('census')} icon={<Users size={20} />} label="Census" />
+            <NavItem active={activeTab === 'help'} onClick={() => goToTab('help')} icon={<ShieldCheck size={20} />} label="Help & Info" />
           </nav>
 
           <div className="p-4 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)]">
@@ -612,6 +618,7 @@ export default function App() {
             <TopTab active={activeTab === 'trends'} onClick={() => goToTab('trends')} label="Specialty Trends" />
             <TopTab active={activeTab === 'reports'} onClick={() => goToTab('reports')} label="Report Builder" />
             <TopTab active={activeTab === 'census'} onClick={() => goToTab('census')} label="Patient Census" />
+            <TopTab active={activeTab === 'help'} onClick={() => goToTab('help')} label="Guide & Info" />
           </div>
         </div>
 
@@ -1017,6 +1024,63 @@ export default function App() {
               </div>
             </motion.section>
           )}
+          {activeTab === 'help' && (
+            <motion.section key="help" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6 pb-20">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                 <Card title="User Guide" subtitle="How to navigate the Appointment Tracker">
+                    <div className="space-y-6">
+                       <div className="flex gap-4">
+                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">1</div>
+                          <div>
+                             <p className="font-black text-slate-900">Manage Appointments</p>
+                             <p className="text-sm text-slate-500 mt-1">Use the Dashboard or Appointments tab to view scheduled visits. Click "Add Appointment" to create a new record including resident details, location, and transport needs.</p>
+                          </div>
+                       </div>
+                       <div className="flex gap-4">
+                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">2</div>
+                          <div>
+                             <p className="font-black text-slate-900">Generate Visit Forms</p>
+                             <p className="text-sm text-slate-500 mt-1">In the consolidated log, click the download icon on any record to instantly produce a visit form PDF. This contains all clinical and contact info for the provider.</p>
+                          </div>
+                       </div>
+                       <div className="flex gap-4">
+                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">3</div>
+                          <div>
+                             <p className="font-black text-slate-900">Bulk Census Import</p>
+                             <p className="text-sm text-slate-500 mt-1">Visit the Census tab to paste a resident listing report. The system parses names, ages, and unit info automatically to keep your registry in sync.</p>
+                          </div>
+                       </div>
+                    </div>
+                 </Card>
+
+                 <Card title="Version History" subtitle="Recent updates and system changes">
+                    <div className="space-y-5">
+                       <div className="border-l-2 border-brand-2 pl-4 py-1">
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className="text-xs font-black bg-brand-2/10 text-brand-2 px-2 py-0.5 rounded">v1.5.0</span>
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LATEST</span>
+                          </div>
+                          <p className="text-sm font-black text-slate-800">Cloudflare Migration & D1 Integration</p>
+                          <ul className="text-xs text-slate-500 mt-2 space-y-1 list-disc ml-4">
+                             <li>Switched to high-performance Cloudflare D1 database</li>
+                             <li>Migrated backend to Cloudflare Workers API</li>
+                             <li>Renamed "Reason" field to "Description of Need"</li>
+                             <li>Updated Location fields for better address support</li>
+                          </ul>
+                       </div>
+                       <div className="border-l-2 border-slate-200 pl-4 py-1">
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded">v1.4.0</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-700">Report Builder & Analytics</p>
+                          <p className="text-xs text-slate-500 mt-1">Added custom date-range report generation and specialty trends visualization.</p>
+                       </div>
+                    </div>
+                 </Card>
+              </div>
+            </motion.section>
+          )}
+
         </AnimatePresence>
       </main>
 
@@ -1114,7 +1178,7 @@ export default function App() {
                     <MapPin size={16} /> Location Details
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Doctor / Provider Name">
+                    <FormField label="Staff/Doctor Name">
                       <input 
                         type="text" 
                         value={newAppt.providerName} 
@@ -1123,13 +1187,13 @@ export default function App() {
                         placeholder="e.g., Dr. Smith" 
                       />
                     </FormField>
-                    <FormField label="Location of Appointment">
+                    <FormField label="Location Name / Address">
                       <input 
                         type="text" 
                         value={newAppt.location} 
                         onChange={e => setNewAppt({...newAppt, location: e.target.value})} 
                         className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30" 
-                        placeholder="Clinic / Hospital" 
+                        placeholder="Clinic / Hospital / Address" 
                       />
                     </FormField>
                     <FormField label="Contact Number">
@@ -1190,9 +1254,9 @@ export default function App() {
                         <option value="Specialist">Other Specialist</option>
                       </select>
                     </FormField>
-                    <FormField label="Description">
+                    <FormField label="Visit Category">
                       <select value={newAppt.description} onChange={e => setNewAppt({...newAppt, description: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                        <option value="">— Select Description —</option>
+                        <option value="">— Select Category —</option>
                         <option value="Follow-up">Follow-up</option>
                         <option value="Initial Eval">Initial Eval</option>
                         <option value="Procedure">Procedure</option>
@@ -1207,7 +1271,7 @@ export default function App() {
                           <option value="No">No</option>
                       </select>
                     </FormField>
-                    <FormField label="Reason for Out-of-house">
+                    <FormField label="Description">
                       <input type="text" value={newAppt.reasonSendOut} onChange={e => setNewAppt({...newAppt, reasonSendOut: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" placeholder="Provider unavailable" />
                     </FormField>
                   </div>
