@@ -5,11 +5,12 @@
 
 import React, { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { generateAppointmentPDF, generateFullReport } from './services/pdfService';
+import { generateAppointmentPDF, generateFullReport, generateTransportSchedulePDF, generateOutsideAppointmentChecklistPDF } from './services/pdfService';
 import {
   Calendar,
   Users,
   ClipboardList,
+  ClipboardCheck,
   Plus,
   Clock,
   MapPin,
@@ -36,12 +37,13 @@ import {
   Square,
   Save,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Home
 } from 'lucide-react';
 import { useHealthData } from './hooks/useHealthData';
 import { Card } from './components/Card';
 import { Button } from './components/Button';
-import { Appointment, Resident } from './types';
+import { Appointment, Resident, Facility } from './types';
 
 type Tab = 'dashboard' | 'appointments' | 'trends' | 'reports' | 'census' | 'help';
 
@@ -112,6 +114,17 @@ export default function App() {
   });
 
   const {
+    facilities,
+    currentFacilityId,
+    setCurrentFacilityId,
+    addFacility,
+    updateFacility,
+    deleteFacility,
+    users,
+    currentUser,
+    addUser,
+    updateUserPermissions,
+    fetchUserPermissions,
     appointments,
     doctors,
     records,
@@ -124,6 +137,14 @@ export default function App() {
     deleteResident,
     isLoaded
   } = useHealthData();
+
+  const [isFacModalOpen, setIsFacModalOpen] = useState(false);
+  const [editingFac, setEditingFac] = useState<Facility | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [userFacPermissions, setUserFacPermissions] = useState<string[]>([]);
+
+  const currentFacility = facilities.find(f => f.id === currentFacilityId);
 
   const [censusPasteText, setCensusPasteText] = useState('');
   const [parsedResidentsPreview, setParsedResidentsPreview] = useState<Omit<Resident, 'id'>[]>([]);
@@ -593,16 +614,23 @@ export default function App() {
               <p className="text-sm opacity-90 mt-1 max-w-3xl leading-relaxed">{TAB_META[activeTab].subtitle}</p>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-              <button className="transport-pill h-10 w-10 flex items-center justify-center text-brand hover:scale-[1.02] transition-transform" aria-label="Search">
-                <Search size={18} />
-              </button>
-              <button className="transport-pill h-10 w-10 flex items-center justify-center text-brand relative hover:scale-[1.02] transition-transform" aria-label="Notifications">
-                <Bell size={18} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-              </button>
-              <Button className="gap-2" onClick={handleOpenAdd}>
-                <Plus size={17} /> Add Appointment
+            <div className="flex items-center gap-3 flex-wrap xl:justify-end">
+              <div className="relative group min-w-[200px]">
+                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none group-focus-within:text-white transition-colors" />
+                <select 
+                  className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-black focus:bg-white/20 focus:outline-none appearance-none transition-all cursor-pointer"
+                  value={currentFacilityId || ''}
+                  onChange={(e) => {
+                    setCurrentFacilityId(e.target.value);
+                  }}
+                >
+                  {facilities.map(f => (
+                    <option key={f.id} value={f.id} className="text-slate-900">{f.name}</option>
+                  ))}
+                </select>
+              </div>
+              <Button className="gap-2 font-black shadow-lg uppercase tracking-wider text-[10px]" onClick={handleOpenAdd}>
+                <Plus size={16} /> New Appointment
               </Button>
               <button className="lg:hidden transport-pill h-10 w-10 flex items-center justify-center text-brand" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
                 {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -642,6 +670,7 @@ export default function App() {
                           appointment={apt} 
                           residents={residents}
                           doctorName={getDoctorNameDisplay(apt)} 
+                          currentFacility={currentFacility}
                           onClick={() => handleOpenEdit(apt)} 
                         />
                       ))
@@ -683,6 +712,7 @@ export default function App() {
                     <WideAppointmentTable 
                       appointments={appointments.sort((a,b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())}
                       residents={residents}
+                      currentFacility={currentFacility}
                       onEdit={handleOpenEdit}
                     />
                   ) : (
@@ -761,12 +791,34 @@ export default function App() {
                               if (end && date > end) return false;
                               return true;
                             });
-                            generateFullReport(filtered, reportFilters.columns);
+                            generateFullReport(filtered, reportFilters.columns, undefined, currentFacility);
                           }}
                         >
                           <FileDown size={18} /> Generate
                         </Button>
                         <Button variant="secondary" className="px-4"><Printer size={18} /></Button>
+                      </div>
+
+                      <div className="pt-4 border-t border-[#d6deeb]">
+                        <label className="block text-xs font-black uppercase text-slate-500 mb-3">Specialized Templates</label>
+                        <Button 
+                          variant="secondary"
+                          className="w-full gap-3 justify-center border-brand/20 hover:bg-brand-light"
+                          onClick={() => {
+                            const filtered = appointments.filter(apt => {
+                              const date = new Date(apt.date);
+                              const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
+                              const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
+                              if (start && date < start) return false;
+                              if (end && date > end) return false;
+                              return true;
+                            });
+                            generateTransportSchedulePDF(filtered, reportFilters.startDate || 'all', reportFilters.endDate || 'all', currentFacility);
+                          }}
+                        >
+                          <Calendar size={18} /> Export Transport Calendar
+                        </Button>
+                        <p className="text-[10px] text-slate-400 mt-2 text-center italic">Matches the facility transport schedule grid format.</p>
                       </div>
                     </div>
                   </Card>
@@ -805,6 +857,7 @@ export default function App() {
                             return true;
                           }).slice(0, 10)} 
                           residents={residents}
+                          currentFacility={currentFacility}
                           selectedColumns={reportFilters.columns}
                           onEdit={handleOpenEdit} 
                         />
@@ -1027,6 +1080,94 @@ export default function App() {
           {activeTab === 'help' && (
             <motion.section key="help" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6 pb-20">
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-2xl bg-brand-light text-brand">
+                        <MapPin size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-800">Facility Management</h3>
+                        <p className="text-sm text-slate-500">Configure transportation hubs and facilities</p>
+                      </div>
+                    </div>
+                    {currentUser?.role === 'admin' && (
+                      <Button onClick={() => { setEditingFac(null); setIsFacModalOpen(true); }} className="gap-2">
+                        <Plus size={18} /> Add Facility
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {facilities.map(fac => (
+                      <div key={fac.id} className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                            <Home size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-800">{fac.name}</h4>
+                            <p className="text-xs text-slate-500">{fac.address || 'No address set'}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => { setEditingFac(fac); setIsFacModalOpen(true); }}>
+                            Edit
+                          </Button>
+                          {currentUser?.role === 'admin' && fac.id !== 'default-id' && (
+                            <Button variant="danger" size="sm" onClick={() => { if(confirm('Delete facility?')) deleteFacility(fac.id); }}>
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {currentUser?.role === 'admin' && (
+                  <Card className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
+                          <Users size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-slate-800">User Access Logic</h3>
+                          <p className="text-sm text-slate-500">Manage facility visibility for staff members</p>
+                        </div>
+                      </div>
+                      <Button onClick={() => { setEditingUser(null); setUserFacPermissions([]); setIsUserModalOpen(true); }} className="gap-2 bg-purple-600 hover:bg-purple-700">
+                        <Plus size={18} /> New User
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {users.map(u => (
+                        <div key={u.id} className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                              <User size={20} />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">{u.fullName} <span className="ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">{u.role}</span></h4>
+                              <p className="text-xs text-slate-500">{u.email}</p>
+                            </div>
+                          </div>
+                          <Button variant="secondary" size="sm" onClick={async () => {
+                            const perms = await fetchUserPermissions(u.id);
+                            setUserFacPermissions(perms);
+                            setEditingUser(u);
+                            setIsUserModalOpen(true);
+                          }}>
+                            Access Logic
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
                  <Card title="User Guide" subtitle="How to navigate the Appointment Tracker">
                     <div className="space-y-6">
                        <div className="flex gap-4">
@@ -1423,12 +1564,22 @@ export default function App() {
                                  <button 
                                    onClick={(e) => {
                                      e.stopPropagation();
-                                     generateAppointmentPDF(apt, selectedResident);
+                                     generateAppointmentPDF(apt, selectedResident, currentFacility);
                                    }}
                                    className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
                                    title="Download Forms"
                                  >
                                    <FileDown size={14} />
+                                 </button>
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     generateOutsideAppointmentChecklistPDF(apt, selectedResident, currentFacility);
+                                   }}
+                                   className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                   title="Checklist for Outside Appt"
+                                 >
+                                   <ClipboardCheck size={14} />
                                  </button>
                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
                                    apt.status === 'Completed' ? 'bg-green-100 text-green-600' : 
@@ -1454,6 +1605,120 @@ export default function App() {
               <div className="p-5 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)] shrink-0 flex justify-end">
                 <Button variant="secondary" onClick={() => setIsResidentDetailOpen(false)}>Close Detailed View</Button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Facility Modals */}
+      <AnimatePresence>
+        {isFacModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md">
+              <Card className="p-6 overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-black text-slate-800">{editingFac ? 'Edit Facility' : 'Add Facility'}</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setIsFacModalOpen(false)}><X size={20} /></Button>
+                </div>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const data = {
+                    name: formData.get('name') as string,
+                    address: formData.get('address') as string,
+                    phone: formData.get('phone') as string
+                  };
+                  if (editingFac) {
+                    await updateFacility(editingFac.id, data);
+                  } else {
+                    await addFacility(data);
+                  }
+                  setIsFacModalOpen(false);
+                }} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Facility Name</label>
+                    <input name="name" defaultValue={editingFac?.name} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Address</label>
+                    <textarea name="address" defaultValue={editingFac?.address} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all rows-3 text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Phone</label>
+                    <input name="phone" defaultValue={editingFac?.phone} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold" />
+                  </div>
+                  <Button type="submit" className="w-full py-4 text-sm font-black">
+                    {editingFac ? 'Save Changes' : 'Create Facility'}
+                  </Button>
+                </form>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+
+        {isUserModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg">
+              <Card className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-black text-slate-800">User Configuration</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setIsUserModalOpen(false)}><X size={20} /></Button>
+                </div>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  let uId = editingUser?.id;
+                  if (!uId) {
+                    uId = await addUser({
+                      fullName: formData.get('fullName'),
+                      email: formData.get('email'),
+                      role: formData.get('role')
+                    });
+                  }
+                  await updateUserPermissions(uId, userFacPermissions);
+                  setIsUserModalOpen(false);
+                }} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">Full Name</label>
+                      <input name="fullName" defaultValue={editingUser?.fullName} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">Email</label>
+                      <input name="email" type="email" defaultValue={editingUser?.email} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Role</label>
+                    <select name="role" defaultValue={editingUser?.role || 'staff'} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm">
+                      <option value="staff">Staff</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-4">Permitted Facilities (Grip Access)</label>
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      {facilities.map(f => (
+                        <label key={f.id} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white rounded-xl transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={userFacPermissions.includes(f.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setUserFacPermissions([...userFacPermissions, f.id]);
+                              else setUserFacPermissions(userFacPermissions.filter(id => id !== f.id));
+                            }}
+                            className="rounded-lg text-brand focus:ring-brand"
+                          />
+                          <span className="text-sm font-bold text-slate-700">{f.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full py-4 text-sm font-black bg-purple-600 hover:bg-purple-700">
+                    Save User Permissions
+                  </Button>
+                </form>
+              </Card>
             </motion.div>
           </div>
         )}
@@ -1515,7 +1780,7 @@ function StatCard({ label, value, hint, icon, onClick }: { label: string; value:
   );
 }
 
-function AppointmentItem({ appointment, residents, doctorName, onClick }: { appointment: Appointment; residents: Resident[]; doctorName: string; key?: string; onClick?: () => void }) {
+function AppointmentItem({ appointment, residents, doctorName, currentFacility, onClick }: { appointment: Appointment; residents: Resident[]; doctorName: string; currentFacility?: Facility; key?: string; onClick?: () => void }) {
   const date = new Date(appointment.date);
   return (
     <div onClick={onClick} className="flex items-start gap-4 p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand-light/40 hover:bg-white transition-all hover:shadow-[0_10px_26px_rgba(11,42,111,.08)] group cursor-pointer relative overflow-hidden">
@@ -1530,6 +1795,17 @@ function AppointmentItem({ appointment, residents, doctorName, onClick }: { appo
           title="Download Visit Form"
         >
           <FileDown size={14} />
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            const res = residents.find(r => r.name === appointment.residentName);
+            generateOutsideAppointmentChecklistPDF(appointment, res, currentFacility);
+          }}
+          className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm ml-1"
+          title="Download Checklist"
+        >
+          <ClipboardCheck size={14} />
         </button>
       </div>
       <DateBadge date={date} />
@@ -1548,7 +1824,7 @@ function AppointmentItem({ appointment, residents, doctorName, onClick }: { appo
   );
 }
 
-function WideAppointmentTable({ appointments, residents, onEdit, selectedColumns }: { appointments: Appointment[]; residents: Resident[]; onEdit: (apt: Appointment) => void; selectedColumns?: string[] }) {
+function WideAppointmentTable({ appointments, residents, currentFacility, onEdit, selectedColumns }: { appointments: Appointment[]; residents: Resident[]; currentFacility?: Facility; onEdit: (apt: Appointment) => void; selectedColumns?: string[] }) {
   const showColumn = (col: string) => !selectedColumns || selectedColumns.includes(col);
 
   return (
@@ -1619,17 +1895,30 @@ function WideAppointmentTable({ appointments, residents, onEdit, selectedColumns
               )}
               {showColumn('Transport') && <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.transportType}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb]">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const resident = residents.find(r => r.name === apt.residentName);
-                    generateAppointmentPDF(apt, resident);
-                  }}
-                  className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                  title="Generate Visit Form"
-                >
-                  <FileDown size={18} />
-                </button>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const resident = residents.find(r => r.name === apt.residentName);
+                      generateAppointmentPDF(apt, resident, currentFacility);
+                    }}
+                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    title="Generate Visit Form"
+                  >
+                    <FileDown size={18} />
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const resident = residents.find(r => r.name === apt.residentName);
+                      generateOutsideAppointmentChecklistPDF(apt, resident, currentFacility);
+                    }}
+                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    title="Generate Checklist"
+                  >
+                    <ClipboardCheck size={18} />
+                  </button>
+                </div>
               </td>
               {showColumn('Payer') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.payerForRide}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.roundTrip}</td>

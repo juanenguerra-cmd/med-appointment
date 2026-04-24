@@ -1,20 +1,61 @@
 import { useState, useEffect } from 'react';
-import { Appointment, Doctor, MedicalRecord, Resident } from '../types';
+import { Appointment, Doctor, MedicalRecord, Resident, Facility } from '../types';
 
 export function useHealthData() {
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>({ id: 'admin-user-1', email: 'juan.enguerra.secure@gmail.com', role: 'admin' });
+  const [currentFacilityId, setCurrentFacilityId] = useState<string | null>(() => {
+    return localStorage.getItem('currentFacilityId');
+  });
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initial Fetch from SQLite / API (Simulation of Cloudflare D1)
+  // Persistence for currentFacilityId
   useEffect(() => {
+    if (currentFacilityId) {
+      localStorage.setItem('currentFacilityId', currentFacilityId);
+    }
+  }, [currentFacilityId]);
+
+  // Fetch Facilities initially
+  useEffect(() => {
+    async function fetchFacilities() {
+      try {
+        // Fetch restricted facilities for current user
+        const res = await fetch(`/api/facilities?userId=${currentUser.id}`);
+        if (res.ok) {
+          const data: Facility[] = await res.json();
+          setFacilities(data);
+          if (data.length > 0 && !currentFacilityId) {
+            setCurrentFacilityId(data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch facilities", err);
+      }
+    }
+    fetchFacilities();
+  }, [currentUser.id]);
+
+  useEffect(() => {
+    if (currentUser.role === 'admin') {
+      fetch('/api/users').then(res => res.json()).then(setUsers).catch(console.error);
+    }
+  }, [currentUser.role]);
+
+  // Main Data Fetch dependent on currentFacilityId
+  useEffect(() => {
+    if (!currentFacilityId) return;
+
     async function fetchData(retries = 3) {
       try {
         const [resResidents, resAppointments] = await Promise.all([
-          fetch('/api/residents'),
-          fetch('/api/appointments')
+          fetch(`/api/residents?facilityId=${currentFacilityId}`),
+          fetch(`/api/appointments?facilityId=${currentFacilityId}`)
         ]);
         
         if (!resResidents.ok || !resAppointments.ok) {
@@ -27,10 +68,13 @@ export function useHealthData() {
         setResidents(residentsData);
         setAppointments(appointmentsData);
         
-        const savedDoctors = localStorage.getItem('doctors');
-        const savedRecords = localStorage.getItem('records');
+        const savedDoctors = localStorage.getItem(`doctors_${currentFacilityId}`);
+        const savedRecords = localStorage.getItem(`records_${currentFacilityId}`);
         if (savedDoctors) setDoctors(JSON.parse(savedDoctors));
+        else setDoctors([]); // Reset if switching facilities
+        
         if (savedRecords) setRecords(JSON.parse(savedRecords));
+        else setRecords([]);
 
         setIsLoaded(true);
       } catch (error) {
@@ -43,23 +87,92 @@ export function useHealthData() {
         }
       }
     }
+    
+    setIsLoaded(false); // Trigger loading state on facility switch
     fetchData();
-  }, []);
+  }, [currentFacilityId]);
 
-  // Persist doctors/records to localStorage as they aren't in DB yet
+  // Persist doctors/records to localStorage
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('doctors', JSON.stringify(doctors));
-      localStorage.setItem('records', JSON.stringify(records));
+    if (isLoaded && currentFacilityId) {
+      localStorage.setItem(`doctors_${currentFacilityId}`, JSON.stringify(doctors));
+      localStorage.setItem(`records_${currentFacilityId}`, JSON.stringify(records));
     }
-  }, [doctors, records, isLoaded]);
+  }, [doctors, records, isLoaded, currentFacilityId]);
 
-  const addAppointment = async (appointment: Omit<Appointment, 'id'>) => {
+  const addFacility = async (facility: Omit<Facility, 'id'>) => {
     const id = crypto.randomUUID();
-    const newAppointment = { ...appointment, id };
+    const newFac = { ...facility, id };
+    setFacilities(prev => [...prev, newFac]);
+    
+    await fetch('/api/facilities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newFac)
+    });
+    
+    if (!currentFacilityId) setCurrentFacilityId(id);
+
+    // If admin, auto-grant permission to the created facility
+    if (currentUser.id) {
+      await fetch(`/api/users/${currentUser.id}/facilities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ facilityIds: [...facilities.map(f => f.id), id] })
+      });
+    }
+  };
+
+  const updateFacility = async (id: string, updates: Partial<Facility>) => {
+    setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+    await fetch(`/api/facilities/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+  };
+
+  const deleteFacility = async (id: string) => {
+    setFacilities(prev => prev.filter(f => f.id !== id));
+    if (currentFacilityId === id) {
+      const next = facilities.find(f => f.id !== id);
+      setCurrentFacilityId(next?.id || null);
+    }
+    await fetch(`/api/facilities/${id}`, { method: 'DELETE' });
+  };
+
+  const addUser = async (user: any) => {
+    const id = crypto.randomUUID();
+    const newUser = { ...user, id };
+    setUsers(prev => [...prev, newUser]);
+    await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUser)
+    });
+    return id;
+  };
+
+  const updateUserPermissions = async (userId: string, facilityIds: string[]) => {
+    await fetch(`/api/users/${userId}/facilities`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facilityIds })
+    });
+  };
+
+  const fetchUserPermissions = async (userId: string) => {
+    const res = await fetch(`/api/users/${userId}/facilities`);
+    return await res.json();
+  };
+
+  const addAppointment = async (appointment: Omit<Appointment, 'id' | 'facilityId'>) => {
+    if (!currentFacilityId) return;
+
+    const id = crypto.randomUUID();
+    const newAppointment = { ...appointment, id, facilityId: currentFacilityId } as Appointment;
     setAppointments(prev => [...prev, newAppointment]);
     
-    // Non-blocking save to background DB
     fetch('/api/appointments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,9 +197,10 @@ export function useHealthData() {
     fetch(`/api/appointments/${id}`, { method: 'DELETE' });
   };
 
-  const addResident = async (resident: Omit<Resident, 'id'>) => {
+  const addResident = async (resident: Omit<Resident, 'id' | 'facilityId'>) => {
+    if (!currentFacilityId) return;
     const id = crypto.randomUUID();
-    const newResident = { ...resident, id };
+    const newResident = { ...resident, id, facilityId: currentFacilityId } as Resident;
     setResidents(prev => [...prev, newResident]);
     
     fetch('/api/residents', {
@@ -100,7 +214,6 @@ export function useHealthData() {
     // Optimistic Update
     setResidents(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
     
-    // PARTIAL UPDATE (Efficient / Non-wasting) - Matches D1 request
     fetch(`/api/residents/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -113,8 +226,9 @@ export function useHealthData() {
     fetch(`/api/residents/${id}`, { method: 'DELETE' });
   };
 
-  const batchAddResidents = async (newResidents: Omit<Resident, 'id'>[]) => {
-    const prepared = newResidents.map(r => ({ ...r, id: crypto.randomUUID() }));
+  const batchAddResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
+    if (!currentFacilityId) return;
+    const prepared = newResidents.map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId })) as Resident[];
     setResidents(prev => [...prev, ...prepared]);
     
     for (const res of prepared) {
@@ -126,7 +240,8 @@ export function useHealthData() {
     }
   };
 
-  const replaceResidents = async (newResidents: Omit<Resident, 'id'>[]) => {
+  const replaceResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
+    if (!currentFacilityId) return;
     const currentResidents = [...residents];
     const existingResidentsMap = new Map<string, Resident>();
     currentResidents.forEach(res => {
@@ -134,7 +249,7 @@ export function useHealthData() {
       existingResidentsMap.set(key, res);
     });
 
-    const uniqueNewResidentsMap = new Map<string, Omit<Resident, 'id'>>();
+    const uniqueNewResidentsMap = new Map<string, Omit<Resident, 'id' | 'facilityId'>>();
     newResidents.forEach(res => {
       const key = res.mrn !== '—' ? res.mrn : `${res.name}|${res.roomNumber}`.toLowerCase();
       uniqueNewResidentsMap.set(key, res);
@@ -148,11 +263,12 @@ export function useHealthData() {
         return {
           ...newRes,
           id: existing.id,
+          facilityId: currentFacilityId,
           notes: existing.notes || newRes.notes,
           lastVisit: existing.lastVisit || newRes.lastVisit
         } as Resident;
       }
-      return { ...newRes, id: crypto.randomUUID() } as Resident;
+      return { ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId } as Resident;
     });
 
     setResidents(merged);
@@ -188,6 +304,17 @@ export function useHealthData() {
   };
 
   return {
+    facilities,
+    currentFacilityId,
+    setCurrentFacilityId,
+    addFacility,
+    updateFacility,
+    deleteFacility,
+    users,
+    currentUser,
+    addUser,
+    updateUserPermissions,
+    fetchUserPermissions,
     appointments,
     doctors,
     records,

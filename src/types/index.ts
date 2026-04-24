@@ -9,8 +9,17 @@ export interface Doctor {
   address?: string;
 }
 
+export interface Facility {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  contactPerson?: string;
+}
+
 export interface Appointment {
   id: string;
+  facilityId: string;
   // Origin & Patient Info
   origin: string;
   residentName: string;
@@ -59,6 +68,7 @@ export interface MedicalRecord {
 
 export interface Resident {
   id: string;
+  facilityId: string;
   name: string;
   lastName: string;
   firstName: string;
