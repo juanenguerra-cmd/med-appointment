@@ -122,3 +122,58 @@ export const generateAppointmentPDF = (appointment: Appointment, resident?: Resi
 
   doc.save(`Visit_Form_${appointment.residentName.replace(/\s+/g, '_')}_${appointment.date}.pdf`);
 };
+
+export const generateFullReport = (appointments: Appointment[], columns: string[], title: string = 'Appointment Summary Report') => {
+  const doc = new jsPDF({ orientation: 'landscape' });
+  const width = doc.internal.pageSize.getWidth();
+
+  // Header
+  doc.setFillColor(11, 42, 111);
+  doc.rect(0, 0, width, 25, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title.toUpperCase(), 15, 16);
+  
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toLocaleString()} | Total Records: ${appointments.length}`, width - 15, 16, { align: 'right' });
+
+  // Map column names to appointment keys
+  const columnMap: Record<string, keyof Appointment> = {
+    'Resident Name': 'residentName',
+    'Date': 'date',
+    'Time': 'time',
+    'Provider': 'providerName',
+    'Specialty': 'type',
+    'Transport': 'transportType',
+    'Status': 'status',
+    'Origin': 'origin' as any,
+    'Room #': 'roomNumber',
+    'Unit': 'unit',
+    'Notes': 'notes',
+    'Payer': 'payerForRide'
+  };
+
+  const head = columns;
+  const body = appointments.map(apt => {
+    return columns.map(col => {
+      const key = columnMap[col];
+      return key ? (apt[key] || '—') : '—';
+    });
+  });
+
+  autoTable(doc, {
+    startY: 35,
+    head: [head],
+    body: body,
+    theme: 'striped',
+    headStyles: { fillColor: [44, 62, 80], fontSize: 8, fontStyle: 'bold' },
+    styles: { fontSize: 7, cellPadding: 2 },
+    columnStyles: {
+      0: { fontStyle: 'bold' }
+    }
+  });
+
+  doc.save(`Report_${new Date().getTime()}.pdf`);
+};

@@ -5,7 +5,7 @@
 
 import React, { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { generateAppointmentPDF } from './services/pdfService';
+import { generateAppointmentPDF, generateFullReport } from './services/pdfService';
 import {
   Calendar,
   Users,
@@ -435,19 +435,37 @@ export default function App() {
   const handleSelectResident = (resident: Resident) => {
     // Normalize unit to match dropdown values if possible
     let matchedUnit = '';
-    const unitStr = resident.unit.toLowerCase();
-    if (unitStr.includes('unit 1')) matchedUnit = 'Unit 1';
-    else if (unitStr.includes('unit 2')) matchedUnit = 'Unit 2';
-    else if (unitStr.includes('unit 3')) matchedUnit = 'Unit 3';
-    else if (unitStr.includes('unit 4')) matchedUnit = 'Unit 4';
+    const unitStr = (resident.unit || '').trim();
+    const units = ['Unit A', 'Unit B', 'Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Rehab'];
+    
+    // Try exact match first (case-insensitive)
+    const exactMatch = units.find(u => u.toLowerCase() === unitStr.toLowerCase());
+    if (exactMatch) {
+      matchedUnit = exactMatch;
+    } else {
+      // Try partial match
+      const lower = unitStr.toLowerCase();
+      if (lower.includes('unit a')) matchedUnit = 'Unit A';
+      else if (lower.includes('unit b')) matchedUnit = 'Unit B';
+      else if (lower.includes('rehab')) matchedUnit = 'Rehab';
+      else if (lower.includes('unit 1')) matchedUnit = 'Unit 1';
+      else if (lower.includes('unit 2')) matchedUnit = 'Unit 2';
+    }
 
-    setNewAppt(prev => ({
-      ...prev,
-      residentName: resident.name,
-      roomNumber: resident.roomNumber,
-      unit: matchedUnit || prev.unit,
-      notes: `MRN: ${resident.mrn} | Physician: ${resident.doctor} | Age: ${resident.age}`
-    }));
+    setNewAppt(prev => {
+      let finalUnit = matchedUnit;
+      if (!finalUnit && resident.unit && resident.unit !== '—') finalUnit = resident.unit;
+      if (!finalUnit && resident.floor && resident.floor !== '—') finalUnit = resident.floor;
+      if (!finalUnit) finalUnit = prev.unit;
+
+      return {
+        ...prev,
+        residentName: resident.name,
+        roomNumber: resident.roomNumber,
+        unit: finalUnit,
+        notes: `MRN: ${resident.mrn} | Physician: ${resident.doctor} | Age: ${resident.age}`
+      };
+    });
   };
 
   const filteredResidents = residents.filter(r => 
@@ -725,7 +743,22 @@ export default function App() {
                       </FormField>
 
                       <div className="pt-4 flex gap-3">
-                        <Button className="flex-1 gap-2 shadow-lg hover:shadow-brand/20"><FileDown size={18} /> Generate</Button>
+                        <Button 
+                          className="flex-1 gap-2 shadow-lg hover:shadow-brand/20"
+                          onClick={() => {
+                            const filtered = appointments.filter(apt => {
+                              const date = new Date(apt.date);
+                              const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
+                              const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
+                              if (start && date < start) return false;
+                              if (end && date > end) return false;
+                              return true;
+                            });
+                            generateFullReport(filtered, reportFilters.columns);
+                          }}
+                        >
+                          <FileDown size={18} /> Generate
+                        </Button>
                         <Button variant="secondary" className="px-4"><Printer size={18} /></Button>
                       </div>
                     </div>
@@ -756,8 +789,16 @@ export default function App() {
                     <div className="mt-2">
                       {appointments.length > 0 ? (
                         <WideAppointmentTable 
-                          appointments={appointments.slice(0, 10)} 
+                          appointments={appointments.filter(apt => {
+                            const date = new Date(apt.date);
+                            const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
+                            const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
+                            if (start && date < start) return false;
+                            if (end && date > end) return false;
+                            return true;
+                          }).slice(0, 10)} 
                           residents={residents}
+                          selectedColumns={reportFilters.columns}
                           onEdit={handleOpenEdit} 
                         />
                       ) : (
@@ -1038,12 +1079,22 @@ export default function App() {
                       </div>
                     </FormField>
                     <FormField label="Unit">
-                      <select value={newAppt.unit} onChange={e => setNewAppt({...newAppt, unit: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                        <option value="">— Select Unit —</option>
-                        <option value="Unit A">Unit A</option>
-                        <option value="Unit B">Unit B</option>
-                        <option value="Rehab">Rehab</option>
-                      </select>
+                      <input 
+                        list="unit-options"
+                        value={newAppt.unit} 
+                        onChange={e => setNewAppt({...newAppt, unit: e.target.value})} 
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" 
+                        placeholder="e.g., Unit A"
+                      />
+                      <datalist id="unit-options">
+                        <option value="Unit A" />
+                        <option value="Unit B" />
+                        <option value="Unit 1" />
+                        <option value="Unit 2" />
+                        <option value="Unit 3" />
+                        <option value="Unit 4" />
+                        <option value="Rehab" />
+                      </datalist>
                     </FormField>
                     <FormField label="Room #">
                       <input 
@@ -1433,29 +1484,32 @@ function AppointmentItem({ appointment, residents, doctorName, onClick }: { appo
   );
 }
 
-function WideAppointmentTable({ appointments, residents, onEdit }: { appointments: Appointment[]; residents: Resident[]; onEdit: (apt: Appointment) => void }) {
+function WideAppointmentTable({ appointments, residents, onEdit, selectedColumns }: { appointments: Appointment[]; residents: Resident[]; onEdit: (apt: Appointment) => void; selectedColumns?: string[] }) {
+  const showColumn = (col: string) => !selectedColumns || selectedColumns.includes(col);
+
   return (
     <div className="overflow-x-auto rounded-xl border border-[#d6deeb] bg-white shadow-sm">
       <table className="w-full text-left border-collapse min-w-[1400px]">
         <thead className="bg-[#0b2a6f] text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
           <tr>
             <th className="px-3 py-4 border-r border-white/10 text-center w-12">Select</th>
-            <th className="px-4 py-4 border-r border-white/10">Resident</th>
-            <th className="px-4 py-4 border-r border-white/10">Unit/Room</th>
-            <th className="px-4 py-4 border-r border-white/10">Specialty</th>
+            {showColumn('Resident Name') && <th className="px-4 py-4 border-r border-white/10">Resident</th>}
+            {(showColumn('Unit') || showColumn('Room #')) && <th className="px-4 py-4 border-r border-white/10">Unit/Room</th>}
+            {showColumn('Origin') && <th className="px-4 py-4 border-r border-white/10">Origin</th>}
+            {showColumn('Specialty') && <th className="px-4 py-4 border-r border-white/10">Specialty</th>}
             <th className="px-4 py-4 border-r border-white/10">Description</th>
-            <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">Location Details</th>
-            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Date</th>
-            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Time</th>
+            {showColumn('Provider') && <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">Location Details</th>}
+            {showColumn('Date') && <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Date</th>}
+            {showColumn('Time') && <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Time</th>}
             <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Pick Up</th>
             <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Due By</th>
-            <th className="px-4 py-4 border-r border-white/10">Status</th>
-            <th className="px-4 py-4 border-r border-white/10">Transport</th>
+            {showColumn('Status') && <th className="px-4 py-4 border-r border-white/10">Status</th>}
+            {showColumn('Transport') && <th className="px-4 py-4 border-r border-white/10">Transport</th>}
             <th className="px-4 py-4 border-r border-white/10">Form</th>
-            <th className="px-4 py-4 border-r border-white/10">Payer</th>
+            {showColumn('Payer') && <th className="px-4 py-4 border-r border-white/10">Payer</th>}
             <th className="px-4 py-4 border-r border-white/10">Round Trip</th>
             <th className="px-4 py-4 border-r border-white/10">Escort</th>
-            <th className="px-4 py-4">Notes</th>
+            {showColumn('Notes') && <th className="px-4 py-4">Notes</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#d6deeb]">
@@ -1468,29 +1522,38 @@ function WideAppointmentTable({ appointments, residents, onEdit }: { appointment
               <td className="px-3 py-4 text-center border-r border-[#d6deeb]">
                 <div className="w-4 h-4 rounded-full border-2 border-slate-300 mx-auto group-hover:border-brand" />
               </td>
-              <td className="px-4 py-4 border-r border-[#d6deeb] font-black uppercase text-slate-900">{apt.residentName}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.unit} / {apt.roomNumber}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.type}</td>
+              {showColumn('Resident Name') && <td className="px-4 py-4 border-r border-[#d6deeb] font-black uppercase text-slate-900">{apt.residentName}</td>}
+              {(showColumn('Unit') || showColumn('Room #')) && (
+                <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">
+                  {showColumn('Unit') && apt.unit} {showColumn('Unit') && showColumn('Room #') && '/'} {showColumn('Room #') && apt.roomNumber}
+                </td>
+              )}
+              {showColumn('Origin') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.origin || '—'}</td>}
+              {showColumn('Specialty') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.type}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb] max-w-[150px] truncate" title={apt.description}>{apt.description}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">
-                <div className="font-bold text-slate-800">{apt.providerName || apt.location}</div>
-                <div className="text-[10px] opacity-70">{apt.contactNumber}</div>
-              </td>
-              <td className="px-4 py-4 border-r border-[#d6deeb] whitespace-nowrap">{apt.date}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.time}</td>
+              {showColumn('Provider') && (
+                <td className="px-4 py-4 border-r border-[#d6deeb]">
+                  <div className="font-bold text-slate-800">{apt.providerName || apt.location}</div>
+                  <div className="text-[10px] opacity-70">{apt.contactNumber}</div>
+                </td>
+              )}
+              {showColumn('Date') && <td className="px-4 py-4 border-r border-[#d6deeb] whitespace-nowrap">{apt.date}</td>}
+              {showColumn('Time') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.time}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.pickUpTime || '—'}</td>
               <td className="px-4 py-4 border-r border-[#d6deeb] whitespace-nowrap">{apt.dueDate || '—'}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${
-                  apt.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                  apt.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                  apt.status === 'Cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                  'bg-amber-50 text-amber-700 border-amber-100'
-                }`}>
-                  {apt.status}
-                </span>
-              </td>
-              <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.transportType}</td>
+              {showColumn('Status') && (
+                <td className="px-4 py-4 border-r border-[#d6deeb]">
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${
+                    apt.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                    apt.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                    apt.status === 'Cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                    'bg-amber-50 text-amber-700 border-amber-100'
+                  }`}>
+                    {apt.status}
+                  </span>
+                </td>
+              )}
+              {showColumn('Transport') && <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.transportType}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb]">
                 <button 
                   onClick={(e) => {
@@ -1504,10 +1567,10 @@ function WideAppointmentTable({ appointments, residents, onEdit }: { appointment
                   <FileDown size={18} />
                 </button>
               </td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.payerForRide}</td>
+              {showColumn('Payer') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.payerForRide}</td>}
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.roundTrip}</td>
               <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.escort}</td>
-              <td className="px-4 py-4 max-w-[200px] truncate italic text-slate-500" title={apt.notes}>{apt.notes}</td>
+              {showColumn('Notes') && <td className="px-4 py-4 max-w-[200px] truncate italic text-slate-500" title={apt.notes}>{apt.notes}</td>}
             </tr>
           ))}
         </tbody>

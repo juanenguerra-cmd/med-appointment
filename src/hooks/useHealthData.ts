@@ -10,17 +10,23 @@ export function useHealthData() {
 
   // Initial Fetch from SQLite / API (Simulation of Cloudflare D1)
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(retries = 3) {
       try {
         const [resResidents, resAppointments] = await Promise.all([
           fetch('/api/residents'),
           fetch('/api/appointments')
         ]);
         
-        if (resResidents.ok) setResidents(await resResidents.json());
-        if (resAppointments.ok) setAppointments(await resAppointments.json());
+        if (!resResidents.ok || !resAppointments.ok) {
+          throw new Error(`Failed to fetch: ${resResidents.status} / ${resAppointments.status}`);
+        }
+
+        const residentsData = await resResidents.json();
+        const appointmentsData = await resAppointments.json();
         
-        // Doctors and Records still in local storage for now, or could be moved too
+        setResidents(residentsData);
+        setAppointments(appointmentsData);
+        
         const savedDoctors = localStorage.getItem('doctors');
         const savedRecords = localStorage.getItem('records');
         if (savedDoctors) setDoctors(JSON.parse(savedDoctors));
@@ -28,8 +34,13 @@ export function useHealthData() {
 
         setIsLoaded(true);
       } catch (error) {
-        console.error("Failed to fetch data from API:", error);
-        setIsLoaded(true); // Still set loaded to allow UI interaction
+        if (retries > 0) {
+          console.warn(`Fetch failed, retrying... (${retries} left)`, error);
+          setTimeout(() => fetchData(retries - 1), 2000);
+        } else {
+          console.error("Failed to fetch data from API after retries:", error);
+          setIsLoaded(true);
+        }
       }
     }
     fetchData();
