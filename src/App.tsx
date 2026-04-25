@@ -46,6 +46,8 @@ import {
   Download,
   FileSpreadsheet,
   Home,
+  Copy,
+  CopyPlus,
 } from "lucide-react";
 import { useHealthData } from "./hooks/useHealthData";
 import { Card } from "./components/Card";
@@ -136,6 +138,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showOtherSpecialtyInput, setShowOtherSpecialtyInput] = useState(false);
+  const [modalStatusPrompt, setModalStatusPrompt] = useState<{status: string, reason: string} | null>(null);
 
   const [newAppt, setNewAppt] = useState<Partial<Appointment>>({
     status: "Scheduled",
@@ -223,6 +226,12 @@ export default function App() {
       "Specialty",
       "Transport",
     ],
+  });
+
+  const [appointmentsFilter, setAppointmentsFilter] = useState({
+    dateRange: "next7days",
+    month: new Date().toISOString().slice(0, 7),
+    status: "All",
   });
 
   const [residentSearchTerm, setResidentSearchTerm] = useState("");
@@ -552,6 +561,8 @@ export default function App() {
     }));
   };
 
+  const printIframeRef = React.useRef<HTMLIFrameElement>(null);
+
   if (!isLoaded) {
     return (
       <div className="h-screen flex items-center justify-center bg-soft-bg text-brand font-black">
@@ -559,6 +570,33 @@ export default function App() {
       </div>
     );
   }
+
+  const handleGenerateForm = (apt: Appointment, formType: string) => {
+    try {
+      const resident = residents.find((r) => r.name === apt.residentName);
+      if (formType === 'Visit Form') {
+        generateAppointmentPDF(apt, resident, currentFacility);
+      } else if (formType === 'Checklist') {
+         generateOutsideAppointmentChecklistPDF(apt, resident, currentFacility);
+      } else if (formType === 'Medical Clearance') {
+         // Defaulting to "Regular Visit" since window.prompt doesn't work well in preview
+         generateMedicalClearancePDF(apt, "Regular Visit", resident, currentFacility);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error generating form");
+    }
+  };
+
+  const handleDuplicateAppt = (apt: Appointment) => {
+    const { id, ...appData } = apt;
+    setEditingId(null);
+    setNewAppt({
+      ...appData,
+      status: "Scheduled" as any
+    });
+    setIsAddModalOpen(true);
+  };
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -694,6 +732,26 @@ export default function App() {
     });
   };
 
+  const filteredTabAppointments = appointments.filter((apt) => {
+    if (appointmentsFilter.dateRange === "next7days") {
+      const today = new Date();
+      // Use local time string for today
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const n7d = new Date(today);
+      n7d.setDate(n7d.getDate() + 7);
+      const n7dStr = `${n7d.getFullYear()}-${String(n7d.getMonth() + 1).padStart(2, '0')}-${String(n7d.getDate()).padStart(2, '0')}`;
+      if (apt.date < todayStr || apt.date > n7dStr) {
+        return false;
+      }
+    } else if (appointmentsFilter.dateRange === "month") {
+      if (!apt.date.startsWith(appointmentsFilter.month)) return false;
+    }
+    
+    if (appointmentsFilter.status !== "All" && apt.status !== appointmentsFilter.status) return false;
+    
+    return true;
+  });
+
   const upcomingAppointments = appointments
     .filter((a) => a.status === "Scheduled")
     .sort(
@@ -731,6 +789,7 @@ export default function App() {
 
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
+      <iframe ref={printIframeRef} style={{ display: "none" }} title="Print iframe" />
       {isMenuOpen && (
         <button
           className="fixed inset-0 bg-slate-950/35 backdrop-blur-sm z-40 lg:hidden"
@@ -969,7 +1028,7 @@ export default function App() {
                       : "—"
                   }
                   hint={
-                    nextAppointment ? nextAppointment.time : "No upcoming visit"
+                    nextAppointment ? formatTimeAMPM(nextAppointment.time) : "No upcoming visit"
                   }
                   icon={<Activity />}
                   onClick={() => goToTab("appointments")}
@@ -1049,10 +1108,48 @@ export default function App() {
                 }
                 className="overflow-hidden"
               >
+                <div className="flex flex-wrap items-center gap-4 px-4 py-3 bg-slate-50 border-y border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase">Date Range</span>
+                    <select 
+                      className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer shadow-sm text-slate-700"
+                      value={appointmentsFilter.dateRange}
+                      onChange={e => setAppointmentsFilter({...appointmentsFilter, dateRange: e.target.value})}
+                    >
+                      <option value="next7days">Today + Next 7 Days</option>
+                      <option value="month">Specific Month</option>
+                      <option value="all">All Dates</option>
+                    </select>
+                    
+                    {appointmentsFilter.dateRange === "month" && (
+                      <input 
+                        type="month"
+                        className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-brand/20 transition-all shadow-sm text-slate-700 h-[34px]"
+                        value={appointmentsFilter.month}
+                        onChange={e => setAppointmentsFilter({...appointmentsFilter, month: e.target.value})}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase ml-2">Status</span>
+                    <select 
+                      className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer shadow-sm text-slate-700"
+                      value={appointmentsFilter.status}
+                      onChange={e => setAppointmentsFilter({...appointmentsFilter, status: e.target.value})}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                      <option value="Discontinued">Discontinued</option>
+                      <option value="Deferred">Deferred</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="mt-2">
-                  {appointments.length > 0 ? (
+                  {filteredTabAppointments.length > 0 ? (
                     <WideAppointmentTable
-                      appointments={appointments.sort(
+                      appointments={filteredTabAppointments.sort(
                         (a, b) =>
                           new Date(`${a.date}T${a.time}`).getTime() -
                           new Date(`${b.date}T${b.time}`).getTime(),
@@ -1061,12 +1158,14 @@ export default function App() {
                       currentFacility={currentFacility}
                       onEdit={handleOpenEdit}
                       onSaveAll={handleSaveAllAppointments}
+                      onDuplicate={handleDuplicateAppt}
+                      onGenerateForm={handleGenerateForm}
                     />
                   ) : (
                     <EmptyState
                       icon={<Database size={44} />}
                       title="No entries found"
-                      text="Your system log is currently empty."
+                      text="No appointments match the current filters."
                     />
                   )}
                 </div>
@@ -1321,6 +1420,8 @@ export default function App() {
                           selectedColumns={reportFilters.columns}
                           onEdit={handleOpenEdit}
                           onSaveAll={handleSaveAllAppointments}
+                          onDuplicate={handleDuplicateAppt}
+                          onGenerateForm={handleGenerateForm}
                         />
                       ) : (
                         <div className="py-20 text-center opacity-40 italic text-sm">
@@ -2172,18 +2273,23 @@ export default function App() {
                   <FormField label="Status">
                     <select
                       value={newAppt.status}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value;
                         setNewAppt({
                           ...newAppt,
-                          status: e.target.value as any,
-                        })
-                      }
+                          status: val as any,
+                        });
+                        if (["Cancelled", "Rescheduled", "Deferred", "Discontinued"].includes(val)) {
+                           setModalStatusPrompt({ status: val, reason: "" });
+                        }
+                      }}
                       className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
                     >
                       <option value="Scheduled">Scheduled</option>
-                      <option value="Pending">Pending</option>
                       <option value="Completed">Completed</option>
                       <option value="Cancelled">Cancelled</option>
+                      <option value="Discontinued">Discontinued</option>
+                      <option value="Deferred">Deferred</option>
                     </select>
                   </FormField>
                 </section>
@@ -2614,6 +2720,59 @@ export default function App() {
                 </div>
               </div>
             </motion.div>
+            
+            <AnimatePresence>
+              {modalStatusPrompt && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col"
+                  >
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <h3 className="font-bold text-slate-800 text-lg">Update Status</h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-sm font-medium text-slate-600 mb-3 block">Reason for changing status to <span className="font-bold text-brand">{modalStatusPrompt.status}</span>:</p>
+                      <textarea
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all resize-none mb-4"
+                        rows={3}
+                        placeholder="Enter reason..."
+                        value={modalStatusPrompt.reason}
+                        onChange={(e) => setModalStatusPrompt({...modalStatusPrompt, reason: e.target.value})}
+                      />
+                      <div className="flex items-center gap-3 justify-end">
+                        <button 
+                          onClick={() => {
+                              setModalStatusPrompt(null);
+                          }} 
+                          className="px-4 py-2 rounded-xl text-slate-500 font-bold hover:bg-slate-100 transition-colors"
+                        >
+                          Dismiss
+                        </button>
+                        <Button 
+                          onClick={() => {
+                            setNewAppt(prev => {
+                               const existingNotes = prev.notes || "";
+                               const val = modalStatusPrompt.status;
+                               const reason = modalStatusPrompt.reason;
+                               return {
+                                 ...prev,
+                                 notes: existingNotes ? `${existingNotes}\n[${val} Reason]: ${reason}` : `[${val} Reason]: ${reason}`
+                               }
+                             });
+                             setModalStatusPrompt(null);
+                          }}
+                        >
+                          Append to Notes
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
@@ -2751,7 +2910,7 @@ export default function App() {
                                   {apt.type}
                                 </p>
                                 <p className="text-xs text-slate-500">
-                                  {formatFullDate(apt.date)} at {apt.time}
+                                  {formatFullDate(apt.date)} at {formatTimeAMPM(apt.time)}
                                 </p>
                                 <p className="text-[10px] font-medium text-slate-400 mt-0.5">
                                   {apt.providerName} • {apt.location}
@@ -2763,44 +2922,32 @@ export default function App() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    generateAppointmentPDF(
-                                      apt,
-                                      selectedResident,
-                                      currentFacility,
-                                    );
+                                    handleGenerateForm(apt, 'Visit Form');
                                   }}
-                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                  title="Download Forms"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
+                                  title="Visit Form"
                                 >
-                                  <FileDown size={14} />
+                                  <FileText size={10} /> Visit Form
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    generateOutsideAppointmentChecklistPDF(
-                                      apt,
-                                      selectedResident,
-                                      currentFacility,
-                                    );
+                                    handleGenerateForm(apt, 'Checklist');
                                   }}
-                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                  title="Checklist for Outside Appt"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
+                                  title="Checklist"
                                 >
-                                  <ClipboardCheck size={14} />
+                                  <ClipboardCheck size={10} /> Checklist
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    generateMedicalClearancePDF(
-                                      apt,
-                                      selectedResident,
-                                      currentFacility,
-                                    );
+                                    handleGenerateForm(apt, 'Medical Clearance');
                                   }}
-                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                  title="Medical Clearance Form"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
+                                  title="Medical Clearance"
                                 >
-                                  <FileSignature size={14} />
+                                  <ShieldCheck size={10} /> Medical Clearance
                                 </button>
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
@@ -3194,7 +3341,7 @@ function AppointmentItem({
             const res = residents.find(
               (r) => r.name === appointment.residentName,
             );
-            generateAppointmentPDF(appointment, res);
+            generateAppointmentPDF(appointment, res, currentFacility);
           }}
           className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm"
           title="Download Visit Form"
@@ -3224,8 +3371,10 @@ function AppointmentItem({
             const res = residents.find(
               (r) => r.name === appointment.residentName,
             );
+            // Defaulting to "Regular Visit" since window.prompt doesn't work well in preview
             generateMedicalClearancePDF(
               appointment,
+              "Regular Visit",
               res,
               currentFacility,
             );
@@ -3243,7 +3392,7 @@ function AppointmentItem({
             {appointment.residentName}
           </h4>
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            {appointment.time}
+            {formatTimeAMPM(appointment.time)}
           </span>
         </div>
         <p className="text-sm text-slate-500 truncate mb-1">
@@ -3260,22 +3409,36 @@ function AppointmentItem({
   );
 }
 
-const InlineInput = ({ value, onChange, placeholder, className = "", type = "text" }: any) => (
-  <input
-    type={type}
-    value={value || ""}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={placeholder || "—"}
-    className={`w-full max-w-[120px] bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit ${className}`}
-    onClick={(e) => e.stopPropagation()}
-  />
-);
+const InlineInput = ({ value, onChange, placeholder, className = "", type = "text" }: any) => {
+  if (type === "textarea") {
+    return (
+      <textarea
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder || "—"}
+        className={`w-full max-w-full bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit resize-y min-h-[32px] ${className}`}
+        onClick={(e) => e.stopPropagation()}
+        rows={2}
+      />
+    );
+  }
+  return (
+    <input
+      type={type}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder || "—"}
+      className={`w-full max-w-full bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit ${className}`}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+};
 
 const InlineSelect = ({ value, onChange, options, className = "" }: any) => (
   <select
     value={value || ""}
     onChange={(e) => onChange(e.target.value)}
-    className={`w-full max-w-[120px] bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit cursor-pointer ${className}`}
+    className={`w-full max-w-full bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit cursor-pointer ${className}`}
     onClick={(e) => e.stopPropagation()}
   >
     {options.map((opt: any) => (
@@ -3291,6 +3454,8 @@ function WideAppointmentTable({
   onEdit,
   selectedColumns,
   onSaveAll,
+  onDuplicate,
+  onGenerateForm,
 }: {
   appointments: Appointment[];
   residents: Resident[];
@@ -3298,11 +3463,30 @@ function WideAppointmentTable({
   onEdit: (apt: Appointment) => void;
   selectedColumns?: string[];
   onSaveAll?: (updates: Record<string, Partial<Appointment>>) => void;
+  onDuplicate?: (apt: Appointment) => void;
+  onGenerateForm?: (apt: Appointment, type: string) => void;
 }) {
   const showColumn = (col: string) =>
     !selectedColumns || selectedColumns.includes(col);
 
   const [editedAppointments, setEditedAppointments] = useState<Record<string, Partial<Appointment>>>({});
+  const [statusPromptAppt, setStatusPromptAppt] = useState<{ id: string; status: string } | null>(null);
+  const [statusReason, setStatusReason] = useState("");
+
+  const handleCopyRecord = (apt: Appointment, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const copyText = `Specialty: ${apt.type || 'N/A'}
+Description: ${apt.description || 'N/A'}
+Reason Consultation: ${apt.reasonConsultation || 'N/A'}
+Provider: ${apt.providerName || 'N/A'}
+Location: ${apt.location || 'N/A'}
+Contact: ${apt.contactNumber || 'N/A'}
+Date: ${apt.date || 'N/A'}
+Time: ${formatTimeAMPM(apt.time)}`;
+    navigator.clipboard.writeText(copyText).then(() => {
+      // Optional: show a small toast, but we can just let it silently copy or alert.
+    });
+  };
 
   const handleEditField = (id: string, field: keyof Appointment, value: any) => {
     setEditedAppointments(prev => ({
@@ -3313,7 +3497,33 @@ function WideAppointmentTable({
       }
     }));
   };
-  
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    if (["Cancelled", "Rescheduled", "Deferred", "Discontinued"].includes(newStatus)) {
+      setStatusPromptAppt({ id, status: newStatus });
+      setStatusReason("");
+    } else {
+      handleEditField(id, 'status', newStatus);
+    }
+  };
+
+  const confirmStatusChange = () => {
+    if (statusPromptAppt) {
+       const { id, status } = statusPromptAppt;
+       handleEditField(id, 'status', status);
+       
+       const currentAppt = appointments.find(a => a.id === id);
+       const edits = editedAppointments[id] || {};
+       const existingNotes = edits.notes !== undefined ? edits.notes : (currentAppt?.notes || "");
+       const newNotes = existingNotes ? `${existingNotes}\n[${status} Reason]: ${statusReason}` : `[${status} Reason]: ${statusReason}`;
+       
+       handleEditField(id, 'notes', newNotes);
+       
+       setStatusPromptAppt(null);
+       setStatusReason("");
+    }
+  };
+
   const getVal = (apt: Appointment, field: keyof Appointment) => {
     if (editedAppointments[apt.id] && editedAppointments[apt.id]?.[field] !== undefined) {
       return editedAppointments[apt.id]?.[field];
@@ -3339,52 +3549,32 @@ function WideAppointmentTable({
             {showColumn("Resident Name") && (
               <th className="px-4 py-4 border-r border-white/10">Resident</th>
             )}
-            {showColumn("Weight") && (
-              <th className="px-4 py-4 border-r border-white/10">Weight</th>
-            )}
-            {showColumn("Height") && (
-              <th className="px-4 py-4 border-r border-white/10">Height</th>
+            {(showColumn("Weight") || showColumn("Height")) && (
+              <th className="px-1 py-4 border-r border-white/10 w-[60px] whitespace-nowrap text-center text-[9px] leading-tight">Wt.<br/>Ht.</th>
             )}
             {(showColumn("Unit") || showColumn("Room #")) && (
-              <th className="px-4 py-4 border-r border-white/10">Unit/Room</th>
+              <th className="px-1 py-4 border-r border-white/10 w-[60px] whitespace-nowrap text-center text-[9px] leading-tight">Unit<br/>Room</th>
             )}
-            {showColumn("Origin") && (
-              <th className="px-4 py-4 border-r border-white/10">Origin</th>
-            )}
-            {showColumn("Specialty") && (
-              <th className="px-4 py-4 border-r border-white/10">Specialty</th>
-            )}
-            <th className="px-4 py-4 border-r border-white/10">Description</th>
-            {showColumn("Provider") && (
-              <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">
-                Location Details
-              </th>
-            )}
-            {showColumn("Date") && (
-              <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
-                Appt Date
-              </th>
-            )}
-            {showColumn("Time") && (
-              <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
-                Appt Time
-              </th>
-            )}
-            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
-              Pick Up
+            <th className="px-4 py-4 border-r border-white/10 min-w-[300px]">
+              Medical Appointment Details
             </th>
-            {showColumn("Status") && (
-              <th className="px-4 py-4 border-r border-white/10">Status</th>
+            {(showColumn("Date") || showColumn("Time")) && (
+              <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
+                Appt Date & Time
+              </th>
             )}
             {showColumn("Transport") && (
-              <th className="px-4 py-4 border-r border-white/10">Transport</th>
+              <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">
+                Transport Details
+              </th>
+            )}
+            {showColumn("Status") && (
+              <th className="px-4 py-4 border-r border-white/10">Status</th>
             )}
             <th className="px-4 py-4 border-r border-white/10">Form</th>
             {showColumn("Payer") && (
               <th className="px-4 py-4 border-r border-white/10">Payer</th>
             )}
-            <th className="px-4 py-4 border-r border-white/10">Round Trip</th>
-            <th className="px-4 py-4 border-r border-white/10">Escort</th>
             {showColumn("Notes") && <th className="px-4 py-4">Notes</th>}
           </tr>
         </thead>
@@ -3398,137 +3588,209 @@ function WideAppointmentTable({
                 <div className="w-4 h-4 rounded-full border-2 border-slate-300 mx-auto group-hover:border-brand" title="Open Edit Modal" />
               </td>
               {showColumn("Resident Name") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb] font-black uppercase text-slate-900 cursor-pointer" onClick={() => onEdit(apt)}>
-                  {apt.residentName}
+                <td className="px-4 py-3 border-r border-[#d6deeb] align-top">
+                  <div className="flex flex-col gap-2">
+                    <span 
+                      className="font-black uppercase text-slate-900 cursor-pointer" 
+                      onClick={() => onEdit(apt)}
+                    >
+                      {apt.residentName}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      {onDuplicate && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDuplicate(apt); }}
+                          className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand/10 hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider border border-brand/20"
+                          title="Duplicate Appointment"
+                        >
+                          <CopyPlus size={10} /> Duplicate
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => handleCopyRecord(apt, e)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors text-[9px] font-bold uppercase tracking-wider border border-slate-200"
+                        title="Copy details"
+                      >
+                        <Copy size={10} /> Copy
+                      </button>
+                    </div>
+                  </div>
                 </td>
               )}
-              {showColumn("Weight") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <InlineInput value={getVal(apt, 'weight')} onChange={(v: string) => handleEditField(apt.id, 'weight', v)} className="w-16" />
-                </td>
-              )}
-              {showColumn("Height") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <InlineInput value={getVal(apt, 'height')} onChange={(v: string) => handleEditField(apt.id, 'height', v)} className="w-16" />
+              {(showColumn("Weight") || showColumn("Height")) && (
+                <td className="px-1 py-3 border-r border-[#d6deeb] align-top w-[60px]">
+                  <div className="flex flex-col gap-1.5 w-full items-center">
+                    {showColumn("Weight") && (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[8px] uppercase text-slate-400 font-bold shrink-0">Wt.</span>
+                        <InlineInput value={getVal(apt, 'weight')} onChange={(v: string) => handleEditField(apt.id, 'weight', v)} className="w-10 text-center text-[10px] px-1 py-1" />
+                      </div>
+                    )}
+                    {showColumn("Height") && (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[8px] uppercase text-slate-400 font-bold shrink-0">Ht.</span>
+                        <InlineInput value={getVal(apt, 'height')} onChange={(v: string) => handleEditField(apt.id, 'height', v)} className="w-10 text-center text-[10px] px-1 py-1" />
+                      </div>
+                    )}
+                  </div>
                 </td>
               )}
               {(showColumn("Unit") || showColumn("Room #")) && (
-                <td className="px-4 py-3 border-r border-[#d6deeb] font-bold">
-                  <div className="flex items-center gap-1">
-                    {showColumn("Unit") && <InlineInput value={getVal(apt, 'unit')} onChange={(v: string) => handleEditField(apt.id, 'unit', v)} className="w-12 text-center" />} 
-                    {showColumn("Unit") && showColumn("Room #") && "/"}
-                    {showColumn("Room #") && <InlineInput value={getVal(apt, 'roomNumber')} onChange={(v: string) => handleEditField(apt.id, 'roomNumber', v)} className="w-12 text-center" />}
+                <td className="px-1 py-3 border-r border-[#d6deeb] font-bold align-top w-[60px]">
+                  <div className="flex flex-col items-center gap-1.5 w-full">
+                    {showColumn("Unit") && (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[8px] uppercase text-slate-400 font-bold shrink-0">Unit</span>
+                        <InlineInput value={getVal(apt, 'unit')} onChange={(v: string) => handleEditField(apt.id, 'unit', v)} className="w-10 text-center text-[10px] px-1 py-1" />
+                      </div>
+                    )} 
+                    {showColumn("Room #") && (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[8px] uppercase text-slate-400 font-bold shrink-0">Room</span>
+                        <InlineInput value={getVal(apt, 'roomNumber')} onChange={(v: string) => handleEditField(apt.id, 'roomNumber', v)} className="w-10 text-center text-[10px] px-1 py-1" />
+                      </div>
+                    )}
                   </div>
                 </td>
               )}
-              {showColumn("Origin") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <InlineInput value={getVal(apt, 'origin')} onChange={(v: string) => handleEditField(apt.id, 'origin', v)} />
-                </td>
-              )}
-              {showColumn("Specialty") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <InlineSelect 
-                    value={getVal(apt, 'type')} 
-                    onChange={(v: string) => handleEditField(apt.id, 'type', v)} 
-                    options={[...MEDICAL_SPECIALTIES, "Other"]}
-                  />
-                </td>
-              )}
-              <td className="px-4 py-3 border-r border-[#d6deeb]">
-                <div className="flex flex-col gap-1">
-                  <InlineInput value={getVal(apt, 'description')} onChange={(v: string) => handleEditField(apt.id, 'description', v)} placeholder="Description" />
-                  <InlineInput value={getVal(apt, 'consultReason')} onChange={(v: string) => handleEditField(apt.id, 'consultReason', v)} placeholder="Admin Consult Reason" className="text-[10px] text-brand" />
-                  <InlineInput value={getVal(apt, 'reasonConsultation')} onChange={(v: string) => handleEditField(apt.id, 'reasonConsultation', v)} placeholder="Consultation reason notes" className="opacity-70 italic text-[10px]" />
+              <td className="px-4 py-3 border-r border-[#d6deeb] align-top">
+                <div className="flex flex-col gap-2 min-w-[300px]">
+                  <div className="grid grid-cols-2 gap-2">
+                    {showColumn("Origin") && (
+                      <div>
+                        <span className="text-[9px] uppercase text-slate-400 font-bold block mb-0.5">Origin</span>
+                        <InlineInput value={getVal(apt, 'origin')} onChange={(v: string) => handleEditField(apt.id, 'origin', v)} />
+                      </div>
+                    )}
+                    {showColumn("Specialty") && (
+                      <div>
+                        <span className="text-[9px] uppercase text-slate-400 font-bold block mb-0.5">Specialty</span>
+                        <InlineSelect 
+                          value={getVal(apt, 'type')} 
+                          onChange={(v: string) => handleEditField(apt.id, 'type', v)} 
+                          options={[...MEDICAL_SPECIALTIES, "Other"]}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase text-slate-400 font-bold block mb-0.5">Description & Reasons</span>
+                    <div className="flex flex-col gap-1">
+                      <InlineInput type="textarea" value={getVal(apt, 'description')} onChange={(v: string) => handleEditField(apt.id, 'description', v)} placeholder="Description" />
+                      <InlineInput type="textarea" value={getVal(apt, 'consultReason')} onChange={(v: string) => handleEditField(apt.id, 'consultReason', v)} placeholder="Admin Consult Reason" className="text-[10px] text-brand" />
+                      <InlineInput type="textarea" value={getVal(apt, 'reasonConsultation')} onChange={(v: string) => handleEditField(apt.id, 'reasonConsultation', v)} placeholder="Consultation reason notes" className="opacity-70 italic text-[10px]" />
+                    </div>
+                  </div>
+                  {showColumn("Provider") && (
+                    <div className="mt-2">
+                      <span className="flex items-center gap-1 text-[9px] uppercase text-brand font-bold mb-1.5"><MapPin size={10} /> Location Details</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] uppercase text-slate-500 font-bold mb-0.5">Staff/Doctor Name</span>
+                          <InlineInput value={getVal(apt, 'providerName')} onChange={(v: string) => handleEditField(apt.id, 'providerName', v)} placeholder="e.g., Dr. So" className="font-medium text-slate-800" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[8px] uppercase text-slate-500 font-bold mb-0.5">Location Name / Address</span>
+                          <InlineInput value={getVal(apt, 'location')} onChange={(v: string) => handleEditField(apt.id, 'location', v)} placeholder="e.g., MSSN/2nd floor" className="text-slate-800" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[8px] uppercase text-slate-500 font-bold mb-0.5">Contact Number</span>
+                          <InlineInput value={getVal(apt, 'contactNumber')} onChange={(v: string) => handleEditField(apt.id, 'contactNumber', v)} placeholder="Contact" className="text-slate-800" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </td>
-              {showColumn("Provider") && (
+              {(showColumn("Date") || showColumn("Time")) && (
                 <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <div className="flex flex-col gap-1">
-                    <InlineInput value={getVal(apt, 'providerName')} onChange={(v: string) => handleEditField(apt.id, 'providerName', v)} placeholder="Provider" className="font-bold text-slate-800" />
-                    <InlineInput value={getVal(apt, 'contactNumber')} onChange={(v: string) => handleEditField(apt.id, 'contactNumber', v)} placeholder="Contact" className="text-[10px] opacity-70" />
+                  <div className="flex flex-col gap-1.5 min-w-[140px]">
+                    {showColumn("Date") && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-16">Appt Date</span>
+                        <InlineInput type="date" value={getVal(apt, 'date')} onChange={(v: string) => handleEditField(apt.id, 'date', v)} className="flex-1 w-full" />
+                      </div>
+                    )}
+                    {showColumn("Time") && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-16">Appt Time</span>
+                        <InlineInput type="time" value={getVal(apt, 'time')} onChange={(v: string) => handleEditField(apt.id, 'time', v)} className="flex-1 w-full" />
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-16">Pick Up</span>
+                      <InlineInput type="time" value={getVal(apt, 'pickUpTime')} onChange={(v: string) => handleEditField(apt.id, 'pickUpTime', v)} className="flex-1 w-full" />
+                    </div>
                   </div>
                 </td>
               )}
-              {showColumn("Date") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb] whitespace-nowrap">
-                  <InlineInput type="date" value={getVal(apt, 'date')} onChange={(v: string) => handleEditField(apt.id, 'date', v)} />
+              {showColumn("Transport") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb] align-top">
+                  <div className="flex flex-col gap-2 min-w-[200px]">
+                    <div className="flex items-center justify-between gap-2">
+                       <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-12">Type</span>
+                       <div className="flex-1">
+                         <InlineSelect 
+                          value={getVal(apt, 'transportType')} 
+                          onChange={(v: string) => handleEditField(apt.id, 'transportType', v)} 
+                          options={["", "Facility Van", "Ambulance", "Lyft/Uber", "Ambulette", "Private Care", "Others"]}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                       <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-12">R/T</span>
+                       <div className="flex-1">
+                         <InlineSelect 
+                            value={getVal(apt, 'roundTrip')} 
+                            onChange={(v: string) => handleEditField(apt.id, 'roundTrip', v)} 
+                            options={["", "Yes", "No"]}
+                          />
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                       <span className="text-[10px] uppercase text-slate-400 font-bold shrink-0 w-12">Escort</span>
+                       <div className="flex-1">
+                         <InlineSelect 
+                            value={getVal(apt, 'escort')} 
+                            onChange={(v: string) => handleEditField(apt.id, 'escort', v)} 
+                            options={["", "Yes", "No"]}
+                          />
+                        </div>
+                    </div>
+                  </div>
                 </td>
               )}
-              {showColumn("Time") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                  <InlineInput type="time" value={getVal(apt, 'time')} onChange={(v: string) => handleEditField(apt.id, 'time', v)} />
-                </td>
-              )}
-              <td className="px-4 py-3 border-r border-[#d6deeb]">
-                <InlineInput type="time" value={getVal(apt, 'pickUpTime')} onChange={(v: string) => handleEditField(apt.id, 'pickUpTime', v)} />
-              </td>
               {showColumn("Status") && (
                 <td className="px-4 py-3 border-r border-[#d6deeb]">
                   <InlineSelect 
                     value={getVal(apt, 'status')} 
-                    onChange={(v: string) => handleEditField(apt.id, 'status', v)} 
-                    options={["Scheduled", "Completed", "Cancelled", "Pending"]}
+                    onChange={(v: string) => handleStatusChange(apt.id, v)} 
+                    options={["Scheduled", "Completed", "Cancelled", "Discontinued", "Deferred"]}
                   />
                 </td>
               )}
-              {showColumn("Transport") && (
-                <td className="px-4 py-3 border-r border-[#d6deeb]">
-                   <InlineSelect 
-                    value={getVal(apt, 'transportType')} 
-                    onChange={(v: string) => handleEditField(apt.id, 'transportType', v)} 
-                    options={["", "Facility Van", "Ambulance", "Lyft/Uber", "Ambulette", "Private Care", "Others"]}
-                  />
-                </td>
-              )}
-              <td className="px-4 py-3 border-r border-[#d6deeb]">
-                <div className="flex gap-1">
+                    <td className="px-4 py-3 border-r border-[#d6deeb] align-top">
+                <div className="flex flex-col gap-1.5">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const resident = residents.find(
-                        (r) => r.name === apt.residentName,
-                      );
-                      generateAppointmentPDF(apt, resident, currentFacility);
-                    }}
-                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    onClick={(e) => { e.stopPropagation(); onGenerateForm && onGenerateForm(apt, 'Visit Form'); }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
                     title="Generate Visit Form"
                   >
-                    <FileDown size={18} />
+                    <FileText size={12} /> Visit Form
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const resident = residents.find(
-                        (r) => r.name === apt.residentName,
-                      );
-                      generateOutsideAppointmentChecklistPDF(
-                        apt,
-                        resident,
-                        currentFacility,
-                      );
-                    }}
-                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    onClick={(e) => { e.stopPropagation(); onGenerateForm && onGenerateForm(apt, 'Checklist'); }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
                     title="Generate Checklist"
                   >
-                    <ClipboardCheck size={18} />
+                    <ClipboardCheck size={12} /> Checklist
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const resident = residents.find(
-                        (r) => r.name === apt.residentName,
-                      );
-                      generateMedicalClearancePDF(
-                        apt,
-                        resident,
-                        currentFacility,
-                      );
-                    }}
-                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    onClick={(e) => { e.stopPropagation(); onGenerateForm && onGenerateForm(apt, 'Medical Clearance'); }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
                     title="Generate Medical Clearance"
                   >
-                    <FileSignature size={18} />
+                    <ShieldCheck size={12} /> Medical Clearance
                   </button>
                 </div>
               </td>
@@ -3541,23 +3803,9 @@ function WideAppointmentTable({
                   />
                 </td>
               )}
-              <td className="px-4 py-3 border-r border-[#d6deeb]">
-                <InlineSelect 
-                    value={getVal(apt, 'roundTrip')} 
-                    onChange={(v: string) => handleEditField(apt.id, 'roundTrip', v)} 
-                    options={["", "Yes", "No"]}
-                  />
-              </td>
-              <td className="px-4 py-3 border-r border-[#d6deeb]">
-                <InlineSelect 
-                    value={getVal(apt, 'escort')} 
-                    onChange={(v: string) => handleEditField(apt.id, 'escort', v)} 
-                    options={["", "Yes", "No"]}
-                  />
-              </td>
               {showColumn("Notes") && (
-                <td className="px-4 py-3">
-                  <InlineInput value={getVal(apt, 'notes')} onChange={(v: string) => handleEditField(apt.id, 'notes', v)} className="w-[180px]" />
+                <td className="px-4 py-3 align-top min-w-[200px]">
+                  <InlineInput type="textarea" value={getVal(apt, 'notes')} onChange={(v: string) => handleEditField(apt.id, 'notes', v)} className="w-[180px] h-full min-h-[80px]" />
                 </td>
               )}
             </tr>
@@ -3571,6 +3819,47 @@ function WideAppointmentTable({
           </Button>
         </div>
       )}
+      
+      <AnimatePresence>
+        {statusPromptAppt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col"
+            >
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800 text-lg">Update Status</h3>
+              </div>
+              <div className="p-6">
+                <p className="text-sm font-medium text-slate-600 mb-3 block">Reason for changing status to <span className="font-bold text-brand">{statusPromptAppt.status}</span>:</p>
+                <textarea
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all resize-none mb-4"
+                  rows={3}
+                  placeholder="Enter reason..."
+                  value={statusReason}
+                  onChange={(e) => setStatusReason(e.target.value)}
+                />
+                <div className="flex items-center gap-3 justify-end">
+                  <button 
+                    onClick={() => {
+                        setStatusPromptAppt(null);
+                        setStatusReason("");
+                    }} 
+                    className="px-4 py-2 rounded-xl text-slate-500 font-bold hover:bg-slate-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <Button onClick={confirmStatusChange}>
+                    Confirm Status Change
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -3614,7 +3903,7 @@ function AppointmenttLogRow({
             </span>
             <span>•</span>
             <span className="inline-flex items-center gap-1">
-              <Clock size={12} /> {appointment.time}
+              <Clock size={12} /> {formatTimeAMPM(appointment.time)}
             </span>
             <span>•</span>
             <span>{doctorName}</span>
@@ -3740,6 +4029,18 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-black text-slate-800">{value}</p>
     </div>
   );
+}
+
+export function formatTimeAMPM(timeStr?: string) {
+  if (!timeStr) return "N/A";
+  const [hours, minutes] = timeStr.split(':');
+  if (!hours || !minutes) return timeStr;
+  const hp = parseInt(hours, 10);
+  if (isNaN(hp)) return timeStr;
+  const ampm = hp >= 12 ? 'PM' : 'AM';
+  const h12 = hp % 12 || 12;
+  const paddedH12 = h12.toString().padStart(2, '0');
+  return `${paddedH12}:${minutes} ${ampm}`;
 }
 
 function formatShortDate(iso: string) {

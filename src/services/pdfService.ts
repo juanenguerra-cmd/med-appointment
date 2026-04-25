@@ -178,8 +178,8 @@ export const generateFullReport = (
     { align: "right" },
   );
 
-  // Map column names to appointment keys
-  const columnMap: Record<string, keyof Appointment> = {
+  // Map column names to appointment keys or formatter functions
+  const columnMap: Record<string, keyof Appointment | ((apt: Appointment) => string)> = {
     "Resident Name": "residentName",
     Date: "date",
     Time: "time",
@@ -202,8 +202,11 @@ export const generateFullReport = (
   const head = columns;
   const body = appointments.map((apt) => {
     return columns.map((col) => {
-      const key = columnMap[col];
-      return key ? apt[key] || "—" : "—";
+      const keyOrFn = columnMap[col];
+      if (typeof keyOrFn === "function") {
+         return keyOrFn(apt) || "—";
+      }
+      return keyOrFn ? (apt[keyOrFn as keyof Appointment] as string) || "—" : "—";
     });
   });
 
@@ -596,6 +599,7 @@ export const generateOutsideAppointmentChecklistPDF = (
 
 export const generateMedicalClearancePDF = (
   appointment: Appointment,
+  type: "Ortho Visit" | "Regular Visit",
   resident?: Resident,
   facility?: Facility,
 ) => {
@@ -618,7 +622,7 @@ export const generateMedicalClearancePDF = (
   currY += 30;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("MEDICAL CLEARANCE FOR PROCEDURE/TREATMENT", width / 2, currY, { align: "center" });
+  doc.text(`MEDICAL CLEARANCE FOR ${type}`, width / 2, currY, { align: "center" });
   
   currY += 30;
   

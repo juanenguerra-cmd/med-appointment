@@ -21,6 +21,12 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+// Global error handler to always return JSON
+app.onError((err, c) => {
+  console.error("Hono error:", err);
+  return c.json({ success: false, error: err.message || 'Internal Server Error' }, 500);
+});
+
 // Basic health check
 app.get('/health', async (c) => {
   const dbCheck = await c.env.DB.prepare("SELECT 1 as ok").first();
