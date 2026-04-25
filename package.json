@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
+    "dev": "mkdir -p dist && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
     "build": "vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
@@ -15,6 +15,7 @@
     "@google/genai": "^1.29.0",
     "@hono/vite-dev-server": "^0.25.3",
     "concurrently": "^9.2.1",
+    "date-fns": "^4.1.0",
     "hono": "^4.12.15",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

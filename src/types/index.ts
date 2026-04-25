@@ -49,16 +49,26 @@ export interface Appointment {
   
   // Transport Details
   transportType: string;
+  transportTypeOther?: string;
   transportCompany: string;
   payerForRide: string;
+  payerForRideOther?: string;
   roundTrip: string;
   escort: string;
+  escortDetails?: string;
   
   notes: string;
   weight?: string;
   height?: string;
   nurseCompleting?: string;
   reasonConsultation?: string;
+  consultReason?: string;
+  ambulating?: boolean;
+  wheelchair?: boolean;
+  withLift?: boolean;
+  recliner?: boolean;
+  oxygen?: boolean;
+  bariatric?: boolean;
 }
 
 export interface MedicalRecord {
@@ -87,4 +97,14 @@ export interface Resident {
   diagnosis: string;
   lastVisit?: string;
   notes?: string;
+}
+
+export type UserRole = 'admin' | 'staff';
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  password?: string;
 }

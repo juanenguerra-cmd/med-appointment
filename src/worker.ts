@@ -78,17 +78,73 @@ app.delete('/facilities/:id', async (c) => {
 
 // Users and Permissions API
 app.get('/users', async (c) => {
-  const { results } = await c.env.DB.prepare("SELECT * FROM users ORDER BY fullName ASC").all();
+  const { results } = await c.env.DB.prepare("SELECT id, email, fullName, role, lastLogin FROM users ORDER BY fullName ASC").all();
   return c.json(results);
+});
+
+app.post('/login', async (c) => {
+  const { email, password } = await c.req.json() as any;
+  const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first() as any;
+  
+  if (!user) {
+    return c.json({ success: false, error: "User not found" }, 404);
+  }
+
+  // If password is not set yet, they need to create one (first time login)
+  if (!user.password) {
+    return c.json({ success: false, needsPasswordSetup: true, userId: user.id }, 200);
+  }
+
+  if (user.password !== password) {
+    return c.json({ success: false, error: "Invalid password" }, 401);
+  }
+
+  await c.env.DB.prepare("UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(user.id).run();
+
+  const { password: _, ...safeUser } = user;
+  return c.json({ success: true, user: safeUser });
+});
+
+app.post('/setup-password', async (c) => {
+  const { userId, password } = await c.req.json() as any;
+  await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(password, userId).run();
+  
+  const user = await c.env.DB.prepare("SELECT id, email, fullName, role, lastLogin FROM users WHERE id = ?").bind(userId).first();
+  return c.json({ success: true, user });
 });
 
 app.post('/users', async (c) => {
   const user = await c.req.json() as any;
   await c.env.DB.prepare(`
-    INSERT INTO users (id, email, fullName, role)
-    VALUES (?, ?, ?, ?)
-  `).bind(toNull(user.id), toNull(user.email), toNull(user.fullName), toNull(user.role)).run();
-  return c.json({ success: true, user }, 201);
+    INSERT INTO users (id, email, fullName, role, password)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(toNull(user.id), toNull(user.email), toNull(user.fullName), toNull(user.role), toNull(user.password)).run();
+  
+  const { password: _, ...safeUser } = user;
+  return c.json({ success: true, user: safeUser }, 201);
+});
+
+app.put('/users/:id', async (c) => {
+  const userId = c.req.param('id');
+  const user = await c.req.json() as any;
+  
+  if (user.password !== undefined) {
+    if (user.password === null) {
+      await c.env.DB.prepare(`
+        UPDATE users SET email = ?, fullName = ?, role = ?, password = NULL WHERE id = ?
+      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), userId).run();
+    } else {
+      await c.env.DB.prepare(`
+        UPDATE users SET email = ?, fullName = ?, role = ?, password = ? WHERE id = ?
+      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), toNull(user.password), userId).run();
+    }
+  } else {
+    await c.env.DB.prepare(`
+      UPDATE users SET email = ?, fullName = ?, role = ? WHERE id = ?
+    `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), userId).run();
+  }
+
+  return c.json({ success: true });
 });
 
 app.get('/users/:id/facilities', async (c) => {
@@ -177,16 +233,19 @@ app.post('/appointments', async (c) => {
       contactNumber, schedulingDate, referralDate, status, date, 
       time, pickUpTime, type, description, serviceInHouse, reasonSendOut, 
       transportType, transportCompany, payerForRide, roundTrip, escort, oxygen, notes, facilityId,
-      weight, height, nurseCompleting, reasonConsultation
+      weight, height, nurseCompleting, reasonConsultation, transportTypeOther, payerForRideOther, escortDetails, consultReason,
+      ambulating, wheelchair, withLift, recliner, bariatric
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     toNull(apt.id), toNull(apt.origin), toNull(apt.residentName), toNull(apt.unit), toNull(apt.roomNumber), toNull(apt.providerName),
     toNull(apt.location), toNull(apt.contactNumber), toNull(apt.schedulingDate), toNull(apt.referralDate),
     toNull(apt.status), toNull(apt.date), toNull(apt.time), toNull(apt.pickUpTime), toNull(apt.type), toNull(apt.description),
     toNull(apt.serviceInHouse), toNull(apt.reasonSendOut), toNull(apt.transportType), toNull(apt.transportCompany),
     toNull(apt.payerForRide), toNull(apt.roundTrip), toNull(apt.escort), toNull(apt.oxygen), toNull(apt.notes), toNull(apt.facilityId),
-    toNull(apt.weight), toNull(apt.height), toNull(apt.nurseCompleting), toNull(apt.reasonConsultation)
+    toNull(apt.weight), toNull(apt.height), toNull(apt.nurseCompleting), toNull(apt.reasonConsultation),
+    toNull(apt.transportTypeOther), toNull(apt.payerForRideOther), toNull(apt.escortDetails), toNull(apt.consultReason),
+    toNull(apt.ambulating), toNull(apt.wheelchair), toNull(apt.withLift), toNull(apt.recliner), toNull(apt.bariatric)
   ).run();
   return c.json({ success: true, appointment: apt }, 201);
 });

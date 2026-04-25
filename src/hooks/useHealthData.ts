@@ -4,7 +4,10 @@ import { Appointment, Doctor, MedicalRecord, Resident, Facility } from '../types
 export function useHealthData() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>({ id: 'admin-user-1', email: 'juan.enguerra.secure@gmail.com', role: 'admin' });
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [currentFacilityId, setCurrentFacilityId] = useState<string | null>(() => {
     return localStorage.getItem('currentFacilityId');
   });
@@ -14,7 +17,15 @@ export function useHealthData() {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Persistence for currentFacilityId
+  // Persistence for user and facility
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (currentFacilityId) {
       localStorage.setItem('currentFacilityId', currentFacilityId);
@@ -23,6 +34,10 @@ export function useHealthData() {
 
   // Fetch Facilities initially
   useEffect(() => {
+    if (!currentUser) {
+      setIsLoaded(true);
+      return;
+    }
     async function fetchFacilities() {
       try {
         // Fetch restricted facilities for current user
@@ -39,17 +54,20 @@ export function useHealthData() {
       }
     }
     fetchFacilities();
-  }, [currentUser.id]);
+  }, [currentUser?.id]);
 
   useEffect(() => {
-    if (currentUser.role === 'admin') {
+    if (currentUser?.role === 'admin') {
       fetch('/api/users').then(res => res.json()).then(setUsers).catch(console.error);
     }
-  }, [currentUser.role]);
+  }, [currentUser?.role]);
 
   // Main Data Fetch dependent on currentFacilityId
   useEffect(() => {
-    if (!currentFacilityId) return;
+    if (!currentFacilityId || !currentUser) {
+      if (!currentUser) setIsLoaded(true);
+      return;
+    }
 
     async function fetchData(retries = 3) {
       try {
@@ -151,6 +169,16 @@ export function useHealthData() {
       body: JSON.stringify(newUser)
     });
     return id;
+  };
+
+  const updateUser = async (id: string, user: any) => {
+    const updatedUser = { ...user, id };
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updatedUser } : u));
+    await fetch(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedUser)
+    });
   };
 
   const updateUserPermissions = async (userId: string, facilityIds: string[]) => {
@@ -303,6 +331,32 @@ export function useHealthData() {
     setRecords(prev => [...prev, newRecord]);
   };
 
+  const login = async (email: string, password?: string) => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    return await res.json();
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    setCurrentFacilityId(null);
+    setFacilities([]);
+    setAppointments([]);
+    setResidents([]);
+  };
+
+  const setupPassword = async (userId: string, password: string) => {
+    const res = await fetch('/api/setup-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, password })
+    });
+    return await res.json();
+  };
+
   return {
     facilities,
     currentFacilityId,
@@ -312,7 +366,12 @@ export function useHealthData() {
     deleteFacility,
     users,
     currentUser,
+    setCurrentUser,
+    login,
+    logout,
+    setupPassword,
     addUser,
+    updateUser,
     updateUserPermissions,
     fetchUserPermissions,
     appointments,

@@ -10,12 +10,14 @@ import {
   generateFullReport,
   generateTransportSchedulePDF,
   generateOutsideAppointmentChecklistPDF,
+  generateMedicalClearancePDF,
 } from "./services/pdfService";
 import {
   Calendar,
   Users,
   ClipboardList,
   ClipboardCheck,
+  FileSignature,
   Plus,
   Clock,
   MapPin,
@@ -48,7 +50,10 @@ import {
 import { useHealthData } from "./hooks/useHealthData";
 import { Card } from "./components/Card";
 import { Button } from "./components/Button";
+import { LockScreen } from "./components/LockScreen";
+import { AppointmentCalendar } from "./components/AppointmentCalendar";
 import { Appointment, Resident, Facility } from "./types";
+import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 
 type Tab =
   | "dashboard"
@@ -157,6 +162,7 @@ export default function App() {
     escort: "",
     notes: "",
     reasonConsultation: "",
+    consultReason: "",
   });
 
   const {
@@ -168,7 +174,12 @@ export default function App() {
     deleteFacility,
     users,
     currentUser,
+    setCurrentUser,
+    login,
+    logout,
+    setupPassword,
     addUser,
+    updateUser,
     updateUserPermissions,
     fetchUserPermissions,
     appointments,
@@ -221,6 +232,16 @@ export default function App() {
     null,
   );
   const [isResidentDetailOpen, setIsResidentDetailOpen] = useState(false);
+
+  if (!currentUser) {
+    return (
+      <LockScreen 
+        onLogin={login}
+        onSetupPassword={setupPassword}
+        onLoginSuccess={setCurrentUser}
+      />
+    );
+  }
 
   const handleParseCensus = () => {
     if (!censusPasteText.trim()) return;
@@ -566,6 +587,7 @@ export default function App() {
       escort: "",
       notes: "",
       reasonConsultation: "",
+      consultReason: "",
     });
     setShowOtherSpecialtyInput(false);
     setIsAddModalOpen(true);
@@ -782,31 +804,35 @@ export default function App() {
               icon={<Users size={20} />}
               label="Census"
             />
-            <NavItem
-              active={activeTab === "help"}
-              onClick={() => goToTab("help")}
-              icon={<ShieldCheck size={20} />}
-              label="Help & Info"
-            />
+            {currentUser?.role === "admin" && (
+              <NavItem
+                active={activeTab === "help"}
+                onClick={() => goToTab("help")}
+                icon={<ShieldCheck size={20} />}
+                label="Help & Info"
+              />
+            )}
           </nav>
 
           <div className="p-4 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)]">
             <div className="rounded-2xl bg-white border border-[#d6deeb] p-4 shadow-[0_4px_12px_rgba(11,42,111,.08)]">
-              <div className="flex items-center gap-2 text-brand font-black text-xs uppercase tracking-wider">
-                <ShieldCheck size={16} /> Local Data
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-brand font-black text-[10px] uppercase tracking-wider">
+                  <ShieldCheck size={14} /> session active
+                </div>
+                <button 
+                  onClick={logout}
+                  className="text-[10px] font-black text-red-500 hover:text-red-600 uppercase tracking-widest"
+                >
+                  Logout
+                </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                Current build keeps your existing localStorage workflow intact
-                while improving the visual layout.
+              <p className="text-[11px] font-bold text-slate-700">
+                {currentUser?.fullName}
               </p>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="w-full mt-3"
-                onClick={() => goToTab("appointments")}
-              >
-                Open Log
-              </Button>
+              <p className="text-[10px] text-slate-500 uppercase tracking-tight">
+                {currentUser?.role === 'admin' ? 'Administrator' : 'Staff Member'} Mode • {facilities.length} Fac.
+              </p>
             </div>
           </div>
         </div>
@@ -893,11 +919,13 @@ export default function App() {
               onClick={() => goToTab("census")}
               label="Patient Census"
             />
-            <TopTab
-              active={activeTab === "help"}
-              onClick={() => goToTab("help")}
-              label="Guide & Info"
-            />
+            {currentUser?.role === "admin" && (
+              <TopTab
+                active={activeTab === "help"}
+                onClick={() => goToTab("help")}
+                label="Guide & Info"
+              />
+            )}
           </div>
         </div>
 
@@ -949,41 +977,14 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <Card
-                  title="Planned Appointments"
-                  subtitle={`${upcomingAppointments.length} item${upcomingAppointments.length === 1 ? "" : "s"} scheduled`}
-                  className="xl:col-span-2"
-                >
-                  <div className="space-y-3">
-                    {upcomingAppointments.length > 0 ? (
-                      upcomingAppointments.map((apt) => (
-                        <AppointmentItem
-                          key={apt.id}
-                          appointment={apt}
-                          residents={residents}
-                          doctorName={getDoctorNameDisplay(apt)}
-                          currentFacility={currentFacility}
-                          onClick={() => handleOpenEdit(apt)}
-                        />
-                      ))
-                    ) : (
-                      <EmptyState
-                        icon={<Calendar size={44} />}
-                        title="No upcoming appointments"
-                        text="Use Add Appointment to start a new entry."
-                        action={
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={handleOpenAdd}
-                          >
-                            New Record
-                          </Button>
-                        }
-                      />
-                    )}
-                  </div>
-                </Card>
+                <div className="xl:col-span-2 min-h-[500px]">
+                  <AppointmentCalendar 
+                    appointments={appointments}
+                    residents={residents}
+                    getDoctorNameDisplay={getDoctorNameDisplay}
+                    onAppointmentClick={handleOpenEdit}
+                  />
+                </div>
 
                 <div className="space-y-6">
                   <Card title="Quick Actions" subtitle="Common tracker tasks">
@@ -1257,40 +1258,39 @@ export default function App() {
                     title="Column Selection"
                     subtitle="Choose which data tags to include in your output."
                   >
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {[
-                        "Resident Name",
-                        "Date",
-                        "Time",
-                        "Provider",
-                        "Specialty",
-                        "Transport",
-                        "Status",
-                        "Origin",
-                        "Room #",
-                        "Unit",
-                        "Notes",
-                        "Payer",
-                        "Weight",
-                        "Height",
-                      ].map((col) => (
-                        <button
-                          key={col}
-                          onClick={() => toggleReportColumn(col)}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-black transition-all ${
-                            reportFilters.columns.includes(col)
-                              ? "bg-brand text-white border-transparent"
-                              : "bg-white text-slate-500 border-[#d6deeb] hover:border-brand/40"
-                          }`}
-                        >
-                          {reportFilters.columns.includes(col) ? (
-                            <CheckSquare size={16} />
-                          ) : (
-                            <Square size={16} />
-                          )}
-                          {col}
-                        </button>
-                      ))}
+                    <div className="space-y-3">
+                      <label htmlFor="report-columns" className="block text-sm font-medium text-slate-700">Select Columns (Hold Ctrl/Cmd to select multiple)</label>
+                      <select
+                        id="report-columns"
+                        multiple
+                        value={reportFilters.columns}
+                        onChange={(e) => {
+                          const options = (Array.from(e.target.selectedOptions) as HTMLOptionElement[]).map((option) => option.value);
+                          setReportFilters(prev => ({ ...prev, columns: options }));
+                        }}
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm min-h-[200px]"
+                      >
+                        {[
+                          "Resident Name",
+                          "Date",
+                          "Time",
+                          "Provider",
+                          "Specialty",
+                          "Transport",
+                          "Status",
+                          "Origin",
+                          "Room #",
+                          "Unit",
+                          "Notes",
+                          "Payer",
+                          "Weight",
+                          "Height",
+                        ].map((col) => (
+                          <option key={col} value={col} className="p-2">
+                            {col}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </Card>
 
@@ -1705,7 +1705,7 @@ export default function App() {
               </div>
             </motion.section>
           )}
-          {activeTab === "help" && (
+          {activeTab === "help" && currentUser?.role === "admin" && (
             <motion.section
               key="help"
               initial={{ opacity: 0, y: 12 }}
@@ -2312,8 +2312,34 @@ export default function App() {
                       />
                     </FormField>
                   </div>
-                  <div className="mt-4">
-                    <FormField label="Reason for Consultation">
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Consult Reason (Admin)">
+                      <select
+                        value={newAppt.consultReason || ""}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            consultReason: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
+                        <option value="">— Select Statistical Reason —</option>
+                        {newAppt.type && CONSULT_REASONS_BY_SPECIALTY[newAppt.type] ? (
+                          CONSULT_REASONS_BY_SPECIALTY[newAppt.type].map((reason, idx) => (
+                            <option key={idx} value={reason}>
+                              {reason}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>Select a valid specialty first</option>
+                        )}
+                        {(!newAppt.type || !CONSULT_REASONS_BY_SPECIALTY[newAppt.type]) && (
+                          <option value="Other">Other</option>
+                        )}
+                      </select>
+                    </FormField>
+                    <FormField label="Reason for Consultation (Notes)">
                       <input
                         type="text"
                         value={newAppt.reasonConsultation || ""}
@@ -2324,7 +2350,7 @@ export default function App() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
-                        placeholder="Reason for the outside consult"
+                        placeholder="Additional details for the outside consult"
                       />
                     </FormField>
                   </div>
@@ -2373,6 +2399,29 @@ export default function App() {
                       />
                     </FormField>
                   </div>
+                  <div className="mt-5 pt-5 border-t border-[#d6deeb] flex flex-wrap gap-x-6 gap-y-3">
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.ambulating} onChange={e => setNewAppt({...newAppt, ambulating: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Ambulating
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.wheelchair} onChange={e => setNewAppt({...newAppt, wheelchair: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Wheelchair
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.withLift} onChange={e => setNewAppt({...newAppt, withLift: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> With lift
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.recliner} onChange={e => setNewAppt({...newAppt, recliner: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Recliner
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={newAppt.escort === "Yes"} onChange={e => setNewAppt({...newAppt, escort: e.target.checked ? "Yes" : "No"})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Escort
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.oxygen} onChange={e => setNewAppt({...newAppt, oxygen: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Oxygen
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[#475569] font-medium cursor-pointer">
+                      <input type="checkbox" checked={!!newAppt.bariatric} onChange={e => setNewAppt({...newAppt, bariatric: e.target.checked})} className="w-4 h-4 rounded border-[#d6deeb] text-brand focus:ring-brand-2/20" /> Bariatric
+                    </label>
+                  </div>
                 </section>
 
                 {/* Transport Section */}
@@ -2381,23 +2430,46 @@ export default function App() {
                     <Database size={16} /> Transport & Logistics
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <FormField label="Type of Transport">
-                      <select
-                        value={newAppt.transportType}
-                        onChange={(e) =>
-                          setNewAppt({
-                            ...newAppt,
-                            transportType: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
-                      >
-                        <option value="">— Select —</option>
-                        <option value="Facility Van">Facility Van</option>
-                        <option value="Ambulance">Ambulance</option>
-                        <option value="Lyft/Uber">Lyft/Uber</option>
-                      </select>
-                    </FormField>
+                    <div className="flex flex-col gap-3">
+                      <FormField label="Type of Transport">
+                        <select
+                          value={newAppt.transportType}
+                          onChange={(e) =>
+                            setNewAppt({
+                              ...newAppt,
+                              transportType: e.target.value,
+                              ...(e.target.value !== "Others" ? { transportTypeOther: "" } : {})
+                            })
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                        >
+                          <option value="">— Select —</option>
+                          <option value="Facility Van">Facility Van</option>
+                          <option value="Ambulance">Ambulance</option>
+                          <option value="Lyft/Uber">Lyft/Uber</option>
+                          <option value="Ambulette">Ambulette</option>
+                          <option value="Private Care">Private Care</option>
+                          <option value="Others">Others</option>
+                        </select>
+                      </FormField>
+                      {newAppt.transportType === "Others" && (
+                        <FormField label="Other Transport Type">
+                          <input
+                            type="text"
+                            value={newAppt.transportTypeOther || ""}
+                            onChange={(e) =>
+                              setNewAppt({
+                                ...newAppt,
+                                transportTypeOther: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                            placeholder="Enter transport type"
+                          />
+                        </FormField>
+                      )}
+                    </div>
+                    
                     <FormField label="Transport Company">
                       <input
                         type="text"
@@ -2412,23 +2484,46 @@ export default function App() {
                         placeholder="Vendor name"
                       />
                     </FormField>
-                    <FormField label="Payer for Ride">
-                      <select
-                        value={newAppt.payerForRide}
-                        onChange={(e) =>
-                          setNewAppt({
-                            ...newAppt,
-                            payerForRide: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
-                      >
-                        <option value="">— Select —</option>
-                        <option value="Medicare">Medicare</option>
-                        <option value="Facility">Facility</option>
-                        <option value="Resident">Resident</option>
-                      </select>
-                    </FormField>
+
+                    <div className="flex flex-col gap-3">
+                      <FormField label="Payer for Ride">
+                        <select
+                          value={newAppt.payerForRide}
+                          onChange={(e) =>
+                            setNewAppt({
+                              ...newAppt,
+                              payerForRide: e.target.value,
+                              ...(e.target.value !== "Others" ? { payerForRideOther: "" } : {})
+                            })
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                        >
+                          <option value="">— Select —</option>
+                          <option value="Medicaid">Medicaid</option>
+                          <option value="Medicare">Medicare</option>
+                          <option value="Facility">Facility</option>
+                          <option value="Resident">Resident</option>
+                          <option value="Others">Others</option>
+                        </select>
+                      </FormField>
+                      {newAppt.payerForRide === "Others" && (
+                        <FormField label="Other Payer">
+                          <input
+                            type="text"
+                            value={newAppt.payerForRideOther || ""}
+                            onChange={(e) =>
+                              setNewAppt({
+                                ...newAppt,
+                                payerForRideOther: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                            placeholder="Enter payer details"
+                          />
+                        </FormField>
+                      )}
+                    </div>
+                    
                     <FormField label="Round Trip?">
                       <select
                         value={newAppt.roundTrip}
@@ -2442,19 +2537,35 @@ export default function App() {
                         <option value="No">No</option>
                       </select>
                     </FormField>
-                    <FormField label="Escort?">
-                      <select
-                        value={newAppt.escort}
-                        onChange={(e) =>
-                          setNewAppt({ ...newAppt, escort: e.target.value })
-                        }
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
-                      >
-                        <option value="">—</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    </FormField>
+
+                    <div className="flex flex-col gap-3">
+                      <FormField label="Escort?">
+                        <select
+                          value={newAppt.escort}
+                          onChange={(e) =>
+                            setNewAppt({ ...newAppt, escort: e.target.value, ...(e.target.value === "No" ? { escortDetails: "" } : {}) })
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                        >
+                          <option value="">—</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </FormField>
+                      {newAppt.escort === "Yes" && (
+                        <FormField label="Escort Details">
+                          <input
+                            type="text"
+                            value={newAppt.escortDetails || ""}
+                            onChange={(e) =>
+                              setNewAppt({ ...newAppt, escortDetails: e.target.value })
+                            }
+                            className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                            placeholder="Enter escort info..."
+                          />
+                        </FormField>
+                      )}
+                    </div>
                   </div>
                 </section>
 
@@ -2677,6 +2788,20 @@ export default function App() {
                                 >
                                   <ClipboardCheck size={14} />
                                 </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateMedicalClearancePDF(
+                                      apt,
+                                      selectedResident,
+                                      currentFacility,
+                                    );
+                                  }}
+                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                  title="Medical Clearance Form"
+                                >
+                                  <FileSignature size={14} />
+                                </button>
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
                                     apt.status === "Completed"
@@ -2830,12 +2955,21 @@ export default function App() {
                   onSubmit={async (e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
+                    const password = formData.get("password") as string;
                     let uId = editingUser?.id;
                     if (!uId) {
                       uId = await addUser({
                         fullName: formData.get("fullName"),
                         email: formData.get("email"),
                         role: formData.get("role"),
+                        password: password || undefined,
+                      });
+                    } else {
+                      await updateUser(uId, {
+                        fullName: formData.get("fullName"),
+                        email: formData.get("email"),
+                        role: formData.get("role"),
+                        ...(password ? { password } : {}),
                       });
                     }
                     await updateUserPermissions(uId, userFacPermissions);
@@ -2868,18 +3002,31 @@ export default function App() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">
-                      Role
-                    </label>
-                    <select
-                      name="role"
-                      defaultValue={editingUser?.role || "staff"}
-                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
-                    >
-                      <option value="staff">Staff</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                        Role
+                      </label>
+                      <select
+                        name="role"
+                        defaultValue={editingUser?.role || "staff"}
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
+                      >
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                        {editingUser ? "Reset Password (Optional)" : "Initial Password (Optional)"}
+                      </label>
+                      <input
+                        name="password"
+                        type="text"
+                        placeholder={editingUser ? "Leave blank to keep current" : "Leave blank for user to setup"}
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-black uppercase text-slate-500 mb-4">
@@ -3070,6 +3217,23 @@ function AppointmentItem({
           title="Download Checklist"
         >
           <ClipboardCheck size={14} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const res = residents.find(
+              (r) => r.name === appointment.residentName,
+            );
+            generateMedicalClearancePDF(
+              appointment,
+              res,
+              currentFacility,
+            );
+          }}
+          className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm ml-1"
+          title="Download Medical Clearance"
+        >
+          <FileSignature size={14} />
         </button>
       </div>
       <DateBadge date={date} />
@@ -3274,7 +3438,8 @@ function WideAppointmentTable({
               <td className="px-4 py-3 border-r border-[#d6deeb]">
                 <div className="flex flex-col gap-1">
                   <InlineInput value={getVal(apt, 'description')} onChange={(v: string) => handleEditField(apt.id, 'description', v)} placeholder="Description" />
-                  <InlineInput value={getVal(apt, 'reasonConsultation')} onChange={(v: string) => handleEditField(apt.id, 'reasonConsultation', v)} placeholder="Consultation reason" className="opacity-70 italic text-[10px]" />
+                  <InlineInput value={getVal(apt, 'consultReason')} onChange={(v: string) => handleEditField(apt.id, 'consultReason', v)} placeholder="Admin Consult Reason" className="text-[10px] text-brand" />
+                  <InlineInput value={getVal(apt, 'reasonConsultation')} onChange={(v: string) => handleEditField(apt.id, 'reasonConsultation', v)} placeholder="Consultation reason notes" className="opacity-70 italic text-[10px]" />
                 </div>
               </td>
               {showColumn("Provider") && (
@@ -3312,7 +3477,7 @@ function WideAppointmentTable({
                    <InlineSelect 
                     value={getVal(apt, 'transportType')} 
                     onChange={(v: string) => handleEditField(apt.id, 'transportType', v)} 
-                    options={["", "Car", "Ambulette", "Ambulance"]}
+                    options={["", "Facility Van", "Ambulance", "Lyft/Uber", "Ambulette", "Private Care", "Others"]}
                   />
                 </td>
               )}
@@ -3348,6 +3513,23 @@ function WideAppointmentTable({
                   >
                     <ClipboardCheck size={18} />
                   </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const resident = residents.find(
+                        (r) => r.name === apt.residentName,
+                      );
+                      generateMedicalClearancePDF(
+                        apt,
+                        resident,
+                        currentFacility,
+                      );
+                    }}
+                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                    title="Generate Medical Clearance"
+                  >
+                    <FileSignature size={18} />
+                  </button>
                 </div>
               </td>
               {showColumn("Payer") && (
@@ -3355,7 +3537,7 @@ function WideAppointmentTable({
                   <InlineSelect 
                     value={getVal(apt, 'payerForRide')} 
                     onChange={(v: string) => handleEditField(apt.id, 'payerForRide', v)} 
-                    options={["", "Medicaid", "Medicare", "Private", "Facility"]}
+                    options={["", "Medicaid", "Medicare", "Facility", "Resident", "Others"]}
                   />
                 </td>
               )}
@@ -3438,13 +3620,15 @@ function AppointmenttLogRow({
             <span>{doctorName}</span>
           </p>
           {(appointment.description ||
+            appointment.consultReason ||
             appointment.reasonConsultation ||
             appointment.notes) && (
             <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic opacity-80">
               {appointment.description && `${appointment.description}`}
+              {appointment.consultReason && ` - ${appointment.consultReason}`}
               {appointment.reasonConsultation &&
                 ` - ${appointment.reasonConsultation}`}
-              {(appointment.description || appointment.reasonConsultation) &&
+              {(appointment.description || appointment.consultReason || appointment.reasonConsultation) &&
               appointment.notes
                 ? ": "
                 : ""}

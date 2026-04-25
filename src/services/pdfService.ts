@@ -74,7 +74,7 @@ export const generateAppointmentPDF = (
       ["Date & Time", `${appointment.date} at ${appointment.time}`],
       [
         "Transport",
-        `${appointment.transportType} (${appointment.transportCompany})`,
+        `${appointment.transportType === 'Others' && appointment.transportTypeOther ? appointment.transportTypeOther : appointment.transportType} ${appointment.transportCompany ? `(${appointment.transportCompany})` : ''}`,
       ],
       [
         "Reason for Visit",
@@ -185,7 +185,10 @@ export const generateFullReport = (
     Time: "time",
     Provider: "providerName",
     Specialty: "type",
-    Transport: "transportType",
+    "Transport": (apt: Appointment) => {
+      const type = apt.transportType === "Others" && apt.transportTypeOther ? apt.transportTypeOther : apt.transportType;
+      return type ? `${type} ${apt.transportCompany ? `(${apt.transportCompany})` : ''}` : "";
+    },
     Status: "status",
     Origin: "origin" as any,
     "Room #": "roomNumber",
@@ -289,9 +292,9 @@ export const generateTransportSchedulePDF = (
       apt.residentName,
       apt.time,
       apt.pickUpTime || "—",
-      `${apt.transportType || ""}\n${apt.transportCompany || ""}`,
+      `${apt.transportType === 'Others' && apt.transportTypeOther ? apt.transportTypeOther : (apt.transportType || "")}\n${apt.transportCompany || ""}`,
       details,
-      apt.escort || "—",
+      apt.escort === "Yes" && apt.escortDetails ? `Yes: ${apt.escortDetails}` : (apt.escort || "—"),
       apt.notes || "",
     ];
   });
@@ -351,7 +354,7 @@ export const generateOutsideAppointmentChecklistPDF = (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.text(
-    `[ ${facility?.name.toUpperCase() || "FACILITY NAME"} ]`,
+    ` ${facility?.name.toUpperCase() || "FACILITY NAME"} `,
     width / 2,
     currY,
     { align: "center" },
@@ -439,11 +442,15 @@ export const generateOutsideAppointmentChecklistPDF = (
   doc.line(margin + 200, currY + 2, width - margin, currY + 2);
   currY += 16;
 
+  const getCb = (isTrue?: boolean | string) => isTrue && isTrue !== "No" ? "[X]" : "[ ]";
+  
+  const q1Sub = `${getCb(appointment.ambulating)} Ambulating  ${getCb(appointment.wheelchair)} Wheelchair  ${getCb(appointment.withLift)} With lift  ${getCb(appointment.recliner)} Recliner  ${getCb(appointment.escort === "Yes")} Escort  ${getCb(appointment.oxygen)} Oxygen  ${getCb(appointment.bariatric)} Bariatric`;
+
   // --- Questions Table ---
   const tableData = [
     {
       q: "1. Check all that apply:",
-      sub: "[] Ambulating  [] Wheelchair  [] With lift  [] Recliner  [] Escort  [] Oxygen  [] Bariatric",
+      sub: q1Sub,
     },
     {
       q: "2. Can the service or work-up be provided inside the facility?",
@@ -586,3 +593,156 @@ export const generateOutsideAppointmentChecklistPDF = (
     `Checklist_${appointment.residentName.replace(/\s+/g, "_")}_${appointment.date}.pdf`,
   );
 };
+
+export const generateMedicalClearancePDF = (
+  appointment: Appointment,
+  resident?: Resident,
+  facility?: Facility,
+) => {
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const width = doc.internal.pageSize.getWidth();
+  const margin = 50;
+  let currY = 50;
+
+  // Header Title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text(facility?.name.toUpperCase() || "FACILITY NAME", width / 2, currY, { align: "center" });
+  
+  currY += 15;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const addressLine = facility?.address || "Facility Address";
+  doc.text(addressLine, width / 2, currY, { align: "center" });
+  
+  currY += 30;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("MEDICAL CLEARANCE FOR PROCEDURE/TREATMENT", width / 2, currY, { align: "center" });
+  
+  currY += 30;
+  
+  // Basic Info Line
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.text("Resident/Patient Name:", margin, currY);
+  const resName = resident ? `${resident.firstName} ${resident.lastName}` : appointment.residentName || "";
+  doc.text(resName, margin + 130, currY);
+  doc.line(margin + 125, currY + 2, margin + 300, currY + 2); // underline name
+  
+  doc.text("Medical Record #", margin + 305, currY);
+  const mrn = resident?.mrn || resident?.id || "";
+  doc.text(mrn, margin + 400, currY);
+  doc.line(margin + 395, currY + 2, width - margin, currY + 2); // underline MRN
+  
+  currY += 20;
+
+  let dob = "";
+  if (resident?.notes) {
+    const dobMatch = resident.notes.match(/DOB:\s*([^\s|]+)/i);
+    if (dobMatch) dob = dobMatch[1].trim();
+  }
+  const age = resident?.age && resident.age !== "—" ? resident.age : "___";
+  const gender = resident?.sex && resident.sex !== "—" ? resident.sex : "___";
+  
+  doc.text(`Date of Birth: ${dob || "________________"}    Age: ${age}    Gender: ${gender}`, margin + 130, currY);
+  
+  currY += 20;
+  
+  const allergies = resident?.allergies && resident.allergies !== "—" ? resident.allergies : "";
+  doc.text("Allergies:", margin, currY);
+  doc.text(allergies, margin + 60, currY);
+  doc.line(margin + 55, currY + 2, width - margin, currY + 2);
+  
+  currY += 25;
+  
+  // Proposed Procedure or Treatment
+  doc.text("Proposed Procedure or Treatment:", margin, currY);
+  currY += 20;
+  
+  const procedureText = appointment.reasonSendOut || appointment.description || appointment.reasonConsultation || "";
+  const lines = doc.splitTextToSize(procedureText, width - margin * 2 - 10);
+  
+  doc.text(lines, margin + 5, currY);
+  // Lines for procedure
+  doc.line(margin, currY + 5, width - margin, currY + 5);
+  doc.line(margin, currY + 25, width - margin, currY + 25);
+  doc.line(margin, currY + 45, width - margin, currY + 45);
+  doc.line(margin, currY + 65, width - margin, currY + 65);
+  
+  currY += 85;
+  
+  // Anticipated Date of Procedure
+  doc.text("Anticipated Date of Procedure:", margin, currY);
+  doc.text(appointment.date || "", margin + 165, currY);
+  doc.line(margin + 160, currY + 2, margin + 400, currY + 2);
+  
+  currY += 30;
+  
+  // Premedication recommended?
+  doc.text("If approved for procedure/treatment, is premedication recommended?", margin, currY);
+  
+  currY += 20;
+  doc.text("Yes:", margin + 100, currY);
+  doc.line(margin + 130, currY + 2, margin + 180, currY + 2);
+  
+  doc.text("No:", margin + 190, currY);
+  doc.line(margin + 215, currY + 2, margin + 265, currY + 2);
+  
+  currY += 30;
+  
+  doc.text("If yes, please specify:", margin, currY);
+  doc.line(margin, currY + 20, width - margin, currY + 20);
+  
+  currY += 40;
+  
+  // Additional Comments
+  doc.text("Additional Comments:", margin, currY);
+  doc.line(margin, currY + 20, width - margin, currY + 20);
+  doc.line(margin, currY + 40, width - margin, currY + 40);
+  
+  currY += 60;
+  
+  // Consent
+  doc.text("Resident/Patient is able to give informed consent:", margin, currY);
+  doc.text("Yes:", width - margin - 150, currY);
+  doc.line(width - margin - 120, currY + 2, width - margin - 80, currY + 2);
+  
+  doc.text("No:", width - margin - 60, currY);
+  doc.line(width - margin - 40, currY + 2, width - margin, currY + 2);
+  
+  currY += 30;
+  // Contraindication
+  doc.text("There is no medical contraindication to the above procedure or treatment:", margin, currY);
+  currY += 20;
+  doc.text("Yes:", margin + 150, currY);
+  doc.line(margin + 180, currY + 2, margin + 230, currY + 2);
+  
+  doc.text("No:", margin + 240, currY);
+  doc.line(margin + 265, currY + 2, margin + 315, currY + 2);
+  
+  currY += 35;
+  
+  // Declaration
+  const declarationText = "Resident/Patient is currently under my care. The medical benefits outweigh the risk of planned procedure/treatment. Resident/Patient is medically cleared for procedure.";
+  const decLines = doc.splitTextToSize(declarationText, width - margin * 2);
+  doc.text(decLines, margin, currY);
+  
+  currY += 45;
+  doc.text("Print Name of Attending Physician/Medical Provider:", margin, currY);
+  doc.line(margin + 280, currY + 2, width - margin, currY + 2);
+  
+  currY += 50;
+  
+  doc.line(margin, currY, margin + 200, currY);
+  doc.text("Attending Physician/Medical Provider", margin + 10, currY + 12);
+  
+  doc.line(margin + 230, currY, margin + 350, currY);
+  doc.text("State License Number", margin + 240, currY + 12);
+  
+  doc.line(margin + 380, currY, width - margin, currY);
+  doc.text("Date", margin + 410, currY + 12);
+  
+  doc.save(`Medical_Clearance_${appointment.residentName.replace(/\s+/g, "_")}_${appointment.date}.pdf`);
+};
+
