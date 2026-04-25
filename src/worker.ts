@@ -174,17 +174,19 @@ app.post('/appointments', async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO appointments (
       id, origin, residentName, unit, roomNumber, providerName, location, 
-      contactNumber, schedulingDate, referralDate, dueDate, status, date, 
+      contactNumber, schedulingDate, referralDate, status, date, 
       time, pickUpTime, type, description, serviceInHouse, reasonSendOut, 
-      transportType, transportCompany, payerForRide, roundTrip, escort, oxygen, notes, facilityId
+      transportType, transportCompany, payerForRide, roundTrip, escort, oxygen, notes, facilityId,
+      weight, height, nurseCompleting, reasonConsultation
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     toNull(apt.id), toNull(apt.origin), toNull(apt.residentName), toNull(apt.unit), toNull(apt.roomNumber), toNull(apt.providerName),
-    toNull(apt.location), toNull(apt.contactNumber), toNull(apt.schedulingDate), toNull(apt.referralDate), toNull(apt.dueDate),
+    toNull(apt.location), toNull(apt.contactNumber), toNull(apt.schedulingDate), toNull(apt.referralDate),
     toNull(apt.status), toNull(apt.date), toNull(apt.time), toNull(apt.pickUpTime), toNull(apt.type), toNull(apt.description),
     toNull(apt.serviceInHouse), toNull(apt.reasonSendOut), toNull(apt.transportType), toNull(apt.transportCompany),
-    toNull(apt.payerForRide), toNull(apt.roundTrip), toNull(apt.escort), toNull(apt.oxygen), toNull(apt.notes), toNull(apt.facilityId)
+    toNull(apt.payerForRide), toNull(apt.roundTrip), toNull(apt.escort), toNull(apt.oxygen), toNull(apt.notes), toNull(apt.facilityId),
+    toNull(apt.weight), toNull(apt.height), toNull(apt.nurseCompleting), toNull(apt.reasonConsultation)
   ).run();
   return c.json({ success: true, appointment: apt }, 201);
 });

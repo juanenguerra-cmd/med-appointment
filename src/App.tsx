@@ -3,9 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, ReactNode } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { generateAppointmentPDF, generateFullReport, generateTransportSchedulePDF, generateOutsideAppointmentChecklistPDF } from './services/pdfService';
+import React, { useState, ReactNode } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  generateAppointmentPDF,
+  generateFullReport,
+  generateTransportSchedulePDF,
+  generateOutsideAppointmentChecklistPDF,
+} from "./services/pdfService";
 import {
   Calendar,
   Users,
@@ -38,79 +43,120 @@ import {
   Save,
   Download,
   FileSpreadsheet,
-  Home
-} from 'lucide-react';
-import { useHealthData } from './hooks/useHealthData';
-import { Card } from './components/Card';
-import { Button } from './components/Button';
-import { Appointment, Resident, Facility } from './types';
+  Home,
+} from "lucide-react";
+import { useHealthData } from "./hooks/useHealthData";
+import { Card } from "./components/Card";
+import { Button } from "./components/Button";
+import { Appointment, Resident, Facility } from "./types";
 
-type Tab = 'dashboard' | 'appointments' | 'trends' | 'reports' | 'census' | 'help';
+type Tab =
+  | "dashboard"
+  | "appointments"
+  | "trends"
+  | "reports"
+  | "census"
+  | "help";
 
-const TAB_META: Record<Tab, { title: string; subtitle: string; badge: string }> = {
+const TAB_META: Record<
+  Tab,
+  { title: string; subtitle: string; badge: string }
+> = {
   dashboard: {
-    title: 'Dashboard',
-    subtitle: 'High-level overview of upcoming visits, volume trends, and provider activity.',
-    badge: 'Overview'
+    title: "Dashboard",
+    subtitle:
+      "High-level overview of upcoming visits, volume trends, and provider activity.",
+    badge: "Overview",
   },
   appointments: {
-    title: 'Appointments',
-    subtitle: 'Manage and monitor all scheduled medical visits and logistics in one place.',
-    badge: 'Entry Log'
+    title: "Appointments",
+    subtitle:
+      "Manage and monitor all scheduled medical visits and logistics in one place.",
+    badge: "Entry Log",
   },
   trends: {
-    title: 'Specialty Trends',
-    subtitle: 'Visualize visit volume by specialty to identify service demand and distribution.',
-    badge: 'Analytics'
+    title: "Specialty Trends",
+    subtitle:
+      "Visualize visit volume by specialty to identify service demand and distribution.",
+    badge: "Analytics",
   },
   reports: {
-    title: 'Report Builder',
-    subtitle: 'Generate and export clinical data reports for specific date ranges or providers.',
-    badge: 'Operations'
+    title: "Report Builder",
+    subtitle:
+      "Generate and export clinical data reports for specific date ranges or providers.",
+    badge: "Operations",
   },
   census: {
-    title: 'Patient Census',
-    subtitle: 'Manage resident data, unit assignments, and room allocations for auto-fill.',
-    badge: 'Registry'
+    title: "Patient Census",
+    subtitle:
+      "Manage resident data, unit assignments, and room allocations for auto-fill.",
+    badge: "Registry",
   },
   help: {
-    title: 'System Guide',
-    subtitle: 'Version history, user instructions, and technical documentation.',
-    badge: 'Support'
-  }
+    title: "System Guide",
+    subtitle:
+      "Version history, user instructions, and technical documentation.",
+    badge: "Support",
+  },
 };
 
+const MEDICAL_SPECIALTIES = [
+  "Cardiology",
+  "Dermatology",
+  "Dentistry",
+  "Endocrinology",
+  "ENT",
+  "Gastroenterology",
+  "Hematology",
+  "Infectious Disease",
+  "Nephrology",
+  "Neurology",
+  "Oncology",
+  "Ophthalmology",
+  "Optometry",
+  "Orthopedics",
+  "Physiatry (PM&R)",
+  "Podiatry",
+  "Psychiatry",
+  "Pulmonology",
+  "Rheumatology",
+  "Urology",
+  "Vascular Surgery",
+  "Wound Care",
+];
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showOtherSpecialtyInput, setShowOtherSpecialtyInput] = useState(false);
 
   const [newAppt, setNewAppt] = useState<Partial<Appointment>>({
-    status: 'Scheduled',
-    residentName: '',
-    origin: '',
-    unit: '',
-    roomNumber: '',
-    providerName: '',
-    location: '',
-    contactNumber: '',
-    schedulingDate: '',
-    referralDate: '',
-    dueDate: '',
-    date: '',
-    time: '',
-    pickUpTime: '',
-    type: '',
-    description: '',
-    serviceInHouse: '',
-    reasonSendOut: '',
-    transportType: '',
-    transportCompany: '',
-    payerForRide: '',
-    roundTrip: '',
-    escort: '',
-    notes: ''
+    status: "Scheduled",
+    residentName: "",
+    origin: "",
+    unit: "",
+    roomNumber: "",
+    providerName: "",
+    location: "",
+    contactNumber: "",
+    schedulingDate: "",
+    referralDate: "",
+    date: "",
+    time: "",
+    pickUpTime: "",
+    type: "",
+    description: "",
+    serviceInHouse: "",
+    reasonSendOut: "",
+    transportType: "",
+    transportCompany: "",
+    payerForRide: "",
+    roundTrip: "",
+    escort: "",
+    notes: "",
+    reasonConsultation: "",
   });
 
   const {
@@ -135,7 +181,7 @@ export default function App() {
     batchAddResidents,
     replaceResidents,
     deleteResident,
-    isLoaded
+    isLoaded,
   } = useHealthData();
 
   const [isFacModalOpen, setIsFacModalOpen] = useState(false);
@@ -144,193 +190,256 @@ export default function App() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [userFacPermissions, setUserFacPermissions] = useState<string[]>([]);
 
-  const currentFacility = facilities.find(f => f.id === currentFacilityId);
+  const currentFacility = facilities.find((f) => f.id === currentFacilityId);
 
-  const [censusPasteText, setCensusPasteText] = useState('');
-  const [parsedResidentsPreview, setParsedResidentsPreview] = useState<Omit<Resident, 'id'>[]>([]);
+  const [censusPasteText, setCensusPasteText] = useState("");
+  const [parsedResidentsPreview, setParsedResidentsPreview] = useState<
+    Omit<Resident, "id">[]
+  >([]);
   const [isParsing, setIsParsing] = useState(false);
   const [censusSkipDuplicates, setCensusSkipDuplicates] = useState(false);
-  
+
   const [reportFilters, setReportFilters] = useState({
-    startDate: '',
-    endDate: '',
+    startDate: "",
+    endDate: "",
     specialties: [] as string[],
-    exportType: 'PDF Document (.pdf)',
-    columns: ['Resident Name', 'Date', 'Time', 'Provider', 'Specialty', 'Transport']
+    exportType: "PDF Document (.pdf)",
+    columns: [
+      "Resident Name",
+      "Date",
+      "Time",
+      "Provider",
+      "Specialty",
+      "Transport",
+    ],
   });
 
-  const [residentSearchTerm, setResidentSearchTerm] = useState('');
+  const [residentSearchTerm, setResidentSearchTerm] = useState("");
   const [showResidentSuggestions, setShowResidentSuggestions] = useState(false);
-  const [censusSearchQuery, setCensusSearchQuery] = useState('');
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [censusSearchQuery, setCensusSearchQuery] = useState("");
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(
+    null,
+  );
   const [isResidentDetailOpen, setIsResidentDetailOpen] = useState(false);
 
   const handleParseCensus = () => {
     if (!censusPasteText.trim()) return;
     setIsParsing(true);
-    
-    const lines = censusPasteText.split('\n');
+
+    const lines = censusPasteText.split("\n");
     const residentMap = new Map<string, any>();
-    
-    lines.forEach(line => {
+
+    // Pre-process lines to aggregate wrapped content (e.g., long allergy lists on new lines)
+    const aggregatedLines: string[] = [];
+    let currentBuffer = "";
+
+    lines.forEach((line) => {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.length < 15) return;
+      if (!trimmed) return;
+
+      // Detect if this line looks like the start of a resident record: "Name (MRN)"
+      const isNewRecord = /^[A-Z0-9\s,.-]+?\s*[\(\[]([A-Z0-9-]+)[\)\]]/i.test(trimmed);
+      
+      if (isNewRecord) {
+        if (currentBuffer) aggregatedLines.push(currentBuffer);
+        currentBuffer = trimmed;
+      } else {
+        // Check if it's a header line to skip
+        const lower = trimmed.toLowerCase();
+        const isHeader = lower.includes("resident listing report") || 
+                         lower.includes("facility #") || 
+                         lower.includes("floor") || 
+                         lower.includes("unit") || 
+                         lower.includes("gender") ||
+                         lower.includes("admission date") ||
+                         lower.includes("birth date") || 
+                         lower.includes("primary physician");
+
+        if (isHeader) {
+          if (currentBuffer) aggregatedLines.push(currentBuffer);
+          currentBuffer = ""; // Reset buffer
+          aggregatedLines.push(trimmed); // Push header for standard filter to catch
+        } else if (currentBuffer) {
+          // Append to current record buffer with a delimiter or space
+          // If the line has tabs, it might be a partial columnar wrap
+          currentBuffer += " " + trimmed;
+        } else {
+          aggregatedLines.push(trimmed);
+        }
+      }
+    });
+    if (currentBuffer) aggregatedLines.push(currentBuffer);
+
+    aggregatedLines.forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.length < 10) return;
 
       // Skip common header noise
       const lower = trimmed.toLowerCase();
       if (
-        lower.includes('resident listing report') || 
-        lower.includes('facility #') || 
-        lower.includes('page #') ||
-        lower.startsWith('date:') || 
-        lower.startsWith('time:') || 
-        lower.startsWith('user:') ||
-        lower.startsWith('resident:') || 
-        lower.includes('status: current') ||
-        lower === 'name' || 
-        lower === 'age' || 
-        lower === 'location' || 
-        lower.includes('(fl un rm bd)') ||
-        lower.includes('gender') ||
-        lower.includes('admission date')
+        lower.includes("resident listing report") ||
+        lower.includes("facility #") ||
+        lower.includes("page #") ||
+        lower.startsWith("date:") ||
+        lower.startsWith("time:") ||
+        lower.startsWith("user:") ||
+        lower.startsWith("resident:") ||
+        lower.includes("status: current") ||
+        lower === "name" ||
+        lower === "age" ||
+        lower === "location" ||
+        lower.includes("(fl un rm bd)") ||
+        lower.includes("gender") ||
+        lower.includes("admission date") ||
+        lower.includes("birth date") || 
+        lower.includes("primary diagnosis") ||
+        lower.includes("resident listing")
       ) {
         return;
       }
 
-      // 1. Extract Name and MRN
-      // Pattern: NAME (MRN) or NAME (MRN) 
-      const nameMrnMatch = trimmed.match(/^(.+?)\s\((.+?)\)/);
-      let name = '—';
-      let mrn = '—';
-      let remaining = trimmed;
+      // The format is column-based, typically separated by tabs (\t) or multiple spaces (\s{2,})
+      // Use a more robust split that prioritizes tabs if they exist
+      let columns: string[] = [];
+      if (trimmed.includes("\t")) {
+        columns = trimmed.split("\t").map(c => c.trim());
+      } else {
+        columns = trimmed.split(/\s{2,}/).map(c => c.trim());
+      }
+      columns = columns.filter(Boolean);
 
+      // If we don't have enough columns, it's probably not a data line
+      if (columns.length < 4) return;
+
+      let name = "—";
+      let mrn = "—";
+      let age = "—";
+      let birthDate = "—";
+      let location = "—";
+      let sex = "—";
+      let admissionDate = "—";
+      let allergies = "No Known Allergies";
+      let doctor = "—";
+      let diagnosis = "—";
+
+      // 1. Name and MRN (Column 0)
+      const nameMrnPart = columns[0] || "";
+      const nameMrnMatch = nameMrnPart.match(/^(.+?)\s*[\(\[]([A-Z0-9-]+)[\)\]]/i);
       if (nameMrnMatch) {
-         name = nameMrnMatch[1].trim();
-         mrn = nameMrnMatch[2].trim();
-         remaining = trimmed.substring(nameMrnMatch[0].length).trim();
+        name = nameMrnMatch[1].trim();
+        mrn = nameMrnMatch[2].trim();
       } else {
-         // Try to find if there is a (MRN) anywhere
-         const mrnMatch = trimmed.match(/\((.*?)\)/);
-         if (mrnMatch) {
-           mrn = mrnMatch[1].trim();
-           name = trimmed.substring(0, mrnMatch.index).trim();
-           remaining = trimmed.substring(mrnMatch.index + mrnMatch[0].length).trim();
-         } else {
-           // Fallback: look for multiple spaces after name
-           const firstParts = trimmed.split(/\s{2,}/);
-           if (firstParts.length > 1) {
-              name = firstParts[0].trim();
-              remaining = trimmed.substring(firstParts[0].length).trim();
-           } else {
-              return; // Probably not a data line
-           }
-         }
+        name = nameMrnPart;
+        // Search for MRN in other parts if missing
+        const fallbackMrn = trimmed.match(/[\(\[]([A-Z0-9-]+)[\)\]]/i);
+        if (fallbackMrn) mrn = fallbackMrn[1];
       }
+      name = name.replace(/,/g, ", ").replace(/\s+/g, " ").trim();
+      if (name.toLowerCase() === "name") return;
 
-      // Cleanup name from potential junk
-      name = name.replace(/,/g, ', ').replace(/\s+/g, ' ').trim();
-      if (name.toLowerCase() === 'name') return;
-
-      // 2. Extract Age (usually 1-3 digits)
-      const ageMatch = remaining.match(/^(\d{1,3})\s/);
-      let age = '—';
-      if (ageMatch) {
-        age = ageMatch[1];
-        remaining = remaining.substring(ageMatch[0].length).trim();
-      }
-
-      // 3. Extract Birth Date (Optional MM/DD/YYYY)
-      const dateRegex = /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/;
-      let birthDate = '—';
-      const birthDateMatch = remaining.match(new RegExp('^' + dateRegex.source));
-      if (birthDateMatch) {
-        birthDate = birthDateMatch[0];
-        remaining = remaining.substring(birthDateMatch[0].length).trim();
-      }
-
-      // 4. Extract Gender (M/F) and separate Location
-      // Gender usually follows location: "... 479 A M 4/16/2026"
-      const genderPattern = /\s(M|F|Male|Female)\s/i;
-      const genderMatch = remaining.match(genderPattern);
-      let location = '—';
-      let sex = '—';
+      // Map columns based on anchored pattern (robust to fragmented columns)
+      // Standard: [Name/MRN, Age, BirthDate, ...Location..., Sex, AdmissionDate, Allergies, Doctor, Diagnosis]
       
-      if (genderMatch) {
-         location = remaining.substring(0, genderMatch.index).trim();
-         sex = genderMatch[1].trim();
-         remaining = remaining.substring(genderMatch.index + genderMatch[0].length).trim();
-      } else {
-         // Fallback if M/F is missing, use next date to find location
-         const nextDateMatch = remaining.match(dateRegex);
-         if (nextDateMatch) {
-            location = remaining.substring(0, nextDateMatch.index).trim();
-            remaining = remaining.substring(nextDateMatch.index).trim();
-         } else {
-            location = remaining;
-            remaining = '';
-         }
+      const dobIdx = columns.findIndex((c, i) => i > 0 && i < 5 && /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c));
+      const sexIdx = columns.findIndex((c, i) => i > 1 && i < 9 && /^(M|F|Male|Female)$/i.test(c));
+      // Admission date is the FIRST date AFTER birthDate (or first date if birthDate missing)
+      const admIdx = columns.findIndex((c, i) => i > (dobIdx !== -1 ? dobIdx : 2) && /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c));
+
+      if (dobIdx !== -1) birthDate = columns[dobIdx];
+      if (sexIdx !== -1) sex = columns[sexIdx];
+      if (admIdx !== -1) admissionDate = columns[admIdx];
+
+      const ageCol = columns.find((c, i) => i > 0 && i < 3 && /^\d{1,3}$/.test(c));
+      if (ageCol) age = ageCol;
+
+      // Location is everything between DOB and Sex (or between DOB and AdmDate if sex missing)
+      const locStart = dobIdx !== -1 ? dobIdx + 1 : 3;
+      const locEnd = sexIdx !== -1 ? sexIdx : (admIdx !== -1 ? admIdx : columns.length);
+      
+      if (locEnd > locStart) {
+        location = columns.slice(locStart, locEnd).join(" ").trim();
+      }
+
+      // Fields after Admission Date
+      if (admIdx !== -1 && admIdx < columns.length - 1) {
+        const remaining = columns.slice(admIdx + 1);
+        
+        // Identify which is which in the remaining tail
+        remaining.forEach((col, idx) => {
+          const c = col.trim();
+          if (/dr\.?\s|physician|\bmd\b|doctor/i.test(c)) {
+            doctor = c;
+          } else if (/nka|nkda|no\s+known|allerg|pcn|sulfa|latex/i.test(c) || (c.includes(",") && doctor === "—")) {
+            allergies = c;
+          } else if (/^[A-Z]\d{2}(?:\.\d+)?$/i.test(c)) {
+            diagnosis = c;
+          } else if (idx === remaining.length - 1 && diagnosis === "—") {
+            diagnosis = c;
+          } else if (idx === remaining.length - 2 && doctor === "—") {
+            doctor = c;
+          }
+        });
+
+        // Positional fallback if heuristics failed for tail
+        if (doctor === "—" && remaining.length >= 2) doctor = remaining[remaining.length - 2];
+        if (diagnosis === "—" && remaining.length >= 1) diagnosis = remaining[remaining.length - 1];
+        if (allergies === "No Known Allergies" && remaining.length >= 3) allergies = remaining[0];
       }
 
       // Parse Location into Floor/Unit/Room
-      let floor = '—';
-      let unit = '—';
-      let room = '—';
-      
-      if (location !== '—') {
-        const fMatch = location.match(/(\d+\w+\sFloor|Floor\s+\d+)/i);
-        const uMatch = location.match(/(Unit\s+\d+|Unit\s+\w+)/i);
-        const rMatch = location.match(/(\d{3}\-[A-Z]|\d{3}\s[A-Z]|\d{3,4}[\s\-]\w+)/i);
-        
-        if (fMatch) floor = fMatch[1].trim();
-        if (uMatch) unit = uMatch[1].trim();
-        
-        if (rMatch) {
-          room = rMatch[1].trim();
-        } else {
-          // If no specific room match, use what's left
-          let rPart = location;
-          if (fMatch) rPart = rPart.replace(fMatch[1], '');
-          if (uMatch) rPart = rPart.replace(uMatch[1], '');
-          room = rPart.trim() || location;
+      let floor = "—";
+      let unit = "—";
+      let room = "—";
+
+      if (location !== "—") {
+        // Floor: "3rd Floor" or "Floor 3"
+        const fMatch = location.match(/(\d+(?:st|nd|rd|th)?\sFloor|Floor\s+\d+)/i);
+        if (fMatch) {
+          floor = fMatch[1].trim();
+          location = location.replace(fMatch[0], "").trim();
         }
+
+        // Unit: "Unit 3", "Unit 4", etc.
+        const uMatch = location.match(/(Unit\s+\d+|Unit\s+\w+|\bUNIT\s+[A-Z]\b)/i);
+        if (uMatch) {
+          unit = uMatch[1].trim();
+          location = location.replace(uMatch[0], "").trim();
+        }
+        
+        // Final cleaning of remaining location to get Room
+        // Room often looks like "359 B" or "470 A" or "101"
+        room = location.replace(/[,;]/g, "").trim();
+        
+        // If room is empty or just gender/noise, skip record
+        if (!room || room.length > 15) {
+            // Try to find a standalone room number pattern in the original location if extraction failed
+            const roomMatch = location.match(/\b\d{2,4}\s?[A-Z]?\b/);
+            if (roomMatch) room = roomMatch[0];
+            else return; 
+        }
+      } else {
+        return; // Skip if no location
       }
 
-      // 5. Extract Admission Date (the first date in remaining)
-      const admissionDateMatch = remaining.match(dateRegex);
-      let admissionDate = '—';
-      if (admissionDateMatch) {
-         admissionDate = admissionDateMatch[0];
-         remaining = remaining.substring(remaining.indexOf(admissionDate) + admissionDate.length).trim();
+      // Final cleanup
+      if (doctor !== "—" && !doctor.toLowerCase().startsWith("dr.")) {
+        doctor = "Dr. " + doctor;
       }
-
-      // 6. Allergies, Physician, Diagnosis
-      // These are usually at the end, often separated by multiple spaces
-      const tailParts = remaining.split(/\s{2,}/).map(p => p.trim()).filter(Boolean);
-      let allergies = 'No Known Allergies';
-      let doctor = '—';
-      let diagnosis = '—';
       
-      if (tailParts.length >= 3) {
-         allergies = tailParts[0];
-         doctor = tailParts[1];
-         diagnosis = tailParts[2];
-      } else if (tailParts.length === 2) {
-         // Check if first part looks like doctor or like allergies
-         if (tailParts[0].toLowerCase().includes('dr.') || tailParts[0].split(' ').length > 2) {
-            doctor = tailParts[0];
-            diagnosis = tailParts[1];
-         } else {
-            allergies = tailParts[0];
-            doctor = tailParts[1];
-         }
-      } else if (tailParts.length === 1) {
-         diagnosis = tailParts[0];
+      // Final cleanup of diagnosis
+      if (diagnosis !== "—") {
+        diagnosis = diagnosis.replace(/^(Diagnosis|Dx|Primary Diagnosis):?\s*/i, "").trim();
+      }
+
+      // Final cleanup of allergies
+      if (allergies !== "No Known Allergies") {
+        allergies = allergies.replace(/^(Allergies|Allg|Allergy):?\s*/i, "").trim();
       }
 
       // Final Assembly
-      const nameParts = name.split(',').map(n => n.trim());
+      const nameParts = name.split(",").map((n) => n.trim());
       const lastName = nameParts[0] || name;
-      const firstName = nameParts.slice(1).join(' ') || '—';
+      const firstName = nameParts.slice(1).join(" ") || "—";
 
       const resData = {
         name,
@@ -341,20 +450,26 @@ export default function App() {
         floor,
         unit,
         roomNumber: room,
-        sex: sex.toUpperCase().startsWith('M') ? 'Male' : sex.toUpperCase().startsWith('F') ? 'Female' : '—',
+        sex: sex.toUpperCase().startsWith("M")
+          ? "Male"
+          : sex.toUpperCase().startsWith("F")
+            ? "Female"
+            : "—",
         admissionDate,
         allergies,
         doctor,
         diagnosis,
-        notes: birthDate !== '—' ? `DOB: ${birthDate}` : ''
+        notes: birthDate !== "—" ? `DOB: ${birthDate}` : "",
       };
 
-      const uniqueKey = mrn !== '—' ? mrn : `${name}-${room}`.toLowerCase();
-      
+      const uniqueKey = mrn !== "—" ? mrn : `${name}-${room}`.toLowerCase();
+
       // Duplicate detection
-      const alreadyInSystem = residents.some(r => 
-        (resData.mrn !== '—' && r.mrn === resData.mrn) || 
-        (`${r.name}|${r.roomNumber}`.toLowerCase() === `${resData.name}|${resData.roomNumber}`.toLowerCase())
+      const alreadyInSystem = residents.some(
+        (r) =>
+          (resData.mrn !== "—" && r.mrn === resData.mrn) ||
+          `${r.name}|${r.roomNumber}`.toLowerCase() ===
+            `${resData.name}|${resData.roomNumber}`.toLowerCase(),
       );
 
       // If skipping duplicates, we don't even add to the map for preview
@@ -371,11 +486,14 @@ export default function App() {
     if (parsedResidentsPreview.length > 0) {
       if (censusSkipDuplicates) {
         // Only append truly new ones
-        const trulyNew = parsedResidentsPreview.filter(newRes => 
-          !residents.some(r => 
-            (newRes.mrn !== '—' && r.mrn === newRes.mrn) || 
-            (`${r.name}|${r.roomNumber}`.toLowerCase() === `${newRes.name}|${newRes.roomNumber}`.toLowerCase())
-          )
+        const trulyNew = parsedResidentsPreview.filter(
+          (newRes) =>
+            !residents.some(
+              (r) =>
+                (newRes.mrn !== "—" && r.mrn === newRes.mrn) ||
+                `${r.name}|${r.roomNumber}`.toLowerCase() ===
+                  `${newRes.name}|${newRes.roomNumber}`.toLowerCase(),
+            ),
         );
         batchAddResidents(trulyNew);
       } else {
@@ -383,33 +501,33 @@ export default function App() {
         replaceResidents(parsedResidentsPreview);
       }
       setParsedResidentsPreview([]);
-      setCensusPasteText('');
+      setCensusPasteText("");
     }
   };
 
   const toggleReportColumn = (col: string) => {
-    setReportFilters(prev => ({
+    setReportFilters((prev) => ({
       ...prev,
-      columns: prev.columns.includes(col) 
-        ? prev.columns.filter(c => c !== col)
-        : [...prev.columns, col]
+      columns: prev.columns.includes(col)
+        ? prev.columns.filter((c) => c !== col)
+        : [...prev.columns, col],
     }));
   };
 
-  const setReportPreset = (type: 'today' | 'week' | 'month') => {
+  const setReportPreset = (type: "today" | "week" | "month") => {
     const start = new Date();
     const end = new Date();
-    
-    if (type === 'week') {
+
+    if (type === "week") {
       start.setDate(start.getDate() - 7);
-    } else if (type === 'month') {
+    } else if (type === "month") {
       start.setMonth(start.getMonth() - 1);
     }
-    
-    setReportFilters(prev => ({
+
+    setReportFilters((prev) => ({
       ...prev,
-      startDate: start.toISOString().split('T')[0],
-      endDate: end.toISOString().split('T')[0]
+      startDate: start.toISOString().split("T")[0],
+      endDate: end.toISOString().split("T")[0],
     }));
   };
 
@@ -424,64 +542,79 @@ export default function App() {
   const handleOpenAdd = () => {
     setEditingId(null);
     setNewAppt({
-      status: 'Scheduled',
-      residentName: '',
-      origin: '',
-      unit: '',
-      roomNumber: '',
-      providerName: '',
-      location: '',
-      contactNumber: '',
-      schedulingDate: '',
-      referralDate: '',
-      dueDate: '',
-      date: '',
-      time: '',
-      pickUpTime: '',
-      type: '',
-      description: '',
-      serviceInHouse: '',
-      reasonSendOut: '',
-      transportType: '',
-      transportCompany: '',
-      payerForRide: '',
-      roundTrip: '',
-      escort: '',
-      notes: ''
+      status: "Scheduled",
+      residentName: "",
+      origin: "",
+      unit: "",
+      roomNumber: "",
+      providerName: "",
+      location: "",
+      contactNumber: "",
+      schedulingDate: "",
+      referralDate: "",
+      date: "",
+      time: "",
+      pickUpTime: "",
+      type: "",
+      description: "",
+      serviceInHouse: "",
+      reasonSendOut: "",
+      transportType: "",
+      transportCompany: "",
+      payerForRide: "",
+      roundTrip: "",
+      escort: "",
+      notes: "",
+      reasonConsultation: "",
     });
+    setShowOtherSpecialtyInput(false);
     setIsAddModalOpen(true);
   };
 
   const handleOpenEdit = (apt: Appointment) => {
     setEditingId(apt.id);
+    const isOther = apt.type !== "" && !MEDICAL_SPECIALTIES.includes(apt.type);
     setNewAppt({ ...apt });
+    setShowOtherSpecialtyInput(isOther);
     setIsAddModalOpen(true);
   };
 
   const handleSelectResident = (resident: Resident) => {
     // Normalize unit to match dropdown values if possible
-    let matchedUnit = '';
-    const unitStr = (resident.unit || '').trim();
-    const units = ['Unit A', 'Unit B', 'Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Rehab'];
-    
+    let matchedUnit = "";
+    const unitStr = (resident.unit || "").trim();
+    const units = [
+      "Unit A",
+      "Unit B",
+      "Unit 1",
+      "Unit 2",
+      "Unit 3",
+      "Unit 4",
+      "Rehab",
+    ];
+
     // Try exact match first (case-insensitive)
-    const exactMatch = units.find(u => u.toLowerCase() === unitStr.toLowerCase());
+    const exactMatch = units.find(
+      (u) => u.toLowerCase() === unitStr.toLowerCase(),
+    );
     if (exactMatch) {
       matchedUnit = exactMatch;
     } else {
       // Try partial match
       const lower = unitStr.toLowerCase();
-      if (lower.includes('unit a')) matchedUnit = 'Unit A';
-      else if (lower.includes('unit b')) matchedUnit = 'Unit B';
-      else if (lower.includes('rehab')) matchedUnit = 'Rehab';
-      else if (lower.includes('unit 1')) matchedUnit = 'Unit 1';
-      else if (lower.includes('unit 2')) matchedUnit = 'Unit 2';
+      if (lower.includes("unit a")) matchedUnit = "Unit A";
+      else if (lower.includes("unit b")) matchedUnit = "Unit B";
+      else if (lower.includes("rehab")) matchedUnit = "Rehab";
+      else if (lower.includes("unit 1")) matchedUnit = "Unit 1";
+      else if (lower.includes("unit 2")) matchedUnit = "Unit 2";
     }
 
-    setNewAppt(prev => {
+    setNewAppt((prev) => {
       let finalUnit = matchedUnit;
-      if (!finalUnit && resident.unit && resident.unit !== '—') finalUnit = resident.unit;
-      if (!finalUnit && resident.floor && resident.floor !== '—') finalUnit = resident.floor;
+      if (!finalUnit && resident.unit && resident.unit !== "—")
+        finalUnit = resident.unit;
+      if (!finalUnit && resident.floor && resident.floor !== "—")
+        finalUnit = resident.floor;
       if (!finalUnit) finalUnit = prev.unit;
 
       return {
@@ -489,15 +622,18 @@ export default function App() {
         residentName: resident.name,
         roomNumber: resident.roomNumber,
         unit: finalUnit,
-        notes: `MRN: ${resident.mrn} | Physician: ${resident.doctor} | Age: ${resident.age}`
+        notes: `MRN: ${resident.mrn} | Physician: ${resident.doctor} | Age: ${resident.age}`,
       };
     });
   };
 
-  const filteredResidents = residents.filter(r => 
-    r.name.toLowerCase().includes(residentSearchTerm.toLowerCase()) ||
-    r.mrn.toLowerCase().includes(residentSearchTerm.toLowerCase())
-  ).slice(0, 5);
+  const filteredResidents = residents
+    .filter(
+      (r) =>
+        r.name.toLowerCase().includes(residentSearchTerm.toLowerCase()) ||
+        r.mrn.toLowerCase().includes(residentSearchTerm.toLowerCase()),
+    )
+    .slice(0, 5);
 
   const handleResidentInputChange = (val: string) => {
     setResidentSearchTerm(val);
@@ -507,12 +643,12 @@ export default function App() {
 
   const handleSaveAppointment = () => {
     if (!newAppt.residentName) return;
-    
+
     if (editingId && updateAppointment) {
-      const original = appointments.find(a => a.id === editingId);
+      const original = appointments.find((a) => a.id === editingId);
       if (original) {
         const updates: Partial<Appointment> = {};
-        (Object.keys(newAppt) as Array<keyof typeof newAppt>).forEach(key => {
+        (Object.keys(newAppt) as Array<keyof typeof newAppt>).forEach((key) => {
           if (newAppt[key] !== (original as any)[key]) {
             (updates as any)[key] = newAppt[key];
           }
@@ -522,30 +658,54 @@ export default function App() {
         }
       }
     } else {
-      addAppointment(newAppt as Omit<Appointment, 'id'>);
+      addAppointment(newAppt as Omit<Appointment, "id">);
     }
-    
+
     setIsAddModalOpen(false);
     setEditingId(null);
   };
 
-  const upcomingAppointments = appointments
-    .filter(a => a.status === 'Scheduled')
-    .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+  const handleSaveAllAppointments = (updates: Record<string, Partial<Appointment>>) => {
+    if (!updateAppointment) return;
+    Object.entries(updates).forEach(([id, apptUpdates]) => {
+      updateAppointment(id, apptUpdates);
+    });
+  };
 
-  const completedAppointments = appointments.filter(a => a.status === 'Completed');
+  const upcomingAppointments = appointments
+    .filter((a) => a.status === "Scheduled")
+    .sort(
+      (a, b) =>
+        new Date(`${a.date}T${a.time}`).getTime() -
+        new Date(`${b.date}T${b.time}`).getTime(),
+    );
+
+  const completedAppointments = appointments.filter(
+    (a) => a.status === "Completed",
+  );
   const nextAppointment = upcomingAppointments[0];
-  const getDoctorNameDisplay = (apt: Appointment) => apt.providerName || 'Unknown Provider';
+  const getDoctorNameDisplay = (apt: Appointment) =>
+    apt.providerName || "Unknown Provider";
   const goToTab = (tab: Tab) => {
     setActiveTab(tab);
     setIsMenuOpen(false);
-    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    window.requestAnimationFrame(() =>
+      window.scrollTo({ top: 0, behavior: "smooth" }),
+    );
   };
 
-  const residentAppointments = selectedResident ? appointments.filter(a => 
-    a.residentName === selectedResident.name || 
-    (a.residentName.toLowerCase().includes(selectedResident.lastName.toLowerCase()) && a.residentName.toLowerCase().includes(selectedResident.firstName.toLowerCase()))
-  ) : [];
+  const residentAppointments = selectedResident
+    ? appointments.filter(
+        (a) =>
+          a.residentName === selectedResident.name ||
+          (a.residentName
+            .toLowerCase()
+            .includes(selectedResident.lastName.toLowerCase()) &&
+            a.residentName
+              .toLowerCase()
+              .includes(selectedResident.firstName.toLowerCase())),
+      )
+    : [];
 
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
@@ -557,10 +717,12 @@ export default function App() {
         />
       )}
 
-      <aside className={`
+      <aside
+        className={`
         fixed inset-y-0 left-0 z-50 w-72 p-4 transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:translate-x-0 lg:h-screen
-        ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+        ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
         <div className="h-full transport-card overflow-hidden flex flex-col">
           <div className="transport-gradient text-white p-5 relative overflow-hidden">
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10" />
@@ -570,23 +732,62 @@ export default function App() {
                 <Stethoscope size={24} />
               </div>
               <div>
-                <h1 className="font-black leading-tight tracking-tight">HealthSync</h1>
-                <p className="text-[10px] uppercase tracking-[0.22em] font-black opacity-80">Medical Tracker</p>
+                <h1 className="font-black leading-tight tracking-tight">
+                  HealthSync
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.22em] font-black opacity-80">
+                  Medical Tracker
+                </p>
               </div>
             </div>
             <div className="relative mt-4 rounded-2xl bg-white/12 border border-white/20 p-3">
-              <p className="text-xs font-black uppercase tracking-wider opacity-90">Appointment workspace</p>
-              <p className="text-xs opacity-80 mt-1 leading-relaxed">Navigation, provider directory, and visit history in separated pages.</p>
+              <p className="text-xs font-black uppercase tracking-wider opacity-90">
+                Appointment workspace
+              </p>
+              <p className="text-xs opacity-80 mt-1 leading-relaxed">
+                Navigation, provider directory, and visit history in separated
+                pages.
+              </p>
             </div>
           </div>
 
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
-            <NavItem active={activeTab === 'dashboard'} onClick={() => goToTab('dashboard')} icon={<Activity size={20} />} label="Dashboard" />
-            <NavItem active={activeTab === 'appointments'} onClick={() => goToTab('appointments')} icon={<Calendar size={20} />} label="Appointments" />
-            <NavItem active={activeTab === 'trends'} onClick={() => goToTab('trends')} icon={<BarChart3 size={20} />} label="Trends" />
-            <NavItem active={activeTab === 'reports'} onClick={() => goToTab('reports')} icon={<FileText size={20} />} label="Reports" />
-            <NavItem active={activeTab === 'census'} onClick={() => goToTab('census')} icon={<Users size={20} />} label="Census" />
-            <NavItem active={activeTab === 'help'} onClick={() => goToTab('help')} icon={<ShieldCheck size={20} />} label="Help & Info" />
+            <NavItem
+              active={activeTab === "dashboard"}
+              onClick={() => goToTab("dashboard")}
+              icon={<Activity size={20} />}
+              label="Dashboard"
+            />
+            <NavItem
+              active={activeTab === "appointments"}
+              onClick={() => goToTab("appointments")}
+              icon={<Calendar size={20} />}
+              label="Appointments"
+            />
+            <NavItem
+              active={activeTab === "trends"}
+              onClick={() => goToTab("trends")}
+              icon={<BarChart3 size={20} />}
+              label="Trends"
+            />
+            <NavItem
+              active={activeTab === "reports"}
+              onClick={() => goToTab("reports")}
+              icon={<FileText size={20} />}
+              label="Reports"
+            />
+            <NavItem
+              active={activeTab === "census"}
+              onClick={() => goToTab("census")}
+              icon={<Users size={20} />}
+              label="Census"
+            />
+            <NavItem
+              active={activeTab === "help"}
+              onClick={() => goToTab("help")}
+              icon={<ShieldCheck size={20} />}
+              label="Help & Info"
+            />
           </nav>
 
           <div className="p-4 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)]">
@@ -594,8 +795,18 @@ export default function App() {
               <div className="flex items-center gap-2 text-brand font-black text-xs uppercase tracking-wider">
                 <ShieldCheck size={16} /> Local Data
               </div>
-              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">Current build keeps your existing localStorage workflow intact while improving the visual layout.</p>
-              <Button size="sm" variant="secondary" className="w-full mt-3" onClick={() => goToTab('appointments')}>Open Log</Button>
+              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                Current build keeps your existing localStorage workflow intact
+                while improving the visual layout.
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full mt-3"
+                onClick={() => goToTab("appointments")}
+              >
+                Open Log
+              </Button>
             </div>
           </div>
         </div>
@@ -610,29 +821,45 @@ export default function App() {
               <span className="inline-flex items-center rounded-full bg-white/15 border border-white/25 px-3 py-1 text-xs font-black mb-3">
                 {TAB_META[activeTab].badge}
               </span>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight">{TAB_META[activeTab].title}</h2>
-              <p className="text-sm opacity-90 mt-1 max-w-3xl leading-relaxed">{TAB_META[activeTab].subtitle}</p>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight">
+                {TAB_META[activeTab].title}
+              </h2>
+              <p className="text-sm opacity-90 mt-1 max-w-3xl leading-relaxed">
+                {TAB_META[activeTab].subtitle}
+              </p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap xl:justify-end">
               <div className="relative group min-w-[200px]">
-                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none group-focus-within:text-white transition-colors" />
-                <select 
+                <MapPin
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none group-focus-within:text-white transition-colors"
+                />
+                <select
                   className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-black focus:bg-white/20 focus:outline-none appearance-none transition-all cursor-pointer"
-                  value={currentFacilityId || ''}
+                  value={currentFacilityId || ""}
                   onChange={(e) => {
                     setCurrentFacilityId(e.target.value);
                   }}
                 >
-                  {facilities.map(f => (
-                    <option key={f.id} value={f.id} className="text-slate-900">{f.name}</option>
+                  {facilities.map((f) => (
+                    <option key={f.id} value={f.id} className="text-slate-900">
+                      {f.name}
+                    </option>
                   ))}
                 </select>
               </div>
-              <Button className="gap-2 font-black shadow-lg uppercase tracking-wider text-[10px]" onClick={handleOpenAdd}>
+              <Button
+                className="gap-2 font-black shadow-lg uppercase tracking-wider text-[10px]"
+                onClick={handleOpenAdd}
+              >
                 <Plus size={16} /> New Appointment
               </Button>
-              <button className="lg:hidden transport-pill h-10 w-10 flex items-center justify-center text-brand" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              <button
+                className="lg:hidden transport-pill h-10 w-10 flex items-center justify-center text-brand"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle menu"
+              >
                 {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
@@ -641,41 +868,119 @@ export default function App() {
 
         <div className="mb-6 transport-card p-2 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
-            <TopTab active={activeTab === 'dashboard'} onClick={() => goToTab('dashboard')} label="Dashboard" />
-            <TopTab active={activeTab === 'appointments'} onClick={() => goToTab('appointments')} label="Appointments" />
-            <TopTab active={activeTab === 'trends'} onClick={() => goToTab('trends')} label="Specialty Trends" />
-            <TopTab active={activeTab === 'reports'} onClick={() => goToTab('reports')} label="Report Builder" />
-            <TopTab active={activeTab === 'census'} onClick={() => goToTab('census')} label="Patient Census" />
-            <TopTab active={activeTab === 'help'} onClick={() => goToTab('help')} label="Guide & Info" />
+            <TopTab
+              active={activeTab === "dashboard"}
+              onClick={() => goToTab("dashboard")}
+              label="Dashboard"
+            />
+            <TopTab
+              active={activeTab === "appointments"}
+              onClick={() => goToTab("appointments")}
+              label="Appointments"
+            />
+            <TopTab
+              active={activeTab === "trends"}
+              onClick={() => goToTab("trends")}
+              label="Specialty Trends"
+            />
+            <TopTab
+              active={activeTab === "reports"}
+              onClick={() => goToTab("reports")}
+              label="Report Builder"
+            />
+            <TopTab
+              active={activeTab === "census"}
+              onClick={() => goToTab("census")}
+              label="Patient Census"
+            />
+            <TopTab
+              active={activeTab === "help"}
+              onClick={() => goToTab("help")}
+              label="Guide & Info"
+            />
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
-            <motion.section key="dashboard" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6">
+          {activeTab === "dashboard" && (
+            <motion.section
+              key="dashboard"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <StatCard label="Appointments" value={appointments.length.toString()} hint="Total saved visits" icon={<Calendar />} onClick={() => goToTab('appointments')} />
-                <StatCard label="Patient Census" value={residents.length.toString()} hint="Active Registry" icon={<Users />} onClick={() => goToTab('census')} />
-                <StatCard label="Completed" value={completedAppointments.length.toString()} hint="Closed visit records" icon={<ShieldCheck />} onClick={() => goToTab('appointments')} />
-                <StatCard label="Next Visit" value={nextAppointment ? formatShortDate(nextAppointment.date) : '—'} hint={nextAppointment ? nextAppointment.time : 'No upcoming visit'} icon={<Activity />} onClick={() => goToTab('appointments')} />
+                <StatCard
+                  label="Appointments"
+                  value={appointments.length.toString()}
+                  hint="Total saved visits"
+                  icon={<Calendar />}
+                  onClick={() => goToTab("appointments")}
+                />
+                <StatCard
+                  label="Patient Census"
+                  value={residents.length.toString()}
+                  hint="Active Registry"
+                  icon={<Users />}
+                  onClick={() => goToTab("census")}
+                />
+                <StatCard
+                  label="Completed"
+                  value={completedAppointments.length.toString()}
+                  hint="Closed visit records"
+                  icon={<ShieldCheck />}
+                  onClick={() => goToTab("appointments")}
+                />
+                <StatCard
+                  label="Next Visit"
+                  value={
+                    nextAppointment
+                      ? formatShortDate(nextAppointment.date)
+                      : "—"
+                  }
+                  hint={
+                    nextAppointment ? nextAppointment.time : "No upcoming visit"
+                  }
+                  icon={<Activity />}
+                  onClick={() => goToTab("appointments")}
+                />
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <Card title="Planned Appointments" subtitle={`${upcomingAppointments.length} item${upcomingAppointments.length === 1 ? '' : 's'} scheduled`} className="xl:col-span-2">
+                <Card
+                  title="Planned Appointments"
+                  subtitle={`${upcomingAppointments.length} item${upcomingAppointments.length === 1 ? "" : "s"} scheduled`}
+                  className="xl:col-span-2"
+                >
                   <div className="space-y-3">
                     {upcomingAppointments.length > 0 ? (
                       upcomingAppointments.map((apt) => (
-                        <AppointmentItem 
-                          key={apt.id} 
-                          appointment={apt} 
+                        <AppointmentItem
+                          key={apt.id}
+                          appointment={apt}
                           residents={residents}
-                          doctorName={getDoctorNameDisplay(apt)} 
+                          doctorName={getDoctorNameDisplay(apt)}
                           currentFacility={currentFacility}
-                          onClick={() => handleOpenEdit(apt)} 
+                          onClick={() => handleOpenEdit(apt)}
                         />
                       ))
                     ) : (
-                      <EmptyState icon={<Calendar size={44} />} title="No upcoming appointments" text="Use Add Appointment to start a new entry." action={<Button size="sm" variant="secondary" onClick={handleOpenAdd}>New Record</Button>} />
+                      <EmptyState
+                        icon={<Calendar size={44} />}
+                        title="No upcoming appointments"
+                        text="Use Add Appointment to start a new entry."
+                        action={
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleOpenAdd}
+                          >
+                            New Record
+                          </Button>
+                        }
+                      />
                     )}
                   </div>
                 </Card>
@@ -683,186 +988,344 @@ export default function App() {
                 <div className="space-y-6">
                   <Card title="Quick Actions" subtitle="Common tracker tasks">
                     <div className="grid gap-3">
-                      <Button className="w-full justify-start gap-3" onClick={handleOpenAdd}><Plus size={18} /> Add Appointment</Button>
-                      <Button variant="secondary" className="w-full justify-start gap-3" onClick={() => goToTab('census')}><Users size={18} /> Manage Census</Button>
-                      <Button variant="secondary" className="w-full justify-start gap-3" onClick={() => goToTab('reports')}><FileText size={18} /> Build Reports</Button>
+                      <Button
+                        className="w-full justify-start gap-3"
+                        onClick={handleOpenAdd}
+                      >
+                        <Plus size={18} /> Add Appointment
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="w-full justify-start gap-3"
+                        onClick={() => goToTab("census")}
+                      >
+                        <Users size={18} /> Manage Census
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="w-full justify-start gap-3"
+                        onClick={() => goToTab("reports")}
+                      >
+                        <FileText size={18} /> Build Reports
+                      </Button>
                     </div>
                   </Card>
 
                   <div className="transport-gradient rounded-2xl p-6 text-white shadow-[0_10px_30px_rgba(11,42,111,.12)]">
-                    <h4 className="font-black text-lg mb-2 flex items-center gap-2"><Bell size={20} /> Daily Health Tip</h4>
-                    <p className="text-sm opacity-90 leading-relaxed">Keep appointment details updated with provider, date, time, location, and follow-up notes so records stay survey-ready and easy to review.</p>
-                    <button className="mt-4 text-xs font-black bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors">View All Tips</button>
+                    <h4 className="font-black text-lg mb-2 flex items-center gap-2">
+                      <Bell size={20} /> Daily Health Tip
+                    </h4>
+                    <p className="text-sm opacity-90 leading-relaxed">
+                      Keep appointment details updated with provider, date,
+                      time, location, and follow-up notes so records stay
+                      survey-ready and easy to review.
+                    </p>
+                    <button className="mt-4 text-xs font-black bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors">
+                      View All Tips
+                    </button>
                   </div>
                 </div>
               </div>
             </motion.section>
           )}
 
-          {activeTab === 'appointments' && (
-            <motion.section key="appointments" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-5">
-              <Card 
-                title="Consolidated Appointment Log" 
+          {activeTab === "appointments" && (
+            <motion.section
+              key="appointments"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-5"
+            >
+              <Card
+                title="Consolidated Appointment Log"
                 subtitle="High-definition tabular view of all medical visits and logistics."
-                actions={<Button size="sm" onClick={handleOpenAdd}><Plus size={15} /> Add Record</Button>}
+                actions={
+                  <Button size="sm" onClick={handleOpenAdd}>
+                    <Plus size={15} /> Add Record
+                  </Button>
+                }
                 className="overflow-hidden"
               >
                 <div className="mt-2">
                   {appointments.length > 0 ? (
-                    <WideAppointmentTable 
-                      appointments={appointments.sort((a,b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())}
+                    <WideAppointmentTable
+                      appointments={appointments.sort(
+                        (a, b) =>
+                          new Date(`${a.date}T${a.time}`).getTime() -
+                          new Date(`${b.date}T${b.time}`).getTime(),
+                      )}
                       residents={residents}
                       currentFacility={currentFacility}
                       onEdit={handleOpenEdit}
+                      onSaveAll={handleSaveAllAppointments}
                     />
                   ) : (
-                    <EmptyState icon={<Database size={44} />} title="No entries found" text="Your system log is currently empty." />
+                    <EmptyState
+                      icon={<Database size={44} />}
+                      title="No entries found"
+                      text="Your system log is currently empty."
+                    />
                   )}
                 </div>
               </Card>
             </motion.section>
           )}
 
-          {activeTab === 'reports' && (
-            <motion.section key="reports" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6">
+          {activeTab === "reports" && (
+            <motion.section
+              key="reports"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                 <div className="xl:col-span-4 space-y-6">
-                  <Card title="Report Configuration" subtitle="Define boundaries for data extraction.">
+                  <Card
+                    title="Report Configuration"
+                    subtitle="Define boundaries for data extraction."
+                  >
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <label className="block text-xs font-black uppercase text-slate-500">Quick Presets</label>
+                        <label className="block text-xs font-black uppercase text-slate-500">
+                          Quick Presets
+                        </label>
                         <div className="flex flex-wrap gap-2">
-                          <button onClick={() => setReportPreset('today')} className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors">Today</button>
-                          <button onClick={() => setReportPreset('week')} className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors">Last 7 Days</button>
-                          <button onClick={() => setReportPreset('month')} className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors">Last Month</button>
+                          <button
+                            onClick={() => setReportPreset("today")}
+                            className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors"
+                          >
+                            Today
+                          </button>
+                          <button
+                            onClick={() => setReportPreset("week")}
+                            className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors"
+                          >
+                            Last 7 Days
+                          </button>
+                          <button
+                            onClick={() => setReportPreset("month")}
+                            className="px-3 py-1.5 rounded-lg border border-[#d6deeb] text-xs font-bold hover:bg-brand-light transition-colors"
+                          >
+                            Last Month
+                          </button>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <FormField label="From Date">
-                          <input 
-                            type="date" 
-                            value={reportFilters.startDate} 
-                            onChange={e => setReportFilters({...reportFilters, startDate: e.target.value})}
-                            className="w-full px-4 py-2 rounded-xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 outline-none bg-white text-sm" 
+                          <input
+                            type="date"
+                            value={reportFilters.startDate}
+                            onChange={(e) =>
+                              setReportFilters({
+                                ...reportFilters,
+                                startDate: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 rounded-xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 outline-none bg-white text-sm"
                           />
                         </FormField>
                         <FormField label="To Date">
-                          <input 
-                            type="date" 
-                            value={reportFilters.endDate} 
-                            onChange={e => setReportFilters({...reportFilters, endDate: e.target.value})}
-                            className="w-full px-4 py-2 rounded-xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 outline-none bg-white text-sm" 
+                          <input
+                            type="date"
+                            value={reportFilters.endDate}
+                            onChange={(e) =>
+                              setReportFilters({
+                                ...reportFilters,
+                                endDate: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 rounded-xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 outline-none bg-white text-sm"
                           />
                         </FormField>
                       </div>
 
                       <FormField label="Export Format">
                         <div className="grid grid-cols-1 gap-2">
-                          {['PDF Document (.pdf)', 'Excel Worksheet (.xlsx)', 'CSV Data (.csv)'].map(fmt => (
-                            <button 
+                          {[
+                            "PDF Document (.pdf)",
+                            "Excel Worksheet (.xlsx)",
+                            "CSV Data (.csv)",
+                          ].map((fmt) => (
+                            <button
                               key={fmt}
-                              onClick={() => setReportFilters({...reportFilters, exportType: fmt})}
+                              onClick={() =>
+                                setReportFilters({
+                                  ...reportFilters,
+                                  exportType: fmt,
+                                })
+                              }
                               className={`flex items-center justify-between p-3 rounded-xl border text-sm font-bold transition-all ${
-                                reportFilters.exportType === fmt 
-                                  ? 'border-brand bg-brand-light text-brand shadow-sm' 
-                                  : 'border-[#d6deeb] bg-white text-slate-600 hover:border-brand/30'
+                                reportFilters.exportType === fmt
+                                  ? "border-brand bg-brand-light text-brand shadow-sm"
+                                  : "border-[#d6deeb] bg-white text-slate-600 hover:border-brand/30"
                               }`}
                             >
-                               <div className="flex items-center gap-3">
-                                 {fmt.includes('.pdf') ? <FileText size={16} /> : fmt.includes('.xlsx') ? <FileSpreadsheet size={16} /> : <Database size={16} />}
-                                 {fmt}
-                               </div>
-                               {reportFilters.exportType === fmt && <CheckSquare size={14} />}
+                              <div className="flex items-center gap-3">
+                                {fmt.includes(".pdf") ? (
+                                  <FileText size={16} />
+                                ) : fmt.includes(".xlsx") ? (
+                                  <FileSpreadsheet size={16} />
+                                ) : (
+                                  <Database size={16} />
+                                )}
+                                {fmt}
+                              </div>
+                              {reportFilters.exportType === fmt && (
+                                <CheckSquare size={14} />
+                              )}
                             </button>
                           ))}
                         </div>
                       </FormField>
 
                       <div className="pt-4 flex gap-3">
-                        <Button 
+                        <Button
                           className="flex-1 gap-2 shadow-lg hover:shadow-brand/20"
                           onClick={() => {
-                            const filtered = appointments.filter(apt => {
+                            const filtered = appointments.filter((apt) => {
                               const date = new Date(apt.date);
-                              const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
-                              const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
+                              const start = reportFilters.startDate
+                                ? new Date(reportFilters.startDate)
+                                : null;
+                              const end = reportFilters.endDate
+                                ? new Date(reportFilters.endDate)
+                                : null;
                               if (start && date < start) return false;
                               if (end && date > end) return false;
                               return true;
                             });
-                            generateFullReport(filtered, reportFilters.columns, undefined, currentFacility);
+                            generateFullReport(
+                              filtered,
+                              reportFilters.columns,
+                              undefined,
+                              currentFacility,
+                            );
                           }}
                         >
                           <FileDown size={18} /> Generate
                         </Button>
-                        <Button variant="secondary" className="px-4"><Printer size={18} /></Button>
+                        <Button variant="secondary" className="px-4">
+                          <Printer size={18} />
+                        </Button>
                       </div>
 
                       <div className="pt-4 border-t border-[#d6deeb]">
-                        <label className="block text-xs font-black uppercase text-slate-500 mb-3">Specialized Templates</label>
-                        <Button 
+                        <label className="block text-xs font-black uppercase text-slate-500 mb-3">
+                          Specialized Templates
+                        </label>
+                        <Button
                           variant="secondary"
                           className="w-full gap-3 justify-center border-brand/20 hover:bg-brand-light"
                           onClick={() => {
-                            const filtered = appointments.filter(apt => {
+                            const filtered = appointments.filter((apt) => {
                               const date = new Date(apt.date);
-                              const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
-                              const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
+                              const start = reportFilters.startDate
+                                ? new Date(reportFilters.startDate)
+                                : null;
+                              const end = reportFilters.endDate
+                                ? new Date(reportFilters.endDate)
+                                : null;
                               if (start && date < start) return false;
                               if (end && date > end) return false;
                               return true;
                             });
-                            generateTransportSchedulePDF(filtered, reportFilters.startDate || 'all', reportFilters.endDate || 'all', currentFacility);
+                            generateTransportSchedulePDF(
+                              filtered,
+                              reportFilters.startDate || "all",
+                              reportFilters.endDate || "all",
+                              currentFacility,
+                            );
                           }}
                         >
                           <Calendar size={18} /> Export Transport Calendar
                         </Button>
-                        <p className="text-[10px] text-slate-400 mt-2 text-center italic">Matches the facility transport schedule grid format.</p>
+                        <p className="text-[10px] text-slate-400 mt-2 text-center italic">
+                          Matches the facility transport schedule grid format.
+                        </p>
                       </div>
                     </div>
                   </Card>
                 </div>
 
                 <div className="xl:col-span-8 space-y-6">
-                  <Card title="Column Selection" subtitle="Choose which data tags to include in your output.">
+                  <Card
+                    title="Column Selection"
+                    subtitle="Choose which data tags to include in your output."
+                  >
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {['Resident Name', 'Date', 'Time', 'Provider', 'Specialty', 'Transport', 'Status', 'Origin', 'Room #', 'Unit', 'Notes', 'Payer'].map(col => (
-                        <button 
+                      {[
+                        "Resident Name",
+                        "Date",
+                        "Time",
+                        "Provider",
+                        "Specialty",
+                        "Transport",
+                        "Status",
+                        "Origin",
+                        "Room #",
+                        "Unit",
+                        "Notes",
+                        "Payer",
+                        "Weight",
+                        "Height",
+                      ].map((col) => (
+                        <button
                           key={col}
                           onClick={() => toggleReportColumn(col)}
                           className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-black transition-all ${
                             reportFilters.columns.includes(col)
-                              ? 'bg-brand text-white border-transparent'
-                              : 'bg-white text-slate-500 border-[#d6deeb] hover:border-brand/40'
+                              ? "bg-brand text-white border-transparent"
+                              : "bg-white text-slate-500 border-[#d6deeb] hover:border-brand/40"
                           }`}
                         >
-                          {reportFilters.columns.includes(col) ? <CheckSquare size={16} /> : <Square size={16} />}
+                          {reportFilters.columns.includes(col) ? (
+                            <CheckSquare size={16} />
+                          ) : (
+                            <Square size={16} />
+                          )}
                           {col}
                         </button>
                       ))}
                     </div>
                   </Card>
 
-                  <Card title="Live Preview (Draft)" subtitle="Real-time look at filtered records." className="overflow-hidden">
+                  <Card
+                    title="Live Preview (Draft)"
+                    subtitle="Real-time look at filtered records."
+                    className="overflow-hidden"
+                  >
                     <div className="mt-2">
                       {appointments.length > 0 ? (
-                        <WideAppointmentTable 
-                          appointments={appointments.filter(apt => {
-                            const date = new Date(apt.date);
-                            const start = reportFilters.startDate ? new Date(reportFilters.startDate) : null;
-                            const end = reportFilters.endDate ? new Date(reportFilters.endDate) : null;
-                            if (start && date < start) return false;
-                            if (end && date > end) return false;
-                            return true;
-                          }).slice(0, 10)} 
+                        <WideAppointmentTable
+                          appointments={appointments
+                            .filter((apt) => {
+                              const date = new Date(apt.date);
+                              const start = reportFilters.startDate
+                                ? new Date(reportFilters.startDate)
+                                : null;
+                              const end = reportFilters.endDate
+                                ? new Date(reportFilters.endDate)
+                                : null;
+                              if (start && date < start) return false;
+                              if (end && date > end) return false;
+                              return true;
+                            })
+                            .slice(0, 10)}
                           residents={residents}
                           currentFacility={currentFacility}
                           selectedColumns={reportFilters.columns}
-                          onEdit={handleOpenEdit} 
+                          onEdit={handleOpenEdit}
+                          onSaveAll={handleSaveAllAppointments}
                         />
                       ) : (
-                        <div className="py-20 text-center opacity-40 italic text-sm">No data matching current filters</div>
+                        <div className="py-20 text-center opacity-40 italic text-sm">
+                          No data matching current filters
+                        </div>
                       )}
                     </div>
                   </Card>
@@ -871,39 +1334,75 @@ export default function App() {
             </motion.section>
           )}
 
-          {activeTab === 'trends' && (
-            <motion.section key="trends" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6">
+          {activeTab === "trends" && (
+            <motion.section
+              key="trends"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card title="Volume by Specialty" subtitle="Monthly appointment distribution.">
+                <Card
+                  title="Volume by Specialty"
+                  subtitle="Monthly appointment distribution."
+                >
                   <div className="h-64 flex items-end justify-between gap-4 pt-10 px-4">
                     {[65, 45, 85, 30, 55, 75, 40].map((h, i) => (
-                      <div key={i} className="flex-1 bg-brand-light rounded-t-xl relative group transition-all hover:bg-brand/10">
-                        <motion.div 
-                          initial={{ height: 0 }} 
-                          animate={{ height: `${h}%` }} 
+                      <div
+                        key={i}
+                        className="flex-1 bg-brand-light rounded-t-xl relative group transition-all hover:bg-brand/10"
+                      >
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${h}%` }}
                           className="absolute bottom-0 left-0 right-0 bg-brand rounded-t-xl shadow-[0_-4px_12px_rgba(11,42,111,0.2)]"
                         />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          {Math.round(h / 2)} Visit{h/2 === 1 ? '' : 's'}
+                          {Math.round(h / 2)} Visit{h / 2 === 1 ? "" : "s"}
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="flex justify-between mt-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                    <span>Cardio</span><span>Derm</span><span>Ortho</span><span>Physio</span><span>Dental</span><span>Onco</span><span>Gastro</span>
+                    <span>Cardio</span>
+                    <span>Derm</span>
+                    <span>Ortho</span>
+                    <span>Physio</span>
+                    <span>Dental</span>
+                    <span>Onco</span>
+                    <span>Gastro</span>
                   </div>
                 </Card>
-                <Card title="Growth Analytics" subtitle="Provider availability vs network demand.">
+                <Card
+                  title="Growth Analytics"
+                  subtitle="Provider availability vs network demand."
+                >
                   <div className="py-12 flex flex-col items-center justify-center text-center">
                     <div className="w-20 h-20 rounded-full bg-brand-light flex items-center justify-center text-brand mb-4">
                       <TrendingUp size={32} />
                     </div>
-                    <p className="font-black text-slate-900">12% Monthly Increase</p>
-                    <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">Network demand for specialty referrals is currently outpacing in-house provider capacity.</p>
+                    <p className="font-black text-slate-900">
+                      12% Monthly Increase
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">
+                      Network demand for specialty referrals is currently
+                      outpacing in-house provider capacity.
+                    </p>
                     <div className="mt-8 grid grid-cols-3 gap-4 w-full px-6">
-                       <div className="text-center"><p className="text-xs font-black text-slate-400">MAY</p><p className="font-extrabold text-brand">+4.2%</p></div>
-                       <div className="text-center"><p className="text-xs font-black text-slate-400">JUN</p><p className="font-extrabold text-brand">+7.1%</p></div>
-                       <div className="text-center"><p className="text-xs font-black text-slate-400">JUL</p><p className="font-extrabold text-brand">+2.8%</p></div>
+                      <div className="text-center">
+                        <p className="text-xs font-black text-slate-400">MAY</p>
+                        <p className="font-extrabold text-brand">+4.2%</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-black text-slate-400">JUN</p>
+                        <p className="font-extrabold text-brand">+7.1%</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-black text-slate-400">JUL</p>
+                        <p className="font-extrabold text-brand">+2.8%</p>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -911,96 +1410,184 @@ export default function App() {
             </motion.section>
           )}
 
-          {activeTab === 'census' && (
-            <motion.section key="census" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6">
+          {activeTab === "census" && (
+            <motion.section
+              key="census"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                 <div className="xl:col-span-5 space-y-6">
-                  <Card title="Bulk Import / Paste" subtitle="Copy from Excel or text and paste here for easy upload.">
+                  <Card
+                    title="Bulk Import / Paste"
+                    subtitle="Copy from Excel or text and paste here for easy upload."
+                  >
                     <div className="space-y-4">
                       <div className="bg-[#fcfdfe] border border-[#d6deeb] rounded-2xl p-4">
-                        <label className="block text-[10px] font-black uppercase text-brand tracking-widest mb-3 italic">Preferred Format: Resident Listing Report</label>
+                        <label className="block text-[10px] font-black uppercase text-brand tracking-widest mb-3 italic">
+                          Preferred Format: Resident Listing Report
+                        </label>
                         <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                          Select and copy the resident rows from your report and paste them here. <br />
-                          The parser automatically extracts <span className="font-bold text-slate-700">Names, MRNs, Age, Locations, Physicians,</span> and <span className="font-bold text-slate-700">Diagnosis</span>.
+                          Select and copy the resident rows from your report and
+                          paste them here. <br />
+                          The parser automatically extracts{" "}
+                          <span className="font-bold text-slate-700">
+                            Names, MRNs, Age, Locations, Physicians,
+                          </span>{" "}
+                          and{" "}
+                          <span className="font-bold text-slate-700">
+                            Diagnosis
+                          </span>
+                          .
                         </p>
-                        <textarea 
+                        <textarea
                           className="w-full h-48 px-4 py-3 bg-white rounded-xl border border-[#d6deeb] shadow-inner focus:ring-2 focus:ring-brand-2/20 outline-none text-sm font-medium resize-none"
                           placeholder="Paste Resident Listing Report data here..."
                           value={censusPasteText}
-                          onChange={e => setCensusPasteText(e.target.value)}
+                          onChange={(e) => setCensusPasteText(e.target.value)}
                         />
                       </div>
                       <div className="flex items-center gap-3 px-1">
                         <label className="flex items-center gap-2 cursor-pointer group">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${censusSkipDuplicates ? 'bg-brand border-brand' : 'bg-white border-slate-300 group-hover:border-brand'}`}>
-                            {censusSkipDuplicates && <CheckSquare size={14} className="text-white" />}
-                            <input 
-                              type="checkbox" 
-                              className="hidden" 
-                              checked={censusSkipDuplicates} 
-                              onChange={() => setCensusSkipDuplicates(!censusSkipDuplicates)} 
+                          <div
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${censusSkipDuplicates ? "bg-brand border-brand" : "bg-white border-slate-300 group-hover:border-brand"}`}
+                          >
+                            {censusSkipDuplicates && (
+                              <CheckSquare size={14} className="text-white" />
+                            )}
+                            <input
+                              type="checkbox"
+                              className="hidden"
+                              checked={censusSkipDuplicates}
+                              onChange={() =>
+                                setCensusSkipDuplicates(!censusSkipDuplicates)
+                              }
                             />
                           </div>
-                          <span className="text-xs font-bold text-slate-600">Skip Existing Residents</span>
+                          <span className="text-xs font-bold text-slate-600">
+                            Skip Existing Residents
+                          </span>
                         </label>
                       </div>
                       <div className="flex gap-3">
-                        <Button className="flex-1 gap-2" onClick={handleParseCensus} disabled={isParsing}>
-                          {isParsing ? <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white" /> : <ClipboardPaste size={18} />} 
+                        <Button
+                          className="flex-1 gap-2"
+                          onClick={handleParseCensus}
+                          disabled={isParsing}
+                        >
+                          {isParsing ? (
+                            <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white" />
+                          ) : (
+                            <ClipboardPaste size={18} />
+                          )}
                           Parse & Preview
                         </Button>
-                        <Button variant="secondary" onClick={() => { setCensusPasteText(''); setParsedResidentsPreview([]); }}>Clear</Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setCensusPasteText("");
+                            setParsedResidentsPreview([]);
+                          }}
+                        >
+                          Clear
+                        </Button>
                       </div>
                     </div>
                   </Card>
 
                   {parsedResidentsPreview.length > 0 && (
-                    <Card title="Preview Upload" subtitle="Review parsed data before final submission." className="border-brand-2 ring-2 ring-brand-2/10">
+                    <Card
+                      title="Preview Upload"
+                      subtitle="Review parsed data before final submission."
+                      className="border-brand-2 ring-2 ring-brand-2/10"
+                    >
                       <div className="max-h-[400px] overflow-y-auto page-scrollbar rounded-xl border border-[#d6deeb] mb-4 shadow-inner">
-                         <table className="w-full text-left">
-                            <thead className="bg-[#f8fbff] text-[10px] font-black uppercase text-[#0b2a6f] sticky top-0 z-10">
-                               <tr>
-                                  <th className="px-4 py-3 border-b border-[#d6deeb]">Resident Name</th>
-                                  <th className="px-4 py-3 border-b border-[#d6deeb]">MRN</th>
-                                  <th className="px-4 py-3 border-b border-[#d6deeb]">Age</th>
-                                  <th className="px-4 py-3 border-b border-[#d6deeb]">Unit / Room</th>
-                                  <th className="px-4 py-3 border-b border-[#d6deeb]">Physician</th>
-                               </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#d6deeb] text-xs">
-                               {parsedResidentsPreview.map((r, i) => (
-                                 <tr key={i} className="bg-white hover:bg-brand-light/20 transition-colors">
-                                    <td className="px-4 py-3">
-                                      <p className="font-extrabold text-slate-900">{r.name}</p>
-                                      <p className="text-[10px] opacity-60 uppercase">{r.sex}</p>
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-500 font-mono">{r.mrn}</td>
-                                    <td className="px-4 py-3 font-bold">{r.age}</td>
-                                    <td className="px-4 py-3">
-                                      <p className="font-medium text-slate-600">{r.unit}</p>
-                                      <p className="text-[10px] font-black bg-slate-100 inline-block px-1 rounded">{r.roomNumber}</p>
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-500 italic">{r.doctor}</td>
-                                 </tr>
-                               ))}
-                            </tbody>
-                         </table>
+                        <table className="w-full text-left">
+                          <thead className="bg-[#f8fbff] text-[10px] font-black uppercase text-[#0b2a6f] sticky top-0 z-10">
+                            <tr>
+                              <th className="px-4 py-3 border-b border-[#d6deeb]">
+                                Resident Name
+                              </th>
+                              <th className="px-4 py-3 border-b border-[#d6deeb]">
+                                MRN
+                              </th>
+                              <th className="px-4 py-3 border-b border-[#d6deeb]">
+                                Age
+                              </th>
+                              <th className="px-4 py-3 border-b border-[#d6deeb]">
+                                Unit / Room
+                              </th>
+                              <th className="px-4 py-3 border-b border-[#d6deeb]">
+                                Physician
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#d6deeb] text-xs">
+                            {parsedResidentsPreview.map((r, i) => (
+                              <tr
+                                key={i}
+                                className="bg-white hover:bg-brand-light/20 transition-colors"
+                              >
+                                <td className="px-4 py-3">
+                                  <p className="font-extrabold text-slate-900">
+                                    {r.name}
+                                  </p>
+                                  <p className="text-[10px] opacity-60 uppercase">
+                                    {r.sex}
+                                  </p>
+                                </td>
+                                <td className="px-4 py-3 text-slate-500 font-mono">
+                                  {r.mrn}
+                                </td>
+                                <td className="px-4 py-3 font-bold">{r.age}</td>
+                                <td className="px-4 py-3">
+                                  <p className="font-medium text-slate-600">
+                                    {r.floor !== "—" ? `${r.floor} • ` : ""}{r.unit}
+                                  </p>
+                                  <p className="text-[10px] font-black bg-slate-100 inline-block px-1 rounded">
+                                    {r.roomNumber}
+                                  </p>
+                                </td>
+                                <td className="px-4 py-3 text-slate-500 italic">
+                                  {r.doctor}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                       <div className="flex items-center justify-between p-2 bg-brand-light/30 rounded-xl mb-4 text-xs font-bold text-brand">
-                        <span>{parsedResidentsPreview.length} records ready for import</span>
+                        <span>
+                          {parsedResidentsPreview.length} records ready for
+                          import
+                        </span>
                         <CheckSquare size={16} />
                       </div>
-                      <Button className="w-full gap-2" onClick={handleSaveCensus}><Save size={18} /> Confirm & Save to Registry</Button>
+                      <Button
+                        className="w-full gap-2"
+                        onClick={handleSaveCensus}
+                      >
+                        <Save size={18} /> Confirm & Save to Registry
+                      </Button>
                     </Card>
                   )}
                 </div>
 
                 <div className="xl:col-span-7">
-                  <Card title="Active Patient Census" subtitle="Current resident directory for auto-complete systems.">
+                  <Card
+                    title="Active Patient Census"
+                    subtitle="Current resident directory for auto-complete systems."
+                  >
                     <div className="mb-6">
                       <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input 
+                        <Search
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                          size={18}
+                        />
+                        <input
                           type="text"
                           placeholder="Search census by name or MRN..."
                           className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-[#d6deeb] rounded-2xl focus:ring-2 focus:ring-brand-2/20 outline-none transition-all font-medium text-sm"
@@ -1021,47 +1608,86 @@ export default function App() {
                         </thead>
                         <tbody className="divide-y divide-[#d6deeb]">
                           {residents
-                            .filter(r => 
-                              r.name.toLowerCase().includes(censusSearchQuery.toLowerCase()) || 
-                              r.mrn.toLowerCase().includes(censusSearchQuery.toLowerCase())
+                            .filter(
+                              (r) =>
+                                r.name
+                                  .toLowerCase()
+                                  .includes(censusSearchQuery.toLowerCase()) ||
+                                r.mrn
+                                  .toLowerCase()
+                                  .includes(censusSearchQuery.toLowerCase()),
                             )
-                            .map(res => (
-                            <tr key={res.id} className="hover:bg-brand-light/30 transition-colors group">
-                              <td className="px-6 py-4">
-                                <p className="font-black text-slate-900 leading-tight">{res.name}</p>
-                                <p className="text-[10px] text-slate-500 mt-0.5">MRN: <span className="font-mono">{res.mrn}</span> • {res.sex === 'M' ? 'Male' : 'Female'} • Age {res.age}</p>
-                              </td>
-                              <td className="px-6 py-4">
-                                <p className="text-sm text-slate-600 font-medium italic">{res.unit}</p>
-                                <span className="px-3 py-1 bg-white border border-[#d6deeb] rounded-lg text-[11px] font-black shadow-sm mt-1 inline-block">{res.roomNumber}</span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <p className="text-xs text-slate-700 font-bold">{res.doctor}</p>
-                                <p className="text-[10px] text-slate-500 truncate max-w-[150px]" title={res.diagnosis}>{res.diagnosis}</p>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    onClick={() => {
-                                      setSelectedResident(res);
-                                      setIsResidentDetailOpen(true);
-                                    }}
-                                    className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors" 
-                                    title="View Detailed Profile"
+                            .map((res) => (
+                              <tr
+                                key={res.id}
+                                className="hover:bg-brand-light/30 transition-colors group"
+                              >
+                                <td className="px-6 py-4">
+                                  <p className="font-black text-slate-900 leading-tight">
+                                    {res.name}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 mt-0.5">
+                                    MRN:{" "}
+                                    <span className="font-mono">{res.mrn}</span>{" "}
+                                    • {res.sex === "M" ? "Male" : "Female"} •
+                                    Age {res.age}
+                                  </p>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <p className="text-sm text-slate-600 font-medium italic">
+                                    {res.floor !== "—" ? `${res.floor} • ` : ""}{res.unit}
+                                  </p>
+                                  <span className="px-3 py-1 bg-white border border-[#d6deeb] rounded-lg text-[11px] font-black shadow-sm mt-1 inline-block">
+                                    {res.roomNumber}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <p className="text-xs text-slate-700 font-bold">
+                                    {res.doctor}
+                                  </p>
+                                  <p
+                                    className="text-[10px] text-slate-500 truncate max-w-[150px]"
+                                    title={res.diagnosis}
                                   >
-                                    <User size={16} />
-                                  </button>
-                                  <button onClick={() => deleteResident(res.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors" title="Delete Resident"><Trash2 size={16} /></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                                    {res.diagnosis}
+                                  </p>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedResident(res);
+                                        setIsResidentDetailOpen(true);
+                                      }}
+                                      className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                      title="View Detailed Profile"
+                                    >
+                                      <User size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteResident(res.id)}
+                                      className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
+                                      title="Delete Resident"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
                           {residents.length === 0 && (
                             <tr>
                               <td colSpan={4} className="py-20 text-center">
-                                <Users size={40} className="mx-auto mb-3 opacity-20" />
-                                <p className="font-extrabold text-slate-400">Registry is currently empty</p>
-                                <p className="text-xs text-slate-400 mt-1">Upload data on the left to begin.</p>
+                                <Users
+                                  size={40}
+                                  className="mx-auto mb-3 opacity-20"
+                                />
+                                <p className="font-extrabold text-slate-400">
+                                  Registry is currently empty
+                                </p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  Upload data on the left to begin.
+                                </p>
                               </td>
                             </tr>
                           )}
@@ -1069,7 +1695,9 @@ export default function App() {
                       </table>
                     </div>
                     <div className="mt-4 flex items-center justify-between text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                      <span>Database: {residents.length || 0} Total Records</span>
+                      <span>
+                        Database: {residents.length || 0} Total Records
+                      </span>
                       <span>v1.2 Secure Ledger</span>
                     </div>
                   </Card>
@@ -1077,8 +1705,15 @@ export default function App() {
               </div>
             </motion.section>
           )}
-          {activeTab === 'help' && (
-            <motion.section key="help" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .18 }} className="space-y-6 pb-20">
+          {activeTab === "help" && (
+            <motion.section
+              key="help"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6 pb-20"
+            >
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
@@ -1087,45 +1722,77 @@ export default function App() {
                         <MapPin size={24} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black text-slate-800">Facility Management</h3>
-                        <p className="text-sm text-slate-500">Configure transportation hubs and facilities</p>
+                        <h3 className="text-xl font-black text-slate-800">
+                          Facility Management
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          Configure transportation hubs and facilities
+                        </p>
                       </div>
                     </div>
-                    {currentUser?.role === 'admin' && (
-                      <Button onClick={() => { setEditingFac(null); setIsFacModalOpen(true); }} className="gap-2">
+                    {currentUser?.role === "admin" && (
+                      <Button
+                        onClick={() => {
+                          setEditingFac(null);
+                          setIsFacModalOpen(true);
+                        }}
+                        className="gap-2"
+                      >
                         <Plus size={18} /> Add Facility
                       </Button>
                     )}
                   </div>
 
                   <div className="space-y-3">
-                    {facilities.map(fac => (
-                      <div key={fac.id} className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all">
+                    {facilities.map((fac) => (
+                      <div
+                        key={fac.id}
+                        className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
                             <Home size={20} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-slate-800">{fac.name}</h4>
-                            <p className="text-xs text-slate-500">{fac.address || 'No address set'}</p>
+                            <h4 className="font-bold text-slate-800">
+                              {fac.name}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {fac.address || "No address set"}
+                            </p>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="secondary" size="sm" onClick={() => { setEditingFac(fac); setIsFacModalOpen(true); }}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setEditingFac(fac);
+                              setIsFacModalOpen(true);
+                            }}
+                          >
                             Edit
                           </Button>
-                          {currentUser?.role === 'admin' && fac.id !== 'default-id' && (
-                            <Button variant="danger" size="sm" onClick={() => { if(confirm('Delete facility?')) deleteFacility(fac.id); }}>
-                              Delete
-                            </Button>
-                          )}
+                          {currentUser?.role === "admin" &&
+                            fac.id !== "default-id" && (
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Delete facility?"))
+                                    deleteFacility(fac.id);
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </Card>
 
-                {currentUser?.role === 'admin' && (
+                {currentUser?.role === "admin" && (
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
@@ -1133,33 +1800,58 @@ export default function App() {
                           <Users size={24} />
                         </div>
                         <div>
-                          <h3 className="text-xl font-black text-slate-800">User Access Logic</h3>
-                          <p className="text-sm text-slate-500">Manage facility visibility for staff members</p>
+                          <h3 className="text-xl font-black text-slate-800">
+                            User Access Logic
+                          </h3>
+                          <p className="text-sm text-slate-500">
+                            Manage facility visibility for staff members
+                          </p>
                         </div>
                       </div>
-                      <Button onClick={() => { setEditingUser(null); setUserFacPermissions([]); setIsUserModalOpen(true); }} className="gap-2 bg-purple-600 hover:bg-purple-700">
+                      <Button
+                        onClick={() => {
+                          setEditingUser(null);
+                          setUserFacPermissions([]);
+                          setIsUserModalOpen(true);
+                        }}
+                        className="gap-2 bg-purple-600 hover:bg-purple-700"
+                      >
                         <Plus size={18} /> New User
                       </Button>
                     </div>
 
                     <div className="space-y-3">
-                      {users.map(u => (
-                        <div key={u.id} className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all">
+                      {users.map((u) => (
+                        <div
+                          key={u.id}
+                          className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all"
+                        >
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
                               <User size={20} />
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">{u.fullName} <span className="ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">{u.role}</span></h4>
-                              <p className="text-xs text-slate-500">{u.email}</p>
+                              <h4 className="font-bold text-slate-800">
+                                {u.fullName}{" "}
+                                <span className="ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                  {u.role}
+                                </span>
+                              </h4>
+                              <p className="text-xs text-slate-500">
+                                {u.email}
+                              </p>
                             </div>
                           </div>
-                          <Button variant="secondary" size="sm" onClick={async () => {
-                            const perms = await fetchUserPermissions(u.id);
-                            setUserFacPermissions(perms);
-                            setEditingUser(u);
-                            setIsUserModalOpen(true);
-                          }}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={async () => {
+                              const perms = await fetchUserPermissions(u.id);
+                              setUserFacPermissions(perms);
+                              setEditingUser(u);
+                              setIsUserModalOpen(true);
+                            }}
+                          >
                             Access Logic
                           </Button>
                         </div>
@@ -1168,127 +1860,216 @@ export default function App() {
                   </Card>
                 )}
 
-                 <Card title="User Guide" subtitle="How to navigate the Appointment Tracker">
-                    <div className="space-y-6">
-                       <div className="flex gap-4">
-                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">1</div>
-                          <div>
-                             <p className="font-black text-slate-900">Manage Appointments</p>
-                             <p className="text-sm text-slate-500 mt-1">Use the Dashboard or Appointments tab to view scheduled visits. Click "Add Appointment" to create a new record including resident details, location, and transport needs.</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4">
-                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">2</div>
-                          <div>
-                             <p className="font-black text-slate-900">Generate Visit Forms</p>
-                             <p className="text-sm text-slate-500 mt-1">In the consolidated log, click the download icon on any record to instantly produce a visit form PDF. This contains all clinical and contact info for the provider.</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4">
-                          <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">3</div>
-                          <div>
-                             <p className="font-black text-slate-900">Bulk Census Import</p>
-                             <p className="text-sm text-slate-500 mt-1">Visit the Census tab to paste a resident listing report. The system parses names, ages, and unit info automatically to keep your registry in sync.</p>
-                          </div>
-                       </div>
+                <Card
+                  title="User Guide"
+                  subtitle="How to navigate the Appointment Tracker"
+                >
+                  <div className="space-y-6">
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
+                        1
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900">
+                          Manage Appointments
+                        </p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Use the Dashboard or Appointments tab to view
+                          scheduled visits. Click "Add Appointment" to create a
+                          new record including resident details, location, and
+                          transport needs.
+                        </p>
+                      </div>
                     </div>
-                 </Card>
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
+                        2
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900">
+                          Generate Visit Forms
+                        </p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          In the consolidated log, click the download icon on
+                          any record to instantly produce a visit form PDF. This
+                          contains all clinical and contact info for the
+                          provider.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
+                        3
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900">
+                          Bulk Census Import
+                        </p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Visit the Census tab to paste a resident listing
+                          report. The system parses names, ages, and unit info
+                          automatically to keep your registry in sync.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
 
-                 <Card title="Version History" subtitle="Recent updates and system changes">
-                    <div className="space-y-5">
-                       <div className="border-l-2 border-brand-2 pl-4 py-1">
-                          <div className="flex items-center gap-2 mb-1">
-                             <span className="text-xs font-black bg-brand-2/10 text-brand-2 px-2 py-0.5 rounded">v1.5.0</span>
-                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LATEST</span>
-                          </div>
-                          <p className="text-sm font-black text-slate-800">Cloudflare Migration & D1 Integration</p>
-                          <ul className="text-xs text-slate-500 mt-2 space-y-1 list-disc ml-4">
-                             <li>Switched to high-performance Cloudflare D1 database</li>
-                             <li>Migrated backend to Cloudflare Workers API</li>
-                             <li>Renamed "Reason" field to "Description of Need"</li>
-                             <li>Updated Location fields for better address support</li>
-                          </ul>
-                       </div>
-                       <div className="border-l-2 border-slate-200 pl-4 py-1">
-                          <div className="flex items-center gap-2 mb-1">
-                             <span className="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded">v1.4.0</span>
-                          </div>
-                          <p className="text-sm font-bold text-slate-700">Report Builder & Analytics</p>
-                          <p className="text-xs text-slate-500 mt-1">Added custom date-range report generation and specialty trends visualization.</p>
-                       </div>
+                <Card
+                  title="Version History"
+                  subtitle="Recent updates and system changes"
+                >
+                  <div className="space-y-5">
+                    <div className="border-l-2 border-brand-2 pl-4 py-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-black bg-brand-2/10 text-brand-2 px-2 py-0.5 rounded">
+                          v1.5.0
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          LATEST
+                        </span>
+                      </div>
+                      <p className="text-sm font-black text-slate-800">
+                        Cloudflare Migration & D1 Integration
+                      </p>
+                      <ul className="text-xs text-slate-500 mt-2 space-y-1 list-disc ml-4">
+                        <li>
+                          Switched to high-performance Cloudflare D1 database
+                        </li>
+                        <li>Migrated backend to Cloudflare Workers API</li>
+                        <li>Renamed "Reason" field to "Description of Need"</li>
+                        <li>
+                          Updated Location fields for better address support
+                        </li>
+                      </ul>
                     </div>
-                 </Card>
+                    <div className="border-l-2 border-slate-200 pl-4 py-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                          v1.4.0
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-700">
+                        Report Builder & Analytics
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Added custom date-range report generation and specialty
+                        trends visualization.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
               </div>
             </motion.section>
           )}
-
         </AnimatePresence>
       </main>
 
       <AnimatePresence>
         {isAddModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.96, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 18 }} className="relative w-full max-w-4xl bg-[#f8fbff] rounded-3xl shadow-2xl overflow-hidden border border-[#d6deeb] max-h-[90vh] flex flex-col">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAddModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 18 }}
+              className="relative w-full max-w-4xl bg-[#f8fbff] rounded-3xl shadow-2xl overflow-hidden border border-[#d6deeb] max-h-[90vh] flex flex-col"
+            >
               <div className="transport-gradient text-white p-5 shrink-0 flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-black tracking-tight">{editingId ? 'Modify Record' : 'New Appointment Request'}</h3>
-                  <p className="text-xs opacity-85 mt-0.5">Comprehensive entry for clinical and transport tracking.</p>
+                  <h3 className="text-xl font-black tracking-tight">
+                    {editingId ? "Modify Record" : "New Appointment Request"}
+                  </h3>
+                  <p className="text-xs opacity-85 mt-0.5">
+                    Comprehensive entry for clinical and transport tracking.
+                  </p>
                 </div>
-                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-white/15 rounded-full" aria-label="Close modal"><X size={20} /></button>
+                <button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="p-2 hover:bg-white/15 rounded-full"
+                  aria-label="Close modal"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               <div className="p-6 overflow-y-auto page-scrollbar space-y-8 flex-1">
                 {/* Origins Section */}
                 <section>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Origin of Appointment" info="e.g., MD Order / Family / Hospital / Specialist">
-                      <input 
-                        type="text" 
-                        value={newAppt.origin} 
-                        onChange={e => setNewAppt({...newAppt, origin: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" 
-                        placeholder="e.g., MD Order" 
+                    <FormField
+                      label="Origin of Appointment"
+                      info="e.g., MD Order / Family / Hospital / Specialist"
+                    >
+                      <input
+                        type="text"
+                        value={newAppt.origin}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, origin: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                        placeholder="e.g., MD Order"
                       />
                     </FormField>
                     <FormField label="Resident Name *" info="Last, First">
                       <div className="relative">
-                        <input 
-                          type="text" 
-                          value={newAppt.residentName} 
-                          onChange={e => handleResidentInputChange(e.target.value)} 
+                        <input
+                          type="text"
+                          value={newAppt.residentName}
+                          onChange={(e) =>
+                            handleResidentInputChange(e.target.value)
+                          }
                           onFocus={() => setShowResidentSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowResidentSuggestions(false), 200)}
-                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" 
-                          placeholder="Search census..." 
+                          onBlur={() =>
+                            setTimeout(
+                              () => setShowResidentSuggestions(false),
+                              200,
+                            )
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                          placeholder="Search census..."
                         />
-                        {showResidentSuggestions && (residentSearchTerm || newAppt.residentName) && filteredResidents.length > 0 && (
-                          <div className="absolute z-60 w-full mt-2 bg-white border border-[#d6deeb] rounded-2xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
-                            {filteredResidents.map(r => (
-                              <button
-                                key={r.id}
-                                type="button"
-                                className="w-full px-4 py-3 text-left hover:bg-brand-light/30 border-b border-[#f0f4f8] last:border-0 transition-colors"
-                                onClick={() => {
-                                  handleSelectResident(r);
-                                  setResidentSearchTerm('');
-                                  setShowResidentSuggestions(false);
-                                }}
-                              >
-                                <p className="font-black text-slate-800 text-sm">{r.name}</p>
-                                <p className="text-[10px] text-slate-500">MRN: {r.mrn} • {r.unit} • {r.roomNumber}</p>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {showResidentSuggestions &&
+                          (residentSearchTerm || newAppt.residentName) &&
+                          filteredResidents.length > 0 && (
+                            <div className="absolute z-60 w-full mt-2 bg-white border border-[#d6deeb] rounded-2xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                              {filteredResidents.map((r) => (
+                                <button
+                                  key={r.id}
+                                  type="button"
+                                  className="w-full px-4 py-3 text-left hover:bg-brand-light/30 border-b border-[#f0f4f8] last:border-0 transition-colors"
+                                  onClick={() => {
+                                    handleSelectResident(r);
+                                    setResidentSearchTerm("");
+                                    setShowResidentSuggestions(false);
+                                  }}
+                                >
+                                  <p className="font-black text-slate-800 text-sm">
+                                    {r.name}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500">
+                                    MRN: {r.mrn} • {r.unit} • {r.roomNumber}
+                                  </p>
+                                </button>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </FormField>
                     <FormField label="Unit">
-                      <input 
+                      <input
                         list="unit-options"
-                        value={newAppt.unit} 
-                        onChange={e => setNewAppt({...newAppt, unit: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" 
+                        value={newAppt.unit}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, unit: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
                         placeholder="e.g., Unit A"
                       />
                       <datalist id="unit-options">
@@ -1302,12 +2083,14 @@ export default function App() {
                       </datalist>
                     </FormField>
                     <FormField label="Room #">
-                      <input 
-                        type="text" 
-                        value={newAppt.roomNumber} 
-                        onChange={e => setNewAppt({...newAppt, roomNumber: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" 
-                        placeholder="e.g., 214A" 
+                      <input
+                        type="text"
+                        value={newAppt.roomNumber}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, roomNumber: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                        placeholder="e.g., 214A"
                       />
                     </FormField>
                   </div>
@@ -1320,30 +2103,42 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField label="Staff/Doctor Name">
-                      <input 
-                        type="text" 
-                        value={newAppt.providerName} 
-                        onChange={e => setNewAppt({...newAppt, providerName: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30" 
-                        placeholder="e.g., Dr. Smith" 
+                      <input
+                        type="text"
+                        value={newAppt.providerName}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            providerName: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="e.g., Dr. Smith"
                       />
                     </FormField>
                     <FormField label="Location Name / Address">
-                      <input 
-                        type="text" 
-                        value={newAppt.location} 
-                        onChange={e => setNewAppt({...newAppt, location: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30" 
-                        placeholder="Clinic / Hospital / Address" 
+                      <input
+                        type="text"
+                        value={newAppt.location}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, location: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="Clinic / Hospital / Address"
                       />
                     </FormField>
                     <FormField label="Contact Number">
-                      <input 
-                        type="text" 
-                        value={newAppt.contactNumber} 
-                        onChange={e => setNewAppt({...newAppt, contactNumber: e.target.value})} 
-                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30" 
-                        placeholder="(###) ###-####" 
+                      <input
+                        type="text"
+                        value={newAppt.contactNumber}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            contactNumber: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="(###) ###-####"
                       />
                     </FormField>
                   </div>
@@ -1352,16 +2147,39 @@ export default function App() {
                 {/* Dates & Status Section */}
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <FormField label="Transport Scheduling">
-                    <input type="date" value={newAppt.schedulingDate} onChange={e => setNewAppt({...newAppt, schedulingDate: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
+                    <input
+                      type="date"
+                      value={newAppt.schedulingDate}
+                      onChange={(e) =>
+                        setNewAppt({
+                          ...newAppt,
+                          schedulingDate: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                    />
                   </FormField>
                   <FormField label="Date of Referral">
-                    <input type="date" value={newAppt.referralDate} onChange={e => setNewAppt({...newAppt, referralDate: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
-                  </FormField>
-                  <FormField label="Appointment Due By">
-                    <input type="date" value={newAppt.dueDate} onChange={e => setNewAppt({...newAppt, dueDate: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
+                    <input
+                      type="date"
+                      value={newAppt.referralDate}
+                      onChange={(e) =>
+                        setNewAppt({ ...newAppt, referralDate: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                    />
                   </FormField>
                   <FormField label="Status">
-                    <select value={newAppt.status} onChange={e => setNewAppt({...newAppt, status: e.target.value as any})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
+                    <select
+                      value={newAppt.status}
+                      onChange={(e) =>
+                        setNewAppt({
+                          ...newAppt,
+                          status: e.target.value as any,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                    >
                       <option value="Scheduled">Scheduled</option>
                       <option value="Pending">Pending</option>
                       <option value="Completed">Completed</option>
@@ -1373,13 +2191,34 @@ export default function App() {
                 {/* Detailed Timing Section */}
                 <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <FormField label="Date of Appt">
-                    <input type="date" value={newAppt.date} onChange={e => setNewAppt({...newAppt, date: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
+                    <input
+                      type="date"
+                      value={newAppt.date}
+                      onChange={(e) =>
+                        setNewAppt({ ...newAppt, date: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                    />
                   </FormField>
                   <FormField label="Time of Appt">
-                    <input type="time" value={newAppt.time} onChange={e => setNewAppt({...newAppt, time: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
+                    <input
+                      type="time"
+                      value={newAppt.time}
+                      onChange={(e) =>
+                        setNewAppt({ ...newAppt, time: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                    />
                   </FormField>
                   <FormField label="Pick Up Time">
-                    <input type="time" value={newAppt.pickUpTime} onChange={e => setNewAppt({...newAppt, pickUpTime: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" />
+                    <input
+                      type="time"
+                      value={newAppt.pickUpTime}
+                      onChange={(e) =>
+                        setNewAppt({ ...newAppt, pickUpTime: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                    />
                   </FormField>
                 </section>
 
@@ -1387,16 +2226,53 @@ export default function App() {
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Appt. Type (Specialty)">
-                      <select value={newAppt.type} onChange={e => setNewAppt({...newAppt, type: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                        <option value="">— Select Specialty —</option>
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Dermatology">Dermatology</option>
-                        <option value="Orthopedic">Orthopedic</option>
-                        <option value="Specialist">Other Specialist</option>
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={showOtherSpecialtyInput ? "Other" : newAppt.type}
+                          onChange={(e) => {
+                            if (e.target.value === "Other") {
+                              setShowOtherSpecialtyInput(true);
+                              setNewAppt({ ...newAppt, type: "" });
+                            } else {
+                              setShowOtherSpecialtyInput(false);
+                              setNewAppt({ ...newAppt, type: e.target.value });
+                            }
+                          }}
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                        >
+                          <option value="">— Select Specialty —</option>
+                          {MEDICAL_SPECIALTIES.map((spec) => (
+                            <option key={spec} value={spec}>
+                              {spec}
+                            </option>
+                          ))}
+                          <option value="Other">Other (Manual Entry)</option>
+                        </select>
+                        {showOtherSpecialtyInput && (
+                          <input
+                            type="text"
+                            placeholder="Enter specialty manually..."
+                            value={newAppt.type}
+                            onChange={(e) =>
+                              setNewAppt({ ...newAppt, type: e.target.value })
+                            }
+                            className="w-full px-4 py-2 text-sm rounded-xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                            autoFocus
+                          />
+                        )}
+                      </div>
                     </FormField>
                     <FormField label="Visit Category">
-                      <select value={newAppt.description} onChange={e => setNewAppt({...newAppt, description: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
+                      <select
+                        value={newAppt.description}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            description: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
                         <option value="">— Select Category —</option>
                         <option value="Follow-up">Follow-up</option>
                         <option value="Initial Eval">Initial Eval</option>
@@ -1406,14 +2282,95 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Service In House?">
-                      <select value={newAppt.serviceInHouse} onChange={e => setNewAppt({...newAppt, serviceInHouse: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                          <option value="">—</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
+                      <select
+                        value={newAppt.serviceInHouse}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            serviceInHouse: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
+                        <option value="">—</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
                       </select>
                     </FormField>
                     <FormField label="Description">
-                      <input type="text" value={newAppt.reasonSendOut} onChange={e => setNewAppt({...newAppt, reasonSendOut: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" placeholder="Provider unavailable" />
+                      <input
+                        type="text"
+                        value={newAppt.reasonSendOut}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            reasonSendOut: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                        placeholder="Provider unavailable"
+                      />
+                    </FormField>
+                  </div>
+                  <div className="mt-4">
+                    <FormField label="Reason for Consultation">
+                      <input
+                        type="text"
+                        value={newAppt.reasonConsultation || ""}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            reasonConsultation: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                        placeholder="Reason for the outside consult"
+                      />
+                    </FormField>
+                  </div>
+                </section>
+
+                {/* Additional Clinical Details (Checklist) */}
+                <section className="bg-white border border-[#d6deeb] rounded-3xl p-6 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
+                    <Database size={16} /> Patient & Consult Details
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField label="Nursing Staff">
+                      <input
+                        type="text"
+                        value={newAppt.nurseCompleting || ""}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            nurseCompleting: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="Nurse completing form"
+                      />
+                    </FormField>
+                    <FormField label="Patient Weight">
+                      <input
+                        type="text"
+                        value={newAppt.weight || ""}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, weight: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="e.g., 150 lbs"
+                      />
+                    </FormField>
+                    <FormField label="Patient Height">
+                      <input
+                        type="text"
+                        value={newAppt.height || ""}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, height: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
+                        placeholder="e.g., 5' 2&quot;"
+                      />
                     </FormField>
                   </div>
                 </section>
@@ -1425,7 +2382,16 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <FormField label="Type of Transport">
-                      <select value={newAppt.transportType} onChange={e => setNewAppt({...newAppt, transportType: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
+                      <select
+                        value={newAppt.transportType}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            transportType: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
                         <option value="">— Select —</option>
                         <option value="Facility Van">Facility Van</option>
                         <option value="Ambulance">Ambulance</option>
@@ -1433,10 +2399,30 @@ export default function App() {
                       </select>
                     </FormField>
                     <FormField label="Transport Company">
-                      <input type="text" value={newAppt.transportCompany} onChange={e => setNewAppt({...newAppt, transportCompany: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white" placeholder="Vendor name" />
+                      <input
+                        type="text"
+                        value={newAppt.transportCompany}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            transportCompany: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                        placeholder="Vendor name"
+                      />
                     </FormField>
                     <FormField label="Payer for Ride">
-                      <select value={newAppt.payerForRide} onChange={e => setNewAppt({...newAppt, payerForRide: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
+                      <select
+                        value={newAppt.payerForRide}
+                        onChange={(e) =>
+                          setNewAppt({
+                            ...newAppt,
+                            payerForRide: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
                         <option value="">— Select —</option>
                         <option value="Medicare">Medicare</option>
                         <option value="Facility">Facility</option>
@@ -1444,36 +2430,76 @@ export default function App() {
                       </select>
                     </FormField>
                     <FormField label="Round Trip?">
-                        <select value={newAppt.roundTrip} onChange={e => setNewAppt({...newAppt, roundTrip: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                            <option value="">—</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
+                      <select
+                        value={newAppt.roundTrip}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, roundTrip: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
+                        <option value="">—</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
                     </FormField>
                     <FormField label="Escort?">
-                        <select value={newAppt.escort} onChange={e => setNewAppt({...newAppt, escort: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none">
-                            <option value="">—</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
+                      <select
+                        value={newAppt.escort}
+                        onChange={(e) =>
+                          setNewAppt({ ...newAppt, escort: e.target.value })
+                        }
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
+                      >
+                        <option value="">—</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
                     </FormField>
                   </div>
                 </section>
 
                 <FormField label="Notes / Other">
-                   <textarea value={newAppt.notes} onChange={e => setNewAppt({...newAppt, notes: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white min-h-[100px]" placeholder="Add any relevant details..." />
+                  <textarea
+                    value={newAppt.notes}
+                    onChange={(e) =>
+                      setNewAppt({ ...newAppt, notes: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white min-h-[100px]"
+                    placeholder="Add any relevant details..."
+                  />
                 </FormField>
               </div>
 
               <div className="p-6 border-t border-[#d6deeb] bg-white flex items-center justify-between shrink-0">
                 <div>
                   {editingId && (
-                    <Button variant="danger" size="sm" onClick={() => { if(confirm('Delete this record?')) { deleteAppointment(editingId); setIsAddModalOpen(false); } }}>Delete Record</Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm("Delete this record?")) {
+                          deleteAppointment(editingId);
+                          setIsAddModalOpen(false);
+                        }
+                      }}
+                    >
+                      Delete Record
+                    </Button>
                   )}
                 </div>
                 <div>
-                  <Button variant="secondary" className="mr-3" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                  <Button onClick={handleSaveAppointment}>{editingId ? 'Update Appointment Record' : 'Save Appointment Record'}</Button>
+                  <Button
+                    variant="secondary"
+                    className="mr-3"
+                    onClick={() => setIsAddModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveAppointment}>
+                    {editingId
+                      ? "Update Appointment Record"
+                      : "Save Appointment Record"}
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -1482,19 +2508,42 @@ export default function App() {
 
         {isResidentDetailOpen && selectedResident && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsResidentDetailOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.96, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 18 }} className="relative w-full max-w-4xl bg-[#f8fbff] rounded-3xl shadow-2xl overflow-hidden border border-[#d6deeb] max-h-[90vh] flex flex-col">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsResidentDetailOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 18 }}
+              className="relative w-full max-w-4xl bg-[#f8fbff] rounded-3xl shadow-2xl overflow-hidden border border-[#d6deeb] max-h-[90vh] flex flex-col"
+            >
               <div className="transport-gradient text-white p-5 shrink-0 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-white border border-white/30 backdrop-blur-md">
                     <User size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black tracking-tight">{selectedResident.name}</h3>
-                    <p className="text-xs opacity-85 mt-0.5">Resident ID: <span className="font-mono">{selectedResident.mrn}</span> • Room {selectedResident.roomNumber}</p>
+                    <h3 className="text-2xl font-black tracking-tight">
+                      {selectedResident.name}
+                    </h3>
+                    <p className="text-xs opacity-85 mt-0.5">
+                      Resident ID:{" "}
+                      <span className="font-mono">{selectedResident.mrn}</span>{" "}
+                      • Room {selectedResident.roomNumber}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => setIsResidentDetailOpen(false)} className="p-2 hover:bg-white/15 rounded-full" aria-label="Close modal"><X size={20} /></button>
+                <button
+                  onClick={() => setIsResidentDetailOpen(false)}
+                  className="p-2 hover:bg-white/15 rounded-full"
+                  aria-label="Close modal"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               <div className="p-6 overflow-y-auto page-scrollbar flex-1 space-y-8">
@@ -1506,10 +2555,22 @@ export default function App() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <DetailItem label="Sex" value={selectedResident.sex} />
                     <DetailItem label="Age" value={selectedResident.age} />
-                    <DetailItem label="Admission Date" value={selectedResident.admissionDate} />
-                    <DetailItem label="Primary Doctor" value={selectedResident.doctor} />
-                    <DetailItem label="Location" value={`${selectedResident.floor} • ${selectedResident.unit}`} />
-                    <DetailItem label="Room Number" value={selectedResident.roomNumber} />
+                    <DetailItem
+                      label="Admission Date"
+                      value={selectedResident.admissionDate}
+                    />
+                    <DetailItem
+                      label="Primary Doctor"
+                      value={selectedResident.doctor}
+                    />
+                    <DetailItem
+                      label="Location"
+                      value={`${selectedResident.floor} • ${selectedResident.unit}`}
+                    />
+                    <DetailItem
+                      label="Room Number"
+                      value={selectedResident.roomNumber}
+                    />
                   </div>
                 </section>
 
@@ -1519,22 +2580,34 @@ export default function App() {
                     <Activity size={16} /> Clinical Profile
                   </div>
                   <div className="space-y-4">
-                     <div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Primary Diagnosis</p>
-                        <p className="text-sm font-bold text-slate-800 bg-brand-light/20 p-3 rounded-xl border border-brand/5">{selectedResident.diagnosis}</p>
-                     </div>
-                     <div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Allergies</p>
-                        <p className={`text-sm font-bold p-3 rounded-xl border ${selectedResident.allergies.toLowerCase() === 'no known allergies' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
-                          {selectedResident.allergies}
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
+                        Primary Diagnosis
+                      </p>
+                      <p className="text-sm font-bold text-slate-800 bg-brand-light/20 p-3 rounded-xl border border-brand/5">
+                        {selectedResident.diagnosis}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
+                        Allergies
+                      </p>
+                      <p
+                        className={`text-sm font-bold p-3 rounded-xl border ${selectedResident.allergies.toLowerCase() === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
+                      >
+                        {selectedResident.allergies}
+                      </p>
+                    </div>
+                    {selectedResident.notes && (
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
+                          Medical Brief / Notes
                         </p>
-                     </div>
-                     {selectedResident.notes && (
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Medical Brief / Notes</p>
-                          <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 whitespace-pre-wrap">{selectedResident.notes}</p>
-                        </div>
-                     )}
+                        <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 whitespace-pre-wrap">
+                          {selectedResident.notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -1544,66 +2617,104 @@ export default function App() {
                     <Calendar size={16} /> Appointment & Visit History
                   </div>
                   <div className="space-y-3">
-                     {residentAppointments.length > 0 ? (
-                        residentAppointments
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .map(apt => (
-                          <div key={apt.id} className="bg-white border border-[#d6deeb] rounded-2xl p-4 flex items-center justify-between hover:border-brand/30 transition-all group">
+                    {residentAppointments.length > 0 ? (
+                      residentAppointments
+                        .sort(
+                          (a, b) =>
+                            new Date(b.date).getTime() -
+                            new Date(a.date).getTime(),
+                        )
+                        .map((apt) => (
+                          <div
+                            key={apt.id}
+                            className="bg-white border border-[#d6deeb] rounded-2xl p-4 flex items-center justify-between hover:border-brand/30 transition-all group"
+                          >
                             <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-xl ${apt.status === 'Completed' ? 'bg-green-100 text-green-600' : 'bg-brand-light text-brand'}`}>
+                              <div
+                                className={`p-3 rounded-xl ${apt.status === "Completed" ? "bg-green-100 text-green-600" : "bg-brand-light text-brand"}`}
+                              >
                                 <Clock size={18} />
                               </div>
                               <div>
-                                <p className="font-black text-slate-800">{apt.type}</p>
-                                <p className="text-xs text-slate-500">{formatFullDate(apt.date)} at {apt.time}</p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-0.5">{apt.providerName} • {apt.location}</p>
+                                <p className="font-black text-slate-800">
+                                  {apt.type}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {formatFullDate(apt.date)} at {apt.time}
+                                </p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-0.5">
+                                  {apt.providerName} • {apt.location}
+                                </p>
                               </div>
                             </div>
-                              <div className="text-right">
-                               <div className="flex items-center gap-2 justify-end">
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     generateAppointmentPDF(apt, selectedResident, currentFacility);
-                                   }}
-                                   className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                   title="Download Forms"
-                                 >
-                                   <FileDown size={14} />
-                                 </button>
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     generateOutsideAppointmentChecklistPDF(apt, selectedResident, currentFacility);
-                                   }}
-                                   className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                   title="Checklist for Outside Appt"
-                                 >
-                                   <ClipboardCheck size={14} />
-                                 </button>
-                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                                   apt.status === 'Completed' ? 'bg-green-100 text-green-600' : 
-                                   apt.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
-                                   'bg-brand-light text-brand'
-                                 }`}>
-                                   {apt.status}
-                                 </span>
-                               </div>
-                               {apt.notes && <p className="text-[10px] text-slate-400 mt-1 italic truncate max-w-[150px]">"{apt.notes}"</p>}
+                            <div className="text-right">
+                              <div className="flex items-center gap-2 justify-end">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateAppointmentPDF(
+                                      apt,
+                                      selectedResident,
+                                      currentFacility,
+                                    );
+                                  }}
+                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                  title="Download Forms"
+                                >
+                                  <FileDown size={14} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateOutsideAppointmentChecklistPDF(
+                                      apt,
+                                      selectedResident,
+                                      currentFacility,
+                                    );
+                                  }}
+                                  className="p-1.5 hover:bg-brand-light rounded-lg text-brand transition-colors"
+                                  title="Checklist for Outside Appt"
+                                >
+                                  <ClipboardCheck size={14} />
+                                </button>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                                    apt.status === "Completed"
+                                      ? "bg-green-100 text-green-600"
+                                      : apt.status === "Cancelled"
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-brand-light text-brand"
+                                  }`}
+                                >
+                                  {apt.status}
+                                </span>
+                              </div>
+                              {apt.notes && (
+                                <p className="text-[10px] text-slate-400 mt-1 italic truncate max-w-[150px]">
+                                  "{apt.notes}"
+                                </p>
+                              )}
                             </div>
                           </div>
                         ))
-                     ) : (
-                        <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                           <p className="text-slate-400 font-bold text-sm">No appointment records found for this resident.</p>
-                        </div>
-                     )}
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                        <p className="text-slate-400 font-bold text-sm">
+                          No appointment records found for this resident.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </section>
               </div>
 
               <div className="p-5 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)] shrink-0 flex justify-end">
-                <Button variant="secondary" onClick={() => setIsResidentDetailOpen(false)}>Close Detailed View</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsResidentDetailOpen(false)}
+                >
+                  Close Detailed View
+                </Button>
               </div>
             </motion.div>
           </div>
@@ -1614,41 +2725,79 @@ export default function App() {
       <AnimatePresence>
         {isFacModalOpen && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md"
+            >
               <Card className="p-6 overflow-hidden">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-black text-slate-800">{editingFac ? 'Edit Facility' : 'Add Facility'}</h3>
-                  <Button variant="ghost" size="sm" onClick={() => setIsFacModalOpen(false)}><X size={20} /></Button>
+                  <h3 className="text-xl font-black text-slate-800">
+                    {editingFac ? "Edit Facility" : "Add Facility"}
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsFacModalOpen(false)}
+                  >
+                    <X size={20} />
+                  </Button>
                 </div>
-                <form onSubmit={async (e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const data = {
-                    name: formData.get('name') as string,
-                    address: formData.get('address') as string,
-                    phone: formData.get('phone') as string
-                  };
-                  if (editingFac) {
-                    await updateFacility(editingFac.id, data);
-                  } else {
-                    await addFacility(data);
-                  }
-                  setIsFacModalOpen(false);
-                }} className="space-y-4">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const data = {
+                      name: formData.get("name") as string,
+                      address: formData.get("address") as string,
+                      phone: formData.get("phone") as string,
+                    };
+                    if (editingFac) {
+                      await updateFacility(editingFac.id, data);
+                    } else {
+                      await addFacility(data);
+                    }
+                    setIsFacModalOpen(false);
+                  }}
+                  className="space-y-4"
+                >
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Facility Name</label>
-                    <input name="name" defaultValue={editingFac?.name} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold" />
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                      Facility Name
+                    </label>
+                    <input
+                      name="name"
+                      defaultValue={editingFac?.name}
+                      required
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold"
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Address</label>
-                    <textarea name="address" defaultValue={editingFac?.address} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all rows-3 text-sm font-bold" />
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                      Address
+                    </label>
+                    <textarea
+                      name="address"
+                      defaultValue={editingFac?.address}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all rows-3 text-sm font-bold"
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Phone</label>
-                    <input name="phone" defaultValue={editingFac?.phone} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold" />
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                      Phone
+                    </label>
+                    <input
+                      name="phone"
+                      defaultValue={editingFac?.phone}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-brand/20 transition-all text-sm font-bold"
+                    />
                   </div>
-                  <Button type="submit" className="w-full py-4 text-sm font-black">
-                    {editingFac ? 'Save Changes' : 'Create Facility'}
+                  <Button
+                    type="submit"
+                    className="w-full py-4 text-sm font-black"
+                  >
+                    {editingFac ? "Save Changes" : "Create Facility"}
                   </Button>
                 </form>
               </Card>
@@ -1658,63 +2807,119 @@ export default function App() {
 
         {isUserModalOpen && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg"
+            >
               <Card className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-black text-slate-800">User Configuration</h3>
-                  <Button variant="ghost" size="sm" onClick={() => setIsUserModalOpen(false)}><X size={20} /></Button>
+                  <h3 className="text-xl font-black text-slate-800">
+                    User Configuration
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsUserModalOpen(false)}
+                  >
+                    <X size={20} />
+                  </Button>
                 </div>
-                <form onSubmit={async (e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  let uId = editingUser?.id;
-                  if (!uId) {
-                    uId = await addUser({
-                      fullName: formData.get('fullName'),
-                      email: formData.get('email'),
-                      role: formData.get('role')
-                    });
-                  }
-                  await updateUserPermissions(uId, userFacPermissions);
-                  setIsUserModalOpen(false);
-                }} className="space-y-4">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    let uId = editingUser?.id;
+                    if (!uId) {
+                      uId = await addUser({
+                        fullName: formData.get("fullName"),
+                        email: formData.get("email"),
+                        role: formData.get("role"),
+                      });
+                    }
+                    await updateUserPermissions(uId, userFacPermissions);
+                    setIsUserModalOpen(false);
+                  }}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">Full Name</label>
-                      <input name="fullName" defaultValue={editingUser?.fullName} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm" />
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                        Full Name
+                      </label>
+                      <input
+                        name="fullName"
+                        defaultValue={editingUser?.fullName}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">Email</label>
-                      <input name="email" type="email" defaultValue={editingUser?.email} required className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm" />
+                      <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                        Email
+                      </label>
+                      <input
+                        name="email"
+                        type="email"
+                        defaultValue={editingUser?.email}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
+                      />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">Role</label>
-                    <select name="role" defaultValue={editingUser?.role || 'staff'} className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm">
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-2">
+                      Role
+                    </label>
+                    <select
+                      name="role"
+                      defaultValue={editingUser?.role || "staff"}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 outline-none font-bold text-sm"
+                    >
                       <option value="staff">Staff</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 mb-4">Permitted Facilities (Grip Access)</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 mb-4">
+                      Permitted Facilities (Grip Access)
+                    </label>
                     <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      {facilities.map(f => (
-                        <label key={f.id} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white rounded-xl transition-colors">
-                          <input 
-                            type="checkbox" 
+                      {facilities.map((f) => (
+                        <label
+                          key={f.id}
+                          className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white rounded-xl transition-colors"
+                        >
+                          <input
+                            type="checkbox"
                             checked={userFacPermissions.includes(f.id)}
                             onChange={(e) => {
-                              if (e.target.checked) setUserFacPermissions([...userFacPermissions, f.id]);
-                              else setUserFacPermissions(userFacPermissions.filter(id => id !== f.id));
+                              if (e.target.checked)
+                                setUserFacPermissions([
+                                  ...userFacPermissions,
+                                  f.id,
+                                ]);
+                              else
+                                setUserFacPermissions(
+                                  userFacPermissions.filter(
+                                    (id) => id !== f.id,
+                                  ),
+                                );
                             }}
                             className="rounded-lg text-brand focus:ring-brand"
                           />
-                          <span className="text-sm font-bold text-slate-700">{f.name}</span>
+                          <span className="text-sm font-bold text-slate-700">
+                            {f.name}
+                          </span>
                         </label>
                       ))}
                     </div>
                   </div>
-                  <Button type="submit" className="w-full py-4 text-sm font-black bg-purple-600 hover:bg-purple-700">
+                  <Button
+                    type="submit"
+                    className="w-full py-4 text-sm font-black bg-purple-600 hover:bg-purple-700"
+                  >
                     Save User Permissions
                   </Button>
                 </form>
@@ -1738,57 +2943,110 @@ function NavItem({ active, onClick, icon, label }: NavItemProps) {
   return (
     <button
       onClick={onClick}
-      aria-current={active ? 'page' : undefined}
+      aria-current={active ? "page" : undefined}
       className={`
         w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group text-left
-        ${active ? 'bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_10px_26px_rgba(11,42,111,.18)]' : 'text-slate-500 hover:bg-brand-light/70 hover:text-brand'}
+        ${active ? "bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_10px_26px_rgba(11,42,111,.18)]" : "text-slate-500 hover:bg-brand-light/70 hover:text-brand"}
       `}
     >
-      <span className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-brand'}`}>{icon}</span>
+      <span
+        className={`${active ? "text-white" : "text-slate-400 group-hover:text-brand"}`}
+      >
+        {icon}
+      </span>
       <span className="font-black text-sm tracking-tight">{label}</span>
-      {active && <motion.div layoutId="nav-active" className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
+      {active && (
+        <motion.div
+          layoutId="nav-active"
+          className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+        />
+      )}
     </button>
   );
 }
 
-function TopTab({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function TopTab({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-full text-sm font-black transition-all ${active ? 'bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_6px_16px_rgba(11,42,111,.16)]' : 'text-slate-600 hover:bg-brand-light hover:text-brand'}`}
+      className={`px-4 py-2 rounded-full text-sm font-black transition-all ${active ? "bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_6px_16px_rgba(11,42,111,.16)]" : "text-slate-600 hover:bg-brand-light hover:text-brand"}`}
     >
       {label}
     </button>
   );
 }
 
-function StatCard({ label, value, hint, icon, onClick }: { label: string; value: string; hint: string; icon: ReactNode; onClick?: () => void }) {
+function StatCard({
+  label,
+  value,
+  hint,
+  icon,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  icon: ReactNode;
+  onClick?: () => void;
+}) {
   return (
-    <div 
-      className={`bg-white p-5 rounded-2xl border border-[#d6deeb] shadow-[0_6px_16px_rgba(11,42,111,.10)] transition-all ${onClick ? 'cursor-pointer hover:border-brand/30 hover:shadow-[0_10px_26px_rgba(11,42,111,.15)]' : ''}`}
+    <div
+      className={`bg-white p-5 rounded-2xl border border-[#d6deeb] shadow-[0_6px_16px_rgba(11,42,111,.10)] transition-all ${onClick ? "cursor-pointer hover:border-brand/30 hover:shadow-[0_10px_26px_rgba(11,42,111,.15)]" : ""}`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-slate-500 text-xs font-black uppercase tracking-wider">{label}</p>
-          <p className="text-2xl font-black text-brand leading-tight mt-2">{value}</p>
+          <p className="text-slate-500 text-xs font-black uppercase tracking-wider">
+            {label}
+          </p>
+          <p className="text-2xl font-black text-brand leading-tight mt-2">
+            {value}
+          </p>
           <p className="text-[11px] text-slate-500 font-bold mt-2">{hint}</p>
         </div>
-        <div className="w-11 h-11 rounded-2xl bg-brand-light flex items-center justify-center text-brand border border-brand/10">{icon}</div>
+        <div className="w-11 h-11 rounded-2xl bg-brand-light flex items-center justify-center text-brand border border-brand/10">
+          {icon}
+        </div>
       </div>
     </div>
   );
 }
 
-function AppointmentItem({ appointment, residents, doctorName, currentFacility, onClick }: { appointment: Appointment; residents: Resident[]; doctorName: string; currentFacility?: Facility; key?: string; onClick?: () => void }) {
+function AppointmentItem({
+  appointment,
+  residents,
+  doctorName,
+  currentFacility,
+  onClick,
+}: {
+  appointment: Appointment;
+  residents: Resident[];
+  doctorName: string;
+  currentFacility?: Facility;
+  key?: string;
+  onClick?: () => void;
+}) {
   const date = new Date(appointment.date);
   return (
-    <div onClick={onClick} className="flex items-start gap-4 p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand-light/40 hover:bg-white transition-all hover:shadow-[0_10px_26px_rgba(11,42,111,.08)] group cursor-pointer relative overflow-hidden">
+    <div
+      onClick={onClick}
+      className="flex items-start gap-4 p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand-light/40 hover:bg-white transition-all hover:shadow-[0_10px_26px_rgba(11,42,111,.08)] group cursor-pointer relative overflow-hidden"
+    >
       <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
-            const res = residents.find(r => r.name === appointment.residentName);
+            const res = residents.find(
+              (r) => r.name === appointment.residentName,
+            );
             generateAppointmentPDF(appointment, res);
           }}
           className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm"
@@ -1796,11 +3054,17 @@ function AppointmentItem({ appointment, residents, doctorName, currentFacility, 
         >
           <FileDown size={14} />
         </button>
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
-            const res = residents.find(r => r.name === appointment.residentName);
-            generateOutsideAppointmentChecklistPDF(appointment, res, currentFacility);
+            const res = residents.find(
+              (r) => r.name === appointment.residentName,
+            );
+            generateOutsideAppointmentChecklistPDF(
+              appointment,
+              res,
+              currentFacility,
+            );
           }}
           className="p-2 bg-brand-light text-brand rounded-xl hover:bg-brand hover:text-white transition-all shadow-sm ml-1"
           title="Download Checklist"
@@ -1811,95 +3075,255 @@ function AppointmentItem({ appointment, residents, doctorName, currentFacility, 
       <DateBadge date={date} />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-3 mb-1">
-          <h4 className="font-black text-slate-900 truncate">{appointment.residentName}</h4>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{appointment.time}</span>
+          <h4 className="font-black text-slate-900 truncate">
+            {appointment.residentName}
+          </h4>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            {appointment.time}
+          </span>
         </div>
-        <p className="text-sm text-slate-500 truncate mb-1">{appointment.type} • {doctorName}</p>
+        <p className="text-sm text-slate-500 truncate mb-1">
+          {appointment.type} • {doctorName}
+        </p>
         <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand uppercase tracking-wider rounded-full bg-brand-light px-2 py-1">
           <Clock size={10} /> {appointment.transportType}
         </span>
       </div>
-      <div className="self-center opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRight size={20} className="text-brand" /></div>
+      <div className="self-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <ChevronRight size={20} className="text-brand" />
+      </div>
     </div>
   );
 }
 
-function WideAppointmentTable({ appointments, residents, currentFacility, onEdit, selectedColumns }: { appointments: Appointment[]; residents: Resident[]; currentFacility?: Facility; onEdit: (apt: Appointment) => void; selectedColumns?: string[] }) {
-  const showColumn = (col: string) => !selectedColumns || selectedColumns.includes(col);
+const InlineInput = ({ value, onChange, placeholder, className = "", type = "text" }: any) => (
+  <input
+    type={type}
+    value={value || ""}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder || "—"}
+    className={`w-full max-w-[120px] bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit ${className}`}
+    onClick={(e) => e.stopPropagation()}
+  />
+);
+
+const InlineSelect = ({ value, onChange, options, className = "" }: any) => (
+  <select
+    value={value || ""}
+    onChange={(e) => onChange(e.target.value)}
+    className={`w-full max-w-[120px] bg-transparent border border-transparent hover:border-slate-300 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 outline-none px-1 py-0.5 -mx-1 rounded transition-all text-inherit font-inherit cursor-pointer ${className}`}
+    onClick={(e) => e.stopPropagation()}
+  >
+    {options.map((opt: any) => (
+      <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
+    ))}
+  </select>
+);
+
+function WideAppointmentTable({
+  appointments,
+  residents,
+  currentFacility,
+  onEdit,
+  selectedColumns,
+  onSaveAll,
+}: {
+  appointments: Appointment[];
+  residents: Resident[];
+  currentFacility?: Facility;
+  onEdit: (apt: Appointment) => void;
+  selectedColumns?: string[];
+  onSaveAll?: (updates: Record<string, Partial<Appointment>>) => void;
+}) {
+  const showColumn = (col: string) =>
+    !selectedColumns || selectedColumns.includes(col);
+
+  const [editedAppointments, setEditedAppointments] = useState<Record<string, Partial<Appointment>>>({});
+
+  const handleEditField = (id: string, field: keyof Appointment, value: any) => {
+    setEditedAppointments(prev => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {}),
+        [field]: value
+      }
+    }));
+  };
+  
+  const getVal = (apt: Appointment, field: keyof Appointment) => {
+    if (editedAppointments[apt.id] && editedAppointments[apt.id]?.[field] !== undefined) {
+      return editedAppointments[apt.id]?.[field];
+    }
+    return apt[field] as string;
+  };
+
+  const handleSaveAllClick = () => {
+    if (onSaveAll && Object.keys(editedAppointments).length > 0) {
+      onSaveAll(editedAppointments);
+      setEditedAppointments({});
+    }
+  };
 
   return (
     <div className="overflow-x-auto rounded-xl border border-[#d6deeb] bg-white shadow-sm">
       <table className="w-full text-left border-collapse min-w-[1400px]">
         <thead className="bg-[#0b2a6f] text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
           <tr>
-            <th className="px-3 py-4 border-r border-white/10 text-center w-12">Select</th>
-            {showColumn('Resident Name') && <th className="px-4 py-4 border-r border-white/10">Resident</th>}
-            {(showColumn('Unit') || showColumn('Room #')) && <th className="px-4 py-4 border-r border-white/10">Unit/Room</th>}
-            {showColumn('Origin') && <th className="px-4 py-4 border-r border-white/10">Origin</th>}
-            {showColumn('Specialty') && <th className="px-4 py-4 border-r border-white/10">Specialty</th>}
+            <th className="px-3 py-4 border-r border-white/10 text-center w-12">
+              Select
+            </th>
+            {showColumn("Resident Name") && (
+              <th className="px-4 py-4 border-r border-white/10">Resident</th>
+            )}
+            {showColumn("Weight") && (
+              <th className="px-4 py-4 border-r border-white/10">Weight</th>
+            )}
+            {showColumn("Height") && (
+              <th className="px-4 py-4 border-r border-white/10">Height</th>
+            )}
+            {(showColumn("Unit") || showColumn("Room #")) && (
+              <th className="px-4 py-4 border-r border-white/10">Unit/Room</th>
+            )}
+            {showColumn("Origin") && (
+              <th className="px-4 py-4 border-r border-white/10">Origin</th>
+            )}
+            {showColumn("Specialty") && (
+              <th className="px-4 py-4 border-r border-white/10">Specialty</th>
+            )}
             <th className="px-4 py-4 border-r border-white/10">Description</th>
-            {showColumn('Provider') && <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">Location Details</th>}
-            {showColumn('Date') && <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Date</th>}
-            {showColumn('Time') && <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Appt Time</th>}
-            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Pick Up</th>
-            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">Due By</th>
-            {showColumn('Status') && <th className="px-4 py-4 border-r border-white/10">Status</th>}
-            {showColumn('Transport') && <th className="px-4 py-4 border-r border-white/10">Transport</th>}
+            {showColumn("Provider") && (
+              <th className="px-4 py-4 border-r border-white/10 min-w-[200px]">
+                Location Details
+              </th>
+            )}
+            {showColumn("Date") && (
+              <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
+                Appt Date
+              </th>
+            )}
+            {showColumn("Time") && (
+              <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
+                Appt Time
+              </th>
+            )}
+            <th className="px-4 py-4 border-r border-white/10 whitespace-nowrap">
+              Pick Up
+            </th>
+            {showColumn("Status") && (
+              <th className="px-4 py-4 border-r border-white/10">Status</th>
+            )}
+            {showColumn("Transport") && (
+              <th className="px-4 py-4 border-r border-white/10">Transport</th>
+            )}
             <th className="px-4 py-4 border-r border-white/10">Form</th>
-            {showColumn('Payer') && <th className="px-4 py-4 border-r border-white/10">Payer</th>}
+            {showColumn("Payer") && (
+              <th className="px-4 py-4 border-r border-white/10">Payer</th>
+            )}
             <th className="px-4 py-4 border-r border-white/10">Round Trip</th>
             <th className="px-4 py-4 border-r border-white/10">Escort</th>
-            {showColumn('Notes') && <th className="px-4 py-4">Notes</th>}
+            {showColumn("Notes") && <th className="px-4 py-4">Notes</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#d6deeb]">
           {appointments.map((apt) => (
-            <tr 
-              key={apt.id} 
-              className="group hover:bg-brand-light/30 transition-colors cursor-pointer text-[11px] font-medium text-slate-700"
-              onClick={() => onEdit(apt)}
+            <tr
+              key={apt.id}
+              className="group hover:bg-brand-light/20 transition-colors text-[11px] font-medium text-slate-700"
             >
-              <td className="px-3 py-4 text-center border-r border-[#d6deeb]">
-                <div className="w-4 h-4 rounded-full border-2 border-slate-300 mx-auto group-hover:border-brand" />
+              <td className="px-3 py-4 text-center border-r border-[#d6deeb] cursor-pointer" onClick={() => onEdit(apt)}>
+                <div className="w-4 h-4 rounded-full border-2 border-slate-300 mx-auto group-hover:border-brand" title="Open Edit Modal" />
               </td>
-              {showColumn('Resident Name') && <td className="px-4 py-4 border-r border-[#d6deeb] font-black uppercase text-slate-900">{apt.residentName}</td>}
-              {(showColumn('Unit') || showColumn('Room #')) && (
-                <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">
-                  {showColumn('Unit') && apt.unit} {showColumn('Unit') && showColumn('Room #') && '/'} {showColumn('Room #') && apt.roomNumber}
+              {showColumn("Resident Name") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb] font-black uppercase text-slate-900 cursor-pointer" onClick={() => onEdit(apt)}>
+                  {apt.residentName}
                 </td>
               )}
-              {showColumn('Origin') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.origin || '—'}</td>}
-              {showColumn('Specialty') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.type}</td>}
-              <td className="px-4 py-4 border-r border-[#d6deeb] max-w-[150px] truncate" title={apt.description}>{apt.description}</td>
-              {showColumn('Provider') && (
-                <td className="px-4 py-4 border-r border-[#d6deeb]">
-                  <div className="font-bold text-slate-800">{apt.providerName || apt.location}</div>
-                  <div className="text-[10px] opacity-70">{apt.contactNumber}</div>
+              {showColumn("Weight") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineInput value={getVal(apt, 'weight')} onChange={(v: string) => handleEditField(apt.id, 'weight', v)} className="w-16" />
                 </td>
               )}
-              {showColumn('Date') && <td className="px-4 py-4 border-r border-[#d6deeb] whitespace-nowrap">{apt.date}</td>}
-              {showColumn('Time') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.time}</td>}
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.pickUpTime || '—'}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb] whitespace-nowrap">{apt.dueDate || '—'}</td>
-              {showColumn('Status') && (
-                <td className="px-4 py-4 border-r border-[#d6deeb]">
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${
-                    apt.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                    apt.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                    apt.status === 'Cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                    'bg-amber-50 text-amber-700 border-amber-100'
-                  }`}>
-                    {apt.status}
-                  </span>
+              {showColumn("Height") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineInput value={getVal(apt, 'height')} onChange={(v: string) => handleEditField(apt.id, 'height', v)} className="w-16" />
                 </td>
               )}
-              {showColumn('Transport') && <td className="px-4 py-4 border-r border-[#d6deeb] font-bold">{apt.transportType}</td>}
-              <td className="px-4 py-4 border-r border-[#d6deeb]">
+              {(showColumn("Unit") || showColumn("Room #")) && (
+                <td className="px-4 py-3 border-r border-[#d6deeb] font-bold">
+                  <div className="flex items-center gap-1">
+                    {showColumn("Unit") && <InlineInput value={getVal(apt, 'unit')} onChange={(v: string) => handleEditField(apt.id, 'unit', v)} className="w-12 text-center" />} 
+                    {showColumn("Unit") && showColumn("Room #") && "/"}
+                    {showColumn("Room #") && <InlineInput value={getVal(apt, 'roomNumber')} onChange={(v: string) => handleEditField(apt.id, 'roomNumber', v)} className="w-12 text-center" />}
+                  </div>
+                </td>
+              )}
+              {showColumn("Origin") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineInput value={getVal(apt, 'origin')} onChange={(v: string) => handleEditField(apt.id, 'origin', v)} />
+                </td>
+              )}
+              {showColumn("Specialty") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineSelect 
+                    value={getVal(apt, 'type')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'type', v)} 
+                    options={[...MEDICAL_SPECIALTIES, "Other"]}
+                  />
+                </td>
+              )}
+              <td className="px-4 py-3 border-r border-[#d6deeb]">
+                <div className="flex flex-col gap-1">
+                  <InlineInput value={getVal(apt, 'description')} onChange={(v: string) => handleEditField(apt.id, 'description', v)} placeholder="Description" />
+                  <InlineInput value={getVal(apt, 'reasonConsultation')} onChange={(v: string) => handleEditField(apt.id, 'reasonConsultation', v)} placeholder="Consultation reason" className="opacity-70 italic text-[10px]" />
+                </div>
+              </td>
+              {showColumn("Provider") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <div className="flex flex-col gap-1">
+                    <InlineInput value={getVal(apt, 'providerName')} onChange={(v: string) => handleEditField(apt.id, 'providerName', v)} placeholder="Provider" className="font-bold text-slate-800" />
+                    <InlineInput value={getVal(apt, 'contactNumber')} onChange={(v: string) => handleEditField(apt.id, 'contactNumber', v)} placeholder="Contact" className="text-[10px] opacity-70" />
+                  </div>
+                </td>
+              )}
+              {showColumn("Date") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb] whitespace-nowrap">
+                  <InlineInput type="date" value={getVal(apt, 'date')} onChange={(v: string) => handleEditField(apt.id, 'date', v)} />
+                </td>
+              )}
+              {showColumn("Time") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineInput type="time" value={getVal(apt, 'time')} onChange={(v: string) => handleEditField(apt.id, 'time', v)} />
+                </td>
+              )}
+              <td className="px-4 py-3 border-r border-[#d6deeb]">
+                <InlineInput type="time" value={getVal(apt, 'pickUpTime')} onChange={(v: string) => handleEditField(apt.id, 'pickUpTime', v)} />
+              </td>
+              {showColumn("Status") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineSelect 
+                    value={getVal(apt, 'status')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'status', v)} 
+                    options={["Scheduled", "Completed", "Cancelled", "Pending"]}
+                  />
+                </td>
+              )}
+              {showColumn("Transport") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                   <InlineSelect 
+                    value={getVal(apt, 'transportType')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'transportType', v)} 
+                    options={["", "Car", "Ambulette", "Ambulance"]}
+                  />
+                </td>
+              )}
+              <td className="px-4 py-3 border-r border-[#d6deeb]">
                 <div className="flex gap-1">
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const resident = residents.find(r => r.name === apt.residentName);
+                      const resident = residents.find(
+                        (r) => r.name === apt.residentName,
+                      );
                       generateAppointmentPDF(apt, resident, currentFacility);
                     }}
                     className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
@@ -1907,11 +3331,17 @@ function WideAppointmentTable({ appointments, residents, currentFacility, onEdit
                   >
                     <FileDown size={18} />
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const resident = residents.find(r => r.name === apt.residentName);
-                      generateOutsideAppointmentChecklistPDF(apt, resident, currentFacility);
+                      const resident = residents.find(
+                        (r) => r.name === apt.residentName,
+                      );
+                      generateOutsideAppointmentChecklistPDF(
+                        apt,
+                        resident,
+                        currentFacility,
+                      );
                     }}
                     className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
                     title="Generate Checklist"
@@ -1920,52 +3350,121 @@ function WideAppointmentTable({ appointments, residents, currentFacility, onEdit
                   </button>
                 </div>
               </td>
-              {showColumn('Payer') && <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.payerForRide}</td>}
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.roundTrip}</td>
-              <td className="px-4 py-4 border-r border-[#d6deeb]">{apt.escort}</td>
-              {showColumn('Notes') && <td className="px-4 py-4 max-w-[200px] truncate italic text-slate-500" title={apt.notes}>{apt.notes}</td>}
+              {showColumn("Payer") && (
+                <td className="px-4 py-3 border-r border-[#d6deeb]">
+                  <InlineSelect 
+                    value={getVal(apt, 'payerForRide')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'payerForRide', v)} 
+                    options={["", "Medicaid", "Medicare", "Private", "Facility"]}
+                  />
+                </td>
+              )}
+              <td className="px-4 py-3 border-r border-[#d6deeb]">
+                <InlineSelect 
+                    value={getVal(apt, 'roundTrip')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'roundTrip', v)} 
+                    options={["", "Yes", "No"]}
+                  />
+              </td>
+              <td className="px-4 py-3 border-r border-[#d6deeb]">
+                <InlineSelect 
+                    value={getVal(apt, 'escort')} 
+                    onChange={(v: string) => handleEditField(apt.id, 'escort', v)} 
+                    options={["", "Yes", "No"]}
+                  />
+              </td>
+              {showColumn("Notes") && (
+                <td className="px-4 py-3">
+                  <InlineInput value={getVal(apt, 'notes')} onChange={(v: string) => handleEditField(apt.id, 'notes', v)} className="w-[180px]" />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
+      {onSaveAll && Object.keys(editedAppointments).length > 0 && (
+        <div className="sticky bottom-0 left-0 right-0 p-4 bg-slate-50 border-t border-[#d6deeb] flex justify-end">
+          <Button onClick={handleSaveAllClick}>
+            Save All Changes ({Object.keys(editedAppointments).length})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function AppointmenttLogRow({ appointment, doctorName, compact = false, onClick }: { appointment: Appointment; doctorName: string; compact?: boolean; key?: string; onClick?: () => void }) {
+function AppointmenttLogRow({
+  appointment,
+  doctorName,
+  compact = false,
+  onClick,
+}: {
+  appointment: Appointment;
+  doctorName: string;
+  compact?: boolean;
+  key?: string;
+  onClick?: () => void;
+}) {
   const date = new Date(appointment.date);
-  const statusClass = appointment.status === 'Scheduled'
-    ? 'bg-blue-50 text-blue-700 border-blue-100'
-    : appointment.status === 'Completed'
-      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-      : appointment.status === 'Cancelled'
-        ? 'bg-red-50 text-red-700 border-red-100'
-        : 'bg-amber-50 text-amber-700 border-amber-100';
+  const statusClass =
+    appointment.status === "Scheduled"
+      ? "bg-blue-50 text-blue-700 border-blue-100"
+      : appointment.status === "Completed"
+        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+        : appointment.status === "Cancelled"
+          ? "bg-red-50 text-red-700 border-red-100"
+          : "bg-amber-50 text-amber-700 border-amber-100";
 
   return (
-    <div onClick={onClick} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand/30 hover:bg-brand-light/10 transition-all gap-4 group cursor-pointer ${compact ? '' : 'hover:shadow-[0_10px_26px_rgba(11,42,111,.10)]'}`}>
+    <div
+      onClick={onClick}
+      className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-2xl border border-[#d6deeb] bg-white hover:border-brand/30 hover:bg-brand-light/10 transition-all gap-4 group cursor-pointer ${compact ? "" : "hover:shadow-[0_10px_26px_rgba(11,42,111,.10)]"}`}
+    >
       <div className="flex items-center gap-4 min-w-0">
         <DateBadge date={date} small />
         <div className="min-w-0">
-          <h4 className="font-black text-slate-900 truncate">{appointment.residentName}</h4>
+          <h4 className="font-black text-slate-900 truncate">
+            {appointment.residentName}
+          </h4>
           <p className="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-            <span className="font-bold text-brand uppercase tracking-tighter text-[10px]">{appointment.type}</span>
+            <span className="font-bold text-brand uppercase tracking-tighter text-[10px]">
+              {appointment.type}
+            </span>
             <span>•</span>
-            <span className="inline-flex items-center gap-1"><Clock size={12} /> {appointment.time}</span>
+            <span className="inline-flex items-center gap-1">
+              <Clock size={12} /> {appointment.time}
+            </span>
             <span>•</span>
             <span>{doctorName}</span>
           </p>
-          {(appointment.description || appointment.notes) && (
+          {(appointment.description ||
+            appointment.reasonConsultation ||
+            appointment.notes) && (
             <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic opacity-80">
-              {appointment.description && `${appointment.description}${appointment.notes ? ': ' : ''}`}
+              {appointment.description && `${appointment.description}`}
+              {appointment.reasonConsultation &&
+                ` - ${appointment.reasonConsultation}`}
+              {(appointment.description || appointment.reasonConsultation) &&
+              appointment.notes
+                ? ": "
+                : ""}
               {appointment.notes}
             </p>
           )}
         </div>
       </div>
       <div className="flex items-center gap-2 md:self-center">
-        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusClass}`}>{appointment.status}</span>
-        <button className="p-2 hover:bg-brand-light rounded-full text-slate-400 hover:text-brand" aria-label="Open appointment"><ChevronRight size={18} /></button>
+        <span
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusClass}`}
+        >
+          {appointment.status}
+        </span>
+        <button
+          className="p-2 hover:bg-brand-light rounded-full text-slate-400 hover:text-brand"
+          aria-label="Open appointment"
+        >
+          <ChevronRight size={18} />
+        </button>
       </div>
     </div>
   );
@@ -1974,14 +3473,32 @@ function AppointmenttLogRow({ appointment, doctorName, compact = false, onClick 
 function DateBadge({ date, small = false }: { date: Date; small?: boolean }) {
   const isValid = !isNaN(date.getTime());
   return (
-    <div className={`${small ? 'w-12 h-12' : 'w-14 h-14'} bg-white rounded-2xl flex flex-col items-center justify-center border border-[#d6deeb] shadow-[0_4px_12px_rgba(11,42,111,.08)] flex-shrink-0`}>
-      <span className="text-[10px] uppercase font-black text-brand leading-none mb-1">{isValid ? date.toLocaleString('default', { month: 'short' }) : '—'}</span>
-      <span className={`${small ? 'text-lg' : 'text-xl'} font-black leading-none text-slate-900`}>{isValid ? date.getDate() : '—'}</span>
+    <div
+      className={`${small ? "w-12 h-12" : "w-14 h-14"} bg-white rounded-2xl flex flex-col items-center justify-center border border-[#d6deeb] shadow-[0_4px_12px_rgba(11,42,111,.08)] flex-shrink-0`}
+    >
+      <span className="text-[10px] uppercase font-black text-brand leading-none mb-1">
+        {isValid ? date.toLocaleString("default", { month: "short" }) : "—"}
+      </span>
+      <span
+        className={`${small ? "text-lg" : "text-xl"} font-black leading-none text-slate-900`}
+      >
+        {isValid ? date.getDate() : "—"}
+      </span>
     </div>
   );
 }
 
-function EmptyState({ icon, title, text, action }: { icon: ReactNode; title: string; text: string; action?: ReactNode }) {
+function EmptyState({
+  icon,
+  title,
+  text,
+  action,
+}: {
+  icon: ReactNode;
+  title: string;
+  text: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="py-12 px-4 flex flex-col items-center justify-center text-center text-slate-400 bg-[rgba(11,42,111,.03)] rounded-2xl border-2 border-dashed border-[#d6deeb]">
       <div className="mb-4 opacity-40 text-brand">{icon}</div>
@@ -1992,12 +3509,26 @@ function EmptyState({ icon, title, text, action }: { icon: ReactNode; title: str
   );
 }
 
-function FormField({ label, info, children }: { label: string; info?: string; children: ReactNode }) {
+function FormField({
+  label,
+  info,
+  children,
+}: {
+  label: string;
+  info?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 px-1">
-        <label className="block text-sm font-extrabold text-[#0b2a6f]">{label}</label>
-        {info && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{info}</span>}
+        <label className="block text-sm font-extrabold text-[#0b2a6f]">
+          {label}
+        </label>
+        {info && (
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+            {info}
+          </span>
+        )}
       </div>
       {children}
     </div>
@@ -2005,24 +3536,31 @@ function FormField({ label, info, children }: { label: string; info?: string; ch
 }
 
 function formatFullDate(iso: string) {
-  if (!iso) return '—';
+  if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white border border-[#d6deeb] p-3 rounded-xl shadow-sm">
-      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-1">{label}</p>
+      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-1">
+        {label}
+      </p>
       <p className="text-sm font-black text-slate-800">{value}</p>
     </div>
   );
 }
 
 function formatShortDate(iso: string) {
-  if (!iso) return '—';
+  if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

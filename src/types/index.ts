@@ -34,7 +34,6 @@ export interface Appointment {
   // Dates & Status
   schedulingDate: string;
   referralDate: string;
-  dueDate: string;
   status: AppointmentStatus;
   
   // Appointment Details
@@ -56,6 +55,10 @@ export interface Appointment {
   escort: string;
   
   notes: string;
+  weight?: string;
+  height?: string;
+  nurseCompleting?: string;
+  reasonConsultation?: string;
 }
 
 export interface MedicalRecord {
