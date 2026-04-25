@@ -72,13 +72,13 @@ const TAB_META: Record<
   dashboard: {
     title: "Dashboard",
     subtitle:
-      "High-level overview of upcoming visits, volume trends, and provider activity.",
+      "Overview of upcoming medical appointments, volume trends, and transport activity.",
     badge: "Overview",
   },
   appointments: {
     title: "Appointments",
     subtitle:
-      "Manage and monitor all scheduled medical visits and logistics in one place.",
+      "Manage and monitor all scheduled medical appointments and logistics in one place.",
     badge: "Entry Log",
   },
   trends: {
