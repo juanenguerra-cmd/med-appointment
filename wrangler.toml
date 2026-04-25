@@ -4,7 +4,7 @@ compatibility_date = "2026-04-24"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "med_appointment_db"
+database_name = "med_appointment"
 database_id = "479dea3e-3075-49db-a0c1-22d7781e05a4"
 
 [assets]
