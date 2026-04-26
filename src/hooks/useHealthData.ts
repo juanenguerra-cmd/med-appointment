@@ -10,6 +10,7 @@ import {
   validateFacility,
   validateResident,
 } from '../utils/dataValidation';
+import { createAuditEvent, appendLocalAuditEvent } from '../utils/auditLog';
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -95,6 +96,11 @@ export function useHealthData() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const auditActor = {
+    id: currentUser?.id,
+    role: currentUser?.role,
+  };
 
   const reportSaveError = (message: string, error: unknown) => {
     console.error(message, error);
@@ -324,6 +330,17 @@ export function useHealthData() {
     const previousAppointments = appointments;
     setAppointments(prev => [...prev, newAppointment]);
 
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'create',
+        entity: 'appointment',
+        entityId: newAppointment.id,
+        facilityId: currentFacilityId,
+        actor: auditActor,
+        summary: `Appointment created for ${newAppointment.residentName}`,
+      }),
+    );
+
     try {
       await apiFetch('/api/appointments', {
         method: 'POST',
@@ -350,6 +367,18 @@ export function useHealthData() {
     const previousAppointments = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? nextAppointment : a));
 
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'update',
+        entity: 'appointment',
+        entityId: id,
+        facilityId: currentFacilityId || undefined,
+        actor: auditActor,
+        summary: 'Appointment updated',
+        changedFields: Object.keys(changes),
+      }),
+    );
+
     try {
       await apiFetch(`/api/appointments/${id}`, {
         method: 'PATCH',
@@ -365,6 +394,17 @@ export function useHealthData() {
   const deleteAppointment = async (id: string) => {
     const previousAppointments = appointments;
     setAppointments(prev => prev.filter(a => a.id !== id));
+
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'delete',
+        entity: 'appointment',
+        entityId: id,
+        facilityId: currentFacilityId || undefined,
+        actor: auditActor,
+        summary: 'Appointment deleted',
+      }),
+    );
 
     try {
       await apiFetch(`/api/appointments/${id}`, { method: 'DELETE' });
