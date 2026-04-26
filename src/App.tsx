@@ -59,6 +59,10 @@ import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
+import {
+  getConsultFormLabel,
+  openConsultForm,
+} from "./services/consultForms";
 
 type Tab =
   | "dashboard"
@@ -573,21 +577,23 @@ if (!isLoaded) {
   }
 
   const handleGenerateForm = (apt: Appointment, formType: string) => {
-    try {
-      const resident = residents.find((r) => r.name === apt.residentName);
-      if (formType === 'Visit Form') {
-        generateAppointmentPDF(apt, resident, currentFacility);
-      } else if (formType === 'Checklist') {
-         generateOutsideAppointmentChecklistPDF(apt, resident, currentFacility);
-      } else if (formType === 'Medical Clearance') {
-         // Defaulting to "Regular Visit" since window.prompt doesn't work well in preview
-         generateMedicalClearancePDF(apt, "Regular Visit", resident, currentFacility);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Error generating form");
+  try {
+    const resident = residents.find((r) => r.name === apt.residentName);
+
+    if (formType === "Visit Form") {
+      generateAppointmentPDF(apt, resident, currentFacility);
+    } else if (formType === "Checklist") {
+      generateOutsideAppointmentChecklistPDF(apt, resident, currentFacility);
+    } else if (formType === "Medical Clearance") {
+      generateMedicalClearancePDF(apt, "Regular Visit", resident, currentFacility);
+    } else if (formType === "Consult") {
+      openConsultForm(apt, resident, currentFacility);
     }
-  };
+  } catch (e) {
+    console.error(e);
+    alert("Error generating form");
+  }
+};
 
   const handleDuplicateAppt = (apt: Appointment) => {
     const { id, ...appData } = apt;
@@ -2609,6 +2615,15 @@ if (!isLoaded) {
                                     e.stopPropagation();
                                     handleGenerateForm(apt, 'Medical Clearance');
                                   }}
+
+<Button
+  size="sm"
+  variant="soft"
+  icon={<FileText size={14} />}
+  onClick={() => handleGenerateForm(apt, "Consult")}
+>
+  {getConsultFormLabel(apt)}
+</Button>
                                   className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
                                   title="Medical Clearance"
                                 >
