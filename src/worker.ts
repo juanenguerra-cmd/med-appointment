@@ -9,6 +9,98 @@ const app = new Hono<{ Bindings: Env }>().basePath('/api');
 // Helper to convert undefined to null for D1
 const toNull = (val: any) => (val === undefined ? null : val);
 
+const FACILITY_UPDATE_FIELDS = new Set([
+  'name',
+  'address',
+  'phone',
+  'contactPerson',
+]);
+
+const RESIDENT_UPDATE_FIELDS = new Set([
+  'name',
+  'mrn',
+  'lastName',
+  'firstName',
+  'age',
+  'floor',
+  'unit',
+  'roomNumber',
+  'sex',
+  'admissionDate',
+  'allergies',
+  'doctor',
+  'diagnosis',
+  'notes',
+  'lastVisit',
+  'status',
+  'dischargedAt',
+  'lastSeenCensusAt',
+]);
+
+const APPOINTMENT_UPDATE_FIELDS = new Set([
+  'origin',
+  'residentName',
+  'unit',
+  'roomNumber',
+  'providerName',
+  'location',
+  'contactNumber',
+  'schedulingDate',
+  'referralDate',
+  'status',
+  'date',
+  'time',
+  'pickUpTime',
+  'type',
+  'description',
+  'serviceInHouse',
+  'reasonSendOut',
+  'transportType',
+  'transportCompany',
+  'payerForRide',
+  'roundTrip',
+  'escort',
+  'oxygen',
+  'notes',
+  'weight',
+  'height',
+  'nurseCompleting',
+  'reasonConsultation',
+  'transportTypeOther',
+  'payerForRideOther',
+  'escortDetails',
+  'consultReason',
+  'ambulating',
+  'wheelchair',
+  'withLift',
+  'recliner',
+  'bariatric',
+]);
+
+type SafeUpdate = {
+  keys: string[];
+  setClause: string;
+  values: any[];
+  rejectedKeys: string[];
+};
+
+function buildSafeUpdate(updates: Record<string, any>, allowedFields: Set<string>): SafeUpdate | null {
+  const incomingKeys = Object.keys(updates || {});
+  const keys = incomingKeys.filter((key) => allowedFields.has(key));
+  const rejectedKeys = incomingKeys.filter((key) => !allowedFields.has(key));
+
+  if (keys.length === 0) {
+    return null;
+  }
+
+  return {
+    keys,
+    setClause: keys.map((key) => `${key} = ?`).join(', '),
+    values: keys.map((key) => toNull(updates[key])),
+    rejectedKeys,
+  };
+}
+
 // Middleware to check for DB binding
 app.use('*', async (c, next) => {
   if (!c.env.DB) {
@@ -66,14 +158,16 @@ app.post('/facilities', async (c) => {
 app.patch('/facilities/:id', async (c) => {
   const id = c.req.param('id');
   const updates = await c.req.json() as any;
-  const keys = Object.keys(updates);
-  const setQuery = keys.map(k => `${k} = ?`).join(', ');
-  const values = keys.map(k => toNull(updates[k]));
+  const safeUpdate = buildSafeUpdate(updates, FACILITY_UPDATE_FIELDS);
+
+  if (!safeUpdate) {
+    return c.json({ success: false, error: 'No valid facility fields to update' }, 400);
+  }
   
-  await c.env.DB.prepare(`UPDATE facilities SET ${setQuery} WHERE id = ?`)
-    .bind(...values, id)
+  await c.env.DB.prepare(`UPDATE facilities SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .bind(...safeUpdate.values, id)
     .run();
-  return c.json({ success: true });
+  return c.json({ success: true, rejectedFields: safeUpdate.rejectedKeys });
 });
 
 app.delete('/facilities/:id', async (c) => {
@@ -192,11 +286,11 @@ app.post('/residents', async (c) => {
   if (!res.facilityId) return c.json({ error: 'facilityId is required' }, 400);
 
   await c.env.DB.prepare(`
-    INSERT INTO residents (id, name, mrn, lastName, firstName, age, floor, unit, roomNumber, sex, admissionDate, allergies, doctor, diagnosis, notes, lastVisit, facilityId)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO residents (id, name, mrn, lastName, firstName, age, floor, unit, roomNumber, sex, admissionDate, allergies, doctor, diagnosis, notes, lastVisit, status, dischargedAt, lastSeenCensusAt, facilityId)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     toNull(res.id), toNull(res.name), toNull(res.mrn), toNull(res.lastName), toNull(res.firstName), toNull(res.age), toNull(res.floor), toNull(res.unit), toNull(res.roomNumber), toNull(res.sex),
-    toNull(res.admissionDate), toNull(res.allergies), toNull(res.doctor), toNull(res.diagnosis), toNull(res.notes), toNull(res.lastVisit), toNull(res.facilityId)
+    toNull(res.admissionDate), toNull(res.allergies), toNull(res.doctor), toNull(res.diagnosis), toNull(res.notes), toNull(res.lastVisit), toNull(res.status || 'Active'), toNull(res.dischargedAt), toNull(res.lastSeenCensusAt), toNull(res.facilityId)
   ).run();
   return c.json({ success: true, resident: res }, 201);
 });
@@ -204,14 +298,16 @@ app.post('/residents', async (c) => {
 app.patch('/residents/:id', async (c) => {
   const id = c.req.param('id');
   const updates = await c.req.json() as any;
-  const keys = Object.keys(updates);
-  if (keys.length === 0) return c.json({ error: 'No fields' }, 400);
+  const safeUpdate = buildSafeUpdate(updates, RESIDENT_UPDATE_FIELDS);
 
-  const setClause = keys.map(k => `${k} = ?`).join(", ");
-  const values = [...keys.map(k => toNull(updates[k])), id];
+  if (!safeUpdate) {
+    return c.json({ success: false, error: 'No valid resident fields to update' }, 400);
+  }
 
-  await c.env.DB.prepare(`UPDATE residents SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(...values).run();
-  return c.json({ success: true });
+  await c.env.DB.prepare(`UPDATE residents SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .bind(...safeUpdate.values, id)
+    .run();
+  return c.json({ success: true, rejectedFields: safeUpdate.rejectedKeys });
 });
 
 app.delete('/residents/:id', async (c) => {
@@ -259,14 +355,16 @@ app.post('/appointments', async (c) => {
 app.patch('/appointments/:id', async (c) => {
   const id = c.req.param('id');
   const updates = await c.req.json() as any;
-  const keys = Object.keys(updates);
-  if (keys.length === 0) return c.json({ error: 'No fields' }, 400);
+  const safeUpdate = buildSafeUpdate(updates, APPOINTMENT_UPDATE_FIELDS);
 
-  const setClause = keys.map(k => `${k} = ?`).join(", ");
-  const values = [...keys.map(k => toNull(updates[k])), id];
+  if (!safeUpdate) {
+    return c.json({ success: false, error: 'No valid appointment fields to update' }, 400);
+  }
 
-  await c.env.DB.prepare(`UPDATE appointments SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(...values).run();
-  return c.json({ success: true });
+  await c.env.DB.prepare(`UPDATE appointments SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .bind(...safeUpdate.values, id)
+    .run();
+  return c.json({ success: true, rejectedFields: safeUpdate.rejectedKeys });
 });
 
 app.delete('/appointments/:id', async (c) => {
