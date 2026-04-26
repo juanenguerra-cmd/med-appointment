@@ -1,4 +1,4 @@
-/**
+no/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -54,6 +54,7 @@ import { Card } from "./components/Card";
 import { Button } from "./components/Button";
 import { LockScreen } from "./components/LockScreen";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
+import { TrendsTabContent } from "./components/TrendsTabContent";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
