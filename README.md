@@ -1,29 +1,53 @@
 # HealthSync Medical Appointment Tracker
 
-Visual refresh adapted from the Transportation Tracker style system.
+## Current Architecture
 
-## What changed
+- React + Vite frontend
+- Cloudflare Worker backend (Hono)
+- Cloudflare D1 database
+- LocalStorage used only for session and cached modules
 
-- Added Transportation-style medical blue gradient header and sidebar.
-- Added rounded card surfaces, softer shadows, and cleaner spacing.
-- Added a secondary top page navigation strip for Dashboard, Appointments, Doctors, and Records.
-- Improved mobile menu overlay and active page states.
-- Improved appointment log rows, doctor cards, empty states, and modal styling.
-- Kept the existing useHealthData localStorage workflow intact.
+## Key Capabilities
 
-## Run locally
+- Facility-based access control
+- User login and role management (prototype)
+- Resident census import and parsing
+- Appointment tracking and reporting
+- PDF export tools
+
+## Important Notes
+
+- This build now uses D1 for facilities, users, residents, and appointments
+- Doctors and records remain stored locally (temporary)
+- Authentication is for prototype/testing only (not production secure)
+
+## Run Locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+## Build & Deploy
 
 ```bash
 npm run build
+npm run deploy
 ```
 
-## Notes
+## Version
 
-This update is focused on CSS/visual layout and page presentation. It does not migrate the app to D1 or replace the existing localStorage data hook.
+### v0.2.0-D1-Prototype
+
+- Migrated core data (facilities, users, residents, appointments) to D1
+- Added Worker API backend
+- Added facility-based filtering and permissions
+- Census import now updates facility-based resident registry
+- Appointments now persist via backend
+
+### Known Limitations
+
+- Passwords are not securely hashed
+- Doctors/records not yet in D1
+- Census replacement does not yet mark discharged residents
+
