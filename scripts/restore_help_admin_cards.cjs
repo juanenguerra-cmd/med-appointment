@@ -97,12 +97,11 @@ function removeCardByTitle(text, title) {
   return { text: result, removed };
 }
 
-// Remove any misplaced Facility Management card first, then insert it only into the admin Help block.
 const removedFacility = removeCardByTitle(source, 'Facility Management');
 source = removedFacility.text;
 
-function findAdminHelpBlock(text) {
-  const markerRegex = /\{activeTab\s*===\s*["']help["']\s*&&\s*currentUser\?\.role\s*===\s*["']admin["']\s*&&\s*\(/;
+function findHelpBlock(text) {
+  const markerRegex = /\{activeTab\s*===\s*["']help["']\s*&&\s*\(/;
   const match = text.match(markerRegex);
   if (!match || match.index === undefined) return null;
   const start = match.index;
@@ -118,109 +117,103 @@ function findAdminHelpBlock(text) {
 }
 
 const facilityCard = `
-              <Card
-                icon={<Home size={22} />}
-                title="Facility Management"
-                subtitle="Configure the active facility, facility details, and available facility records"
-                action={
-                  <Button
-                    variant="primary"
-                    icon={<Plus size={16} />}
-                    onClick={() => {
-                      setEditingFac(null);
-                      setIsFacModalOpen(true);
-                    }}
-                  >
-                    New Facility
-                  </Button>
-                }
-              >
-                <div className="space-y-3">
-                  {facilities.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-bold text-slate-400">
-                      No facilities found. Add a facility to begin.
-                    </div>
-                  ) : (
-                    facilities.map((facility) => (
-                      <div
-                        key={facility.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-                            <Home size={18} />
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-800">{facility.name}</p>
-                            <p className="text-xs font-semibold text-slate-500">
-                              {[facility.address, facility.phone].filter(Boolean).join(" • ") || "No facility details listed"}
-                            </p>
-                            {facility.id === currentFacilityId && (
-                              <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">
-                                Current Facility
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>
-                            Set Active
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => {
-                              setEditingFac(facility);
-                              setIsFacModalOpen(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="danger"
-                            icon={<Trash2 size={15} />}
-                            onClick={() => {
-                              const ok = window.confirm(
-                                `Delete facility ${facility.name}? This does not delete existing appointment records from the database.`
-                              );
-                              if (ok) deleteFacility(facility.id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
+                <Card
+                  icon={<Home size={22} />}
+                  title="Facility Management"
+                  subtitle="Configure the active facility, facility details, and available facility records"
+                  action={
+                    <Button
+                      variant="primary"
+                      icon={<Plus size={16} />}
+                      onClick={() => {
+                        setEditingFac(null);
+                        setIsFacModalOpen(true);
+                      }}
+                    >
+                      New Facility
+                    </Button>
+                  }
+                >
+                  <div className="space-y-3">
+                    {facilities.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-bold text-slate-400">
+                        No facilities found. Add a facility to begin.
                       </div>
-                    ))
-                  )}
-                </div>
-              </Card>
+                    ) : (
+                      facilities.map((facility) => (
+                        <div
+                          key={facility.id}
+                          className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+                              <Home size={18} />
+                            </div>
+                            <div>
+                              <p className="font-black text-slate-800">{facility.name}</p>
+                              <p className="text-xs font-semibold text-slate-500">
+                                {[facility.address, facility.phone].filter(Boolean).join(" • ") || "No facility details listed"}
+                              </p>
+                              {facility.id === currentFacilityId && (
+                                <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">
+                                  Current Facility
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>
+                              Set Active
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              onClick={() => {
+                                setEditingFac(facility);
+                                setIsFacModalOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="danger"
+                              icon={<Trash2 size={15} />}
+                              onClick={() => {
+                                const ok = window.confirm(
+                                  `Delete facility ${facility.name}? This does not delete existing appointment records from the database.`
+                                );
+                                if (ok) deleteFacility(facility.id);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
 `;
 
-const adminHelp = findAdminHelpBlock(source);
-if (!adminHelp) {
-  console.error('Could not find admin Help/System Guide render block. No changes made.');
+const helpBlock = findHelpBlock(source);
+if (!helpBlock) {
+  console.error('Could not find Help/System Guide render block. No changes made.');
   process.exit(1);
 }
 
-const adminBlock = source.slice(adminHelp.start, adminHelp.end);
-let insertAt = -1;
-const adminPanelRelative = adminBlock.indexOf('<VersionHistoryPanel currentUserRole={currentUser?.role} />');
-if (adminPanelRelative >= 0) {
-  insertAt = adminHelp.start + adminPanelRelative + '<VersionHistoryPanel currentUserRole={currentUser?.role} />'.length;
-} else {
-  const firstCard = source.indexOf('<Card', adminHelp.start);
-  if (firstCard >= 0 && firstCard < adminHelp.end) insertAt = firstCard;
-}
-
-if (insertAt < 0) {
-  console.error('Could not find admin insertion point for Facility Management. No changes made.');
+const adminGuard = '{currentUser?.role === "admin" && (';
+const helpText = source.slice(helpBlock.start, helpBlock.end);
+const guardRelative = helpText.indexOf(adminGuard);
+if (guardRelative < 0) {
+  console.error('Could not find admin-only section inside Help page. No changes made.');
   process.exit(1);
 }
 
-source = source.slice(0, insertAt) + facilityCard + source.slice(insertAt);
+const guardAbsolute = helpBlock.start + guardRelative + adminGuard.length;
+source = source.slice(0, guardAbsolute) + facilityCard + source.slice(guardAbsolute);
 
 if (source === original) {
   console.log('No changes were needed.');
 } else {
   fs.writeFileSync(appPath, source);
-  console.log(`Facility Management restored inside admin Help block only. Removed ${removedFacility.removed} misplaced Facility Management card(s). Staff Guide & Info nav ensured. Run npm run build next.`);
+  console.log(`Facility Management restored inside current admin-only Help section. Removed ${removedFacility.removed} misplaced Facility Management card(s). Staff Guide & Info nav ensured. Run npm run build next.`);
 }
