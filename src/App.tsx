@@ -833,7 +833,16 @@ if (!isLoaded) {
           </div>
 
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
-            <NavItem
+                        {currentUser?.role !== "admin" && (
+              <NavItem
+                key="nav-help-staff-0"
+                active={activeTab === "help"}
+                onClick={() => goToTab("help")}
+                icon={<ShieldCheck size={20} />}
+                label="Guide & Info"
+              />
+            )}
+<NavItem
               active={activeTab === "dashboard"}
               onClick={() => goToTab("dashboard")}
               icon={<Activity size={20} />}
@@ -1693,9 +1702,9 @@ if (!isLoaded) {
             </motion.section>
           )}
           
-          {activeTab === "help" && currentUser?.role !== "admin" && (
+                    {activeTab === "help" && (
             <motion.div
-              key="help-staff"
+              key="help"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
@@ -1703,269 +1712,58 @@ if (!isLoaded) {
               className="space-y-6"
             >
               <VersionHistoryPanel currentUserRole={currentUser?.role} />
-            </motion.div>
-          )}
 
-{activeTab === "help" && currentUser?.role === "admin" && (
-            <motion.section
-              key="help"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-6 pb-20"
-            >
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
-              <VersionHistoryPanel currentUserRole={currentUser?.role} />
-<Card className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-2xl bg-brand-light text-brand">
-                        <MapPin size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black text-slate-800">
-                          Facility Management
-                        </h3>
-                        <p className="text-sm text-slate-500">
-                          Configure transportation hubs and facilities
-                        </p>
-                      </div>
-                    </div>
-                    {currentUser?.role === "admin" && (
-                      <Button
-                        onClick={() => {
-                          setEditingFac(null);
-                          setIsFacModalOpen(true);
-                        }}
-                        className="gap-2"
-                      >
-                        <Plus size={18} /> Add Facility
-                      </Button>
-                    )}
-                  </div>
-
+              {currentUser?.role === "admin" && (
+                <Card
+                  icon={<User size={22} />}
+                  title="User Access Logic"
+                  subtitle="Manage facility visibility for staff members"
+                  action={
+                    <Button
+                      variant="primary"
+                      icon={<Plus size={16} />}
+                      onClick={() => {
+                        setEditingUser(null);
+                        setIsUserModalOpen(true);
+                      }}
+                    >
+                      New User
+                    </Button>
+                  }
+                >
                   <div className="space-y-3">
-                    {facilities.map((fac) => (
-                      <div
-                        key={fac.id}
-                        className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                            <Home size={20} />
+                    {users.map((u: any) => (
+                      <div key={u.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                            <User size={18} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-slate-800">
-                              {fac.name}
-                            </h4>
-                            <p className="text-xs text-slate-500">
-                              {fac.address || "No address set"}
-                            </p>
+                            <p className="font-black text-slate-800">{u.name || u.email}</p>
+                            <p className="text-xs font-semibold text-slate-500">{u.email}</p>
                           </div>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase text-slate-500">
+                            {u.role}
+                          </span>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setEditingFac(fac);
-                              setIsFacModalOpen(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          {currentUser?.role === "admin" &&
-                            fac.id !== "default-id" && (
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => {
-                                  if (confirm("Delete facility?"))
-                                    deleteFacility(fac.id);
-                                }}
-                              >
-                                Delete
-                              </Button>
-                            )}
-                        </div>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setEditingUser(u);
+                            setIsUserModalOpen(true);
+                          }}
+                        >
+                          Access Logic
+                        </Button>
                       </div>
                     ))}
                   </div>
                 </Card>
-
-                {currentUser?.role === "admin" && (
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
-                          <Users size={24} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black text-slate-800">
-                            User Access Logic
-                          </h3>
-                          <p className="text-sm text-slate-500">
-                            Manage facility visibility for staff members
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setEditingUser(null);
-                          setUserFacPermissions([]);
-                          setIsUserModalOpen(true);
-                        }}
-                        className="gap-2 bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Plus size={18} /> New User
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {users.map((u) => (
-                        <div
-                          key={u.id}
-                          className="p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                              <User size={20} />
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">
-                                {u.fullName}{" "}
-                                <span className="ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                                  {u.role}
-                                </span>
-                              </h4>
-                              <p className="text-xs text-slate-500">
-                                {u.email}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={async () => {
-                              const perms = await fetchUserPermissions(u.id);
-                              setUserFacPermissions(perms);
-                              setEditingUser(u);
-                              setIsUserModalOpen(true);
-                            }}
-                          >
-                            Access Logic
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-
-                <Card
-                  title="User Guide"
-                  subtitle="How to navigate the Appointment Tracker"
-                >
-                  <div className="space-y-6">
-                    <div className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
-                        1
-                      </div>
-                      <div>
-                        <p className="font-black text-slate-900">
-                          Manage Appointments
-                        </p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          Use the Dashboard or Appointments tab to view
-                          scheduled visits. Click "Add Appointment" to create a
-                          new record including resident details, location, and
-                          transport needs.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
-                        2
-                      </div>
-                      <div>
-                        <p className="font-black text-slate-900">
-                          Generate Visit Forms
-                        </p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          In the consolidated log, click the download icon on
-                          any record to instantly produce a visit form PDF. This
-                          contains all clinical and contact info for the
-                          provider.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-black shrink-0">
-                        3
-                      </div>
-                      <div>
-                        <p className="font-black text-slate-900">
-                          Bulk Census Import
-                        </p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          Visit the Census tab to paste a resident listing
-                          report. The system parses names, ages, and unit info
-                          automatically to keep your registry in sync.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card
-                  title="Version History"
-                  subtitle="Recent updates and system changes"
-                >
-                  <div className="space-y-5">
-                    <div className="border-l-2 border-brand-2 pl-4 py-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black bg-brand-2/10 text-brand-2 px-2 py-0.5 rounded">
-                          v1.5.0
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          LATEST
-                        </span>
-                      </div>
-                      <p className="text-sm font-black text-slate-800">
-                        Cloudflare Migration & D1 Integration
-                      </p>
-                      <ul className="text-xs text-slate-500 mt-2 space-y-1 list-disc ml-4">
-                        <li>
-                          Switched to high-performance Cloudflare D1 database
-                        </li>
-                        <li>Migrated backend to Cloudflare Workers API</li>
-                        <li>Renamed "Reason" field to "Description of Need"</li>
-                        <li>
-                          Updated Location fields for better address support
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="border-l-2 border-slate-200 pl-4 py-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                          v1.4.0
-                        </span>
-                      </div>
-                      <p className="text-sm font-bold text-slate-700">
-                        Report Builder & Analytics
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Added custom date-range report generation and specialty
-                        trends visualization.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </motion.section>
+              )}
+            </motion.div>
           )}
-        </AnimatePresence>
+
+</AnimatePresence>
       </main>
 
       <AnimatePresence>
