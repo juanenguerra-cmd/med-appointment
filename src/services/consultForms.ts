@@ -116,7 +116,7 @@ export const generateRegularConsultHTML = (
     }
 
     .facility-name {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 900;
       text-transform: uppercase;
     }
@@ -129,7 +129,7 @@ export const generateRegularConsultHTML = (
     .title {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 900;
       letter-spacing: -0.45px;
       line-height: 1;
@@ -251,13 +251,13 @@ export const generateRegularConsultHTML = (
     .clinical-box h4 {
       margin: 0;
       padding: 0;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.08;
       font-weight: bold;
     }
 
     .clinical-box small {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
     }
 
