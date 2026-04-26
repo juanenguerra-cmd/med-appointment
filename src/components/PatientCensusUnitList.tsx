@@ -1,27 +1,18 @@
-import React, { useMemo, useState } from "react";
-import { ChevronRight, Eye, Trash2, Users } from "lucide-react";
+import React from "react";
+import { Search, Trash2, Eye, Users } from "lucide-react";
 import { Resident } from "../types";
 import { Button } from "./Button";
 
-interface PatientCensusUnitListProps {
+type PatientCensusUnitListProps = {
   residents: Resident[];
-  searchQuery: string;
+  searchQuery: unknown;
   onSearchChange: (value: string) => void;
   onViewDetails: (resident: Resident) => void;
   onDeleteResident?: (id: string) => void;
-}
-
-const normalize = (value: unknown) => String(value ?? "").trim();
-
-const unitLabel = (resident: Resident) => {
-  const unit = normalize(resident.unit);
-  if (unit && unit !== "—") return unit;
-
-  const floor = normalize(resident.floor);
-  if (floor && floor !== "—") return floor;
-
-  return "Unassigned Unit";
 };
+
+const safeText = (value: unknown) => String(value ?? "");
+const safeLower = (value: unknown) => safeText(value).trim().toLowerCase();
 
 export function PatientCensusUnitList({
   residents,
@@ -30,202 +21,210 @@ export function PatientCensusUnitList({
   onViewDetails,
   onDeleteResident,
 }: PatientCensusUnitListProps) {
-  const [openUnits, setOpenUnits] = useState<Record<string, boolean>>({});
+  const q = safeLower(searchQuery);
+  const safeResidents = Array.isArray(residents) ? residents : [];
 
-  const filteredResidents = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return residents;
+  const filteredResidents = safeResidents.filter((resident) => {
+    if (!q) return true;
 
-    return residents.filter((resident) => {
-      const haystack = [
-        resident.name,
-        resident.mrn,
-        resident.roomNumber,
-        resident.unit,
-        resident.floor,
-        resident.doctor,
-      ]
-        .map((value) => String(value ?? "").toLowerCase())
-        .join(" ");
+    return [
+      resident?.name,
+      resident?.firstName,
+      resident?.lastName,
+      resident?.mrn,
+      resident?.roomNumber,
+      resident?.unit,
+      resident?.floor,
+      resident?.doctor,
+      resident?.diagnosis,
+      resident?.sex,
+      resident?.age,
+      resident?.admissionDate,
+    ]
+      .map((value) => safeLower(value))
+      .some((value) => value.includes(q));
+  });
 
-      return haystack.includes(q);
-    });
-  }, [residents, searchQuery]);
+  const groupedByUnit = filteredResidents.reduce<Record<string, Resident[]>>(
+    (groups, resident) => {
+      const unitKey =
+        safeText(resident?.unit).trim() ||
+        safeText(resident?.floor).trim() ||
+        "Unassigned";
 
-  const groupedResidents = useMemo(() => {
-    const map = new Map<string, Resident[]>();
+      if (!groups[unitKey]) groups[unitKey] = [];
+      groups[unitKey].push(resident);
+      return groups;
+    },
+    {},
+  );
 
-    filteredResidents.forEach((resident) => {
-      const key = unitLabel(resident);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(resident);
-    });
-
-    return Array.from(map.entries())
-      .map(([unit, list]) => [
-        unit,
-        list.sort((a, b) => {
-          const roomCompare = String(a.roomNumber || "").localeCompare(
-            String(b.roomNumber || ""),
-            undefined,
-            { numeric: true },
-          );
-          if (roomCompare !== 0) return roomCompare;
-          return String(a.name || "").localeCompare(String(b.name || ""));
-        }),
-      ] as const)
-      .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
-  }, [filteredResidents]);
-
-  const isUnitOpen = (unit: string) => {
-    if (searchQuery.trim()) return true;
-    if (openUnits[unit] === undefined) return groupedResidents.length <= 2;
-    return openUnits[unit];
-  };
-
-  const toggleUnit = (unit: string) => {
-    setOpenUnits((prev) => ({ ...prev, [unit]: !isUnitOpen(unit) }));
-  };
-
-  const expandAll = () => {
-    const next: Record<string, boolean> = {};
-    groupedResidents.forEach(([unit]) => {
-      next[unit] = true;
-    });
-    setOpenUnits(next);
-  };
-
-  const collapseAll = () => {
-    const next: Record<string, boolean> = {};
-    groupedResidents.forEach(([unit]) => {
-      next[unit] = false;
-    });
-    setOpenUnits(next);
-  };
+  const sortedUnitNames = Object.keys(groupedByUnit).sort((a, b) =>
+    safeLower(a).localeCompare(safeLower(b)),
+  );
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-            <Users size={18} />
-          </div>
+    <div className="transport-card overflow-hidden">
+      <div className="p-5 border-b border-[#d6deeb] bg-white">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h3 className="text-base font-black text-slate-900">Active Patient Census</h3>
-            <p className="text-xs font-semibold text-slate-500">
-              Collapsible by unit. Quick actions remain visible for each resident.
+            <h3 className="font-black text-[#0b2a6f] text-lg flex items-center gap-2">
+              <Users size={20} />
+              Patient Census Registry
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {safeResidents.length} total resident
+              {safeResidents.length === 1 ? "" : "s"} in registry
             </p>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search resident, MRN, room, unit, or physician..."
-            className="min-w-[260px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={expandAll}
-              className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200"
-            >
-              Expand
-            </button>
-            <button
-              type="button"
-              onClick={collapseAll}
-              className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200"
-            >
-              Collapse
-            </button>
+          <div className="relative w-full md:w-80">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              value={safeText(searchQuery)}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#d6deeb] bg-white text-sm font-semibold outline-none focus:ring-2 focus:ring-brand-2/20"
+              placeholder="Search resident, MRN, unit, room..."
+            />
           </div>
         </div>
       </div>
 
-      <div className="mt-4 space-y-3">
-        {groupedResidents.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-bold text-slate-400">
-            No active residents found.
+      {filteredResidents.length === 0 ? (
+        <div className="p-10 text-center">
+          <div className="mx-auto mb-3 w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+            <Users size={26} />
           </div>
-        )}
+          <p className="font-black text-slate-700">No residents found</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Adjust the search or import census data.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-[#d6deeb]">
+          {sortedUnitNames.map((unitName) => {
+            const unitResidents = groupedByUnit[unitName].sort((a, b) =>
+              safeLower(a?.roomNumber).localeCompare(
+                safeLower(b?.roomNumber),
+                undefined,
+                { numeric: true },
+              ),
+            );
 
-        {groupedResidents.map(([unit, list]) => {
-          const open = isUnitOpen(unit);
-          return (
-            <div key={unit} className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-              <button
-                type="button"
-                onClick={() => toggleUnit(unit)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-100"
-              >
-                <div className="flex items-center gap-3">
-                  <ChevronRight
-                    size={18}
-                    className={`text-slate-500 transition-transform ${open ? "rotate-90" : ""}`}
-                  />
+            return (
+              <section key={unitName}>
+                <div className="sticky top-0 z-10 bg-[#f8fbff] border-b border-[#d6deeb] px-5 py-3 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-black text-slate-800">{unit}</p>
-                    <p className="text-[11px] font-bold text-slate-500">
-                      {list.length} resident{list.length === 1 ? "" : "s"}
+                    <h4 className="font-black text-[#0b2a6f] text-sm">
+                      {unitName}
+                    </h4>
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                      {unitResidents.length} resident
+                      {unitResidents.length === 1 ? "" : "s"}
                     </p>
                   </div>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">
-                  {open ? "Hide" : "Show"}
-                </span>
-              </button>
 
-              {open && (
-                <div className="divide-y divide-slate-100 bg-white">
-                  {list.map((resident) => (
-                    <div
-                      key={resident.id}
-                      className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_auto] md:items-center"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-900">{resident.name}</p>
-                        <div className="mt-1 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
-                          <span className="rounded-full bg-slate-100 px-2 py-1">Room {resident.roomNumber || "—"}</span>
-                          <span className="rounded-full bg-slate-100 px-2 py-1">MRN {resident.mrn || "—"}</span>
-                          <span className="rounded-full bg-slate-100 px-2 py-1">{resident.doctor || "No physician listed"}</span>
-                        </div>
-                      </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-white text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                      <tr>
+                        <th className="px-5 py-3 border-b border-[#eef2f7]">
+                          Resident
+                        </th>
+                        <th className="px-5 py-3 border-b border-[#eef2f7]">
+                          MRN
+                        </th>
+                        <th className="px-5 py-3 border-b border-[#eef2f7]">
+                          Room
+                        </th>
+                        <th className="px-5 py-3 border-b border-[#eef2f7]">
+                          Physician
+                        </th>
+                        <th className="px-5 py-3 border-b border-[#eef2f7] text-right">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
 
-                      <div className="flex flex-wrap justify-start gap-2 md:justify-end">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="inline-flex items-center gap-2 rounded-full text-xs font-black"
-                          onClick={() => onViewDetails(resident)}
-                        >
-                          <Eye size={14} />
-                          View Details
-                        </Button>
-                        {onDeleteResident && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            className="inline-flex items-center gap-2 rounded-full text-xs font-black"
-                            onClick={() => {
-                              const ok = window.confirm(`Delete ${resident.name} from the active census?`);
-                              if (ok) onDeleteResident(resident.id);
-                            }}
+                    <tbody className="divide-y divide-[#eef2f7]">
+                      {unitResidents.map((resident, index) => {
+                        const residentId =
+                          safeText(resident?.id) ||
+                          `${safeText(resident?.name)}-${safeText(
+                            resident?.roomNumber,
+                          )}-${index}`;
+
+                        return (
+                          <tr
+                            key={residentId}
+                            className="bg-white hover:bg-brand-light/20 transition-colors"
                           >
-                            <Trash2 size={14} />
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                            <td className="px-5 py-4">
+                              <p className="font-black text-slate-800 text-sm">
+                                {safeText(resident?.name) || "—"}
+                              </p>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">
+                                {safeText(resident?.sex) || "—"}
+                                {resident?.age ? ` • Age ${safeText(resident.age)}` : ""}
+                              </p>
+                            </td>
+
+                            <td className="px-5 py-4 text-xs font-mono text-slate-500">
+                              {safeText(resident?.mrn) || "—"}
+                            </td>
+
+                            <td className="px-5 py-4">
+                              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
+                                {safeText(resident?.roomNumber) || "—"}
+                              </span>
+                            </td>
+
+                            <td className="px-5 py-4 text-xs text-slate-500 italic">
+                              {safeText(resident?.doctor) || "—"}
+                            </td>
+
+                            <td className="px-5 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="gap-1"
+                                  onClick={() => onViewDetails(resident)}
+                                >
+                                  <Eye size={14} />
+                                  View
+                                </Button>
+
+                                {onDeleteResident && safeText(resident?.id) && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      onDeleteResident(safeText(resident.id))
+                                    }
+                                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                    aria-label="Delete resident"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
