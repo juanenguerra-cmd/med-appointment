@@ -42,8 +42,13 @@ const SPECIALTY_ALIASES: Record<string, string> = {
   ent: 'ENT',
 };
 
-export function normalizeSpecialtyForTrend(value?: string | null): string {
-  const raw = String(value || '').trim().replace(/\s+/g, ' ');
+function safeString(value: unknown): string {
+  if (value === undefined || value === null) return '';
+  return String(value);
+}
+
+export function normalizeSpecialtyForTrend(value?: unknown): string {
+  const raw = safeString(value).trim().replace(/\s+/g, ' ');
   if (!raw) return '';
 
   const key = raw.toLowerCase();
@@ -59,8 +64,8 @@ export function normalizeSpecialtyForTrend(value?: string | null): string {
     .join(' ');
 }
 
-function isIsoDate(value?: string | null): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '').trim());
+function isIsoDate(value?: unknown): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
 }
 
 function percentage(count: number, total: number): number {
@@ -68,15 +73,17 @@ function percentage(count: number, total: number): number {
   return Math.round((count / total) * 1000) / 10;
 }
 
-function statusMatches(appointment: Appointment, status?: string): boolean {
+function statusMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
+  const status = safeString(filters?.status).trim();
   if (!status || status === 'All') return true;
-  return String(appointment.status || '').toLowerCase() === status.toLowerCase();
+  return safeString(appointment.status).toLowerCase() === status.toLowerCase();
 }
 
 function dateMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
-  if (!isIsoDate(appointment.date)) return false;
-  if (filters?.startDate && appointment.date < filters.startDate) return false;
-  if (filters?.endDate && appointment.date > filters.endDate) return false;
+  const date = safeString(appointment.date).trim();
+  if (!isIsoDate(date)) return false;
+  if (filters?.startDate && date < filters.startDate) return false;
+  if (filters?.endDate && date > filters.endDate) return false;
   return true;
 }
 
@@ -91,13 +98,14 @@ export function buildSpecialtyTrends(
 
   appointments.forEach((appointment) => {
     const specialty = normalizeSpecialtyForTrend(appointment.type);
+    const date = safeString(appointment.date).trim();
 
     if (!specialty) {
       excludedMissingSpecialty += 1;
       return;
     }
 
-    if (!isIsoDate(appointment.date)) {
+    if (!isIsoDate(date)) {
       excludedMissingDate += 1;
       return;
     }
@@ -107,7 +115,7 @@ export function buildSpecialtyTrends(
 
     specialtyCounts.set(specialty, (specialtyCounts.get(specialty) || 0) + 1);
 
-    const monthKey = `${appointment.date.slice(0, 7)}|${specialty}`;
+    const monthKey = `${date.slice(0, 7)}|${specialty}`;
     monthCounts.set(monthKey, (monthCounts.get(monthKey) || 0) + 1);
   });
 
