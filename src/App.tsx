@@ -790,13 +790,16 @@ const filteredResidents = residents
   };
 
   const residentAppointments = selectedResident
-    ? appointments.filter(
-        (a) =>
-          a.residentName === selectedResident.name ||
-          (safeLower(a.residentName).includes(safeLower(selectedResident.lastName)) &&
-safeLower(a.residentName).includes(safeLower(selectedResident.firstName)),
-      )
-    : [];
+  ? appointments.filter((a) => {
+      return (
+        a.residentName === selectedResident.name ||
+        (
+          safeLower(a.residentName).includes(safeLower(selectedResident.lastName)) &&
+          safeLower(a.residentName).includes(safeLower(selectedResident.firstName))
+        )
+      );
+    })
+  : [];
 
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
