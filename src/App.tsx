@@ -2589,7 +2589,8 @@ if (!isLoaded) {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="flex items-center gap-2 justify-<button
+                              <div className="flex items-center gap-2 justify-<<button
+<button
   onClick={(e) => {
     e.stopPropagation();
     handleGenerateForm(apt, "Visit Form");
@@ -2632,8 +2633,6 @@ if (!isLoaded) {
 >
   <FileText size={10} /> {getConsultFormLabel(apt)}
 </button>
-
-
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
                                     apt.status === "Completed"
