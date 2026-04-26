@@ -234,7 +234,7 @@ export const generateRegularConsultHTML = (
     }
 
     .clinical-area {
-      flex: 0 0 6.2in;
+      flex: 0 0 7.2in;
       display: grid;
       grid-template-rows: 1.05fr 0.95fr 1.05fr 0.70fr;
       border: 1.2px solid #000;
