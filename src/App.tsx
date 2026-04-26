@@ -3470,12 +3470,26 @@ Time: ${formatTimeAMPM(apt.time)}`;
                     <ClipboardCheck size={12} /> Checklist
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); onGenerateForm && onGenerateForm(apt, 'Medical Clearance'); }}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
-                    title="Generate Medical Clearance"
-                  >
-                    <ShieldCheck size={12} /> Medical Clearance
-                  </button>
+  onClick={(e) => {
+    e.stopPropagation();
+    onGenerateForm && onGenerateForm(apt, "Medical Clearance");
+  }}
+  className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
+  title="Generate Medical Clearance"
+>
+  <ShieldCheck size={12} /> Medical Clearance
+</button>
+
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    onGenerateForm && onGenerateForm(apt, "Consult");
+  }}
+  className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[10px] font-bold uppercase tracking-wider"
+  title={`Generate ${getConsultFormLabel(apt)}`}
+>
+  <FileText size={12} /> {getConsultFormLabel(apt)}
+</button>
                 </div>
               </td>
               {showColumn("Payer") && (
