@@ -26,45 +26,61 @@ if (!source.includes(importLine)) {
   source = source.replace(anchor, `${anchor}\n${importLine}`);
 }
 
-if (source.includes('<VersionHistoryPanel')) {
+if (source.includes('<VersionHistoryPanel') && source.includes('key="help-staff"')) {
   if (source !== original) {
     fs.writeFileSync(appPath, source);
-    console.log('VersionHistoryPanel import added. Panel was already wired.');
+    console.log('VersionHistoryPanel import added. Staff/admin help panel was already wired.');
   } else {
-    console.log('VersionHistoryPanel already wired. No changes made.');
+    console.log('VersionHistoryPanel already wired for staff/admin Help page. No changes made.');
   }
   process.exit(0);
 }
 
-const helpMarker = '{activeTab === "help" && (';
-const helpStart = source.indexOf(helpMarker);
-if (helpStart < 0) {
-  console.error('Could not find Help/System Guide tab block. No changes made.');
+const adminHelpMarker = '{activeTab === "help" && currentUser?.role === "admin" && (';
+const adminHelpStart = source.indexOf(adminHelpMarker);
+if (adminHelpStart < 0) {
+  console.error('Could not find admin-gated Help/System Guide tab block. No changes made.');
   process.exit(1);
 }
 
-const possibleEnds = [
-  source.indexOf('{isAddModalOpen', helpStart + helpMarker.length),
-  source.indexOf('{isFacModalOpen', helpStart + helpMarker.length),
-  source.indexOf('{isUserModalOpen', helpStart + helpMarker.length),
-  source.indexOf('</AnimatePresence>', helpStart + helpMarker.length),
-].filter((index) => index > helpStart);
-
-const helpEnd = possibleEnds.length ? Math.min(...possibleEnds) : source.length;
-const firstCard = source.indexOf('<Card', helpStart);
-const insertAtCard = firstCard > helpStart && firstCard < helpEnd;
-
-const panelBlock = `
+const staffHelpBlock = `
+          {activeTab === "help" && currentUser?.role !== "admin" && (
+            <motion.div
+              key="help-staff"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-6"
+            >
               <VersionHistoryPanel currentUserRole={currentUser?.role} />
+            </motion.div>
+          )}
+
 `;
 
-if (insertAtCard) {
+if (!source.includes('key="help-staff"')) {
+  source = source.slice(0, adminHelpStart) + staffHelpBlock + source.slice(adminHelpStart);
+}
+
+// Insert the panel at the top of the existing admin Help block, before the first Card.
+if (!source.includes('<VersionHistoryPanel currentUserRole={currentUser?.role} />\n              <Card')) {
+  const updatedAdminHelpStart = source.indexOf(adminHelpMarker);
+  const nextBlockStart = source.indexOf('{activeTab ===', updatedAdminHelpStart + adminHelpMarker.length);
+  const searchEnd = nextBlockStart > updatedAdminHelpStart ? nextBlockStart : source.length;
+  const firstCard = source.indexOf('<Card', updatedAdminHelpStart);
+
+  if (firstCard < 0 || firstCard > searchEnd) {
+    console.error('Could not find first Card in admin Help block. Staff block/import may have been added; no admin panel inserted.');
+    fs.writeFileSync(appPath, source);
+    process.exit(1);
+  }
+
+  const panelBlock = `
+              <VersionHistoryPanel currentUserRole={currentUser?.role} />
+`;
   source = source.slice(0, firstCard) + panelBlock + source.slice(firstCard);
-} else {
-  // Fallback: place the panel immediately after the Help condition opens.
-  const fallbackInsertAt = helpStart + helpMarker.length;
-  source = source.slice(0, fallbackInsertAt) + `\n${panelBlock}` + source.slice(fallbackInsertAt);
 }
 
 fs.writeFileSync(appPath, source);
-console.log('VersionHistoryPanel wired into Help/System Guide page. Run npm run build next.');
+console.log('VersionHistoryPanel wired into Help/System Guide page for staff and admin. Run npm run build next.');
