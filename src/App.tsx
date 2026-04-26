@@ -698,8 +698,6 @@ if (!isLoaded) {
     });
   };
 
-  const safeLower = (value: unknown) => String(value ?? "").toLowerCase();
-
 const filteredResidents = residents
   .filter((r) => {
     const search = safeLower(residentSearchTerm);
@@ -1896,7 +1894,7 @@ const filteredResidents = residents
                           ...newAppt,
                           status: val as any,
                         });
-                        if (["Cancelled", "Rescheduled", "Deferred", "Discontinued"].includes(val)) {
+                        if (["Cancelled", "Deferred", "Discontinued"].includes(val)) {
                            setModalStatusPrompt({ status: val, reason: "" });
                         }
                       }}
