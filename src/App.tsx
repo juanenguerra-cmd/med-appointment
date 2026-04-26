@@ -56,6 +56,7 @@ import { LockScreen } from "./components/LockScreen";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
+import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 
@@ -1712,6 +1713,19 @@ if (!isLoaded) {
               className="space-y-6"
             >
               <VersionHistoryPanel currentUserRole={currentUser?.role} />
+              <AdminGuideTools
+                currentUserRole={currentUser?.role}
+                facilities={facilities}
+                currentFacilityId={currentFacilityId}
+                setCurrentFacilityId={setCurrentFacilityId}
+                setEditingFac={setEditingFac}
+                setIsFacModalOpen={setIsFacModalOpen}
+                deleteFacility={deleteFacility}
+                users={users}
+                setEditingUser={setEditingUser}
+                setIsUserModalOpen={setIsUserModalOpen}
+              />
+
 
               {currentUser?.role === "admin" && (
                 <Card
