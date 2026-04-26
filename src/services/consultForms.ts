@@ -701,7 +701,7 @@ export const generateOrthoConsultHTML = (
     }
 
     .push-space {
-  flex: 0 0 0.9in;
+  flex: 0 0 1.5in;
   min-height: 0;
 }
 
