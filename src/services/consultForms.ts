@@ -71,234 +71,157 @@ export const generateRegularConsultHTML = (
   <meta charset="utf-8" />
   <title>Regular Consult</title>
     <style>
-    @page {
-      size: letter portrait;
-      margin: 0.12in 0.24in 0.12in 0.24in;
-    }
+  @page {
+    size: letter portrait;
+    margin: 0.25in 0.35in;
+  }
 
-    * {
-      box-sizing: border-box;
-    }
+  html, body {
+    width: 8.5in;
+    height: 11in;
+    margin: 0;
+    padding: 0;
+    font-family: "Times New Roman", serif;
+    font-size: 11.5px;
+    line-height: 1.1;
+    color: #000;
+  }
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      color: #000;
-      background: #fff;
-      font-family: "Times New Roman", Times, serif;
-      font-size: 9.2px;
-      line-height: 0.98;
-    }
+  .sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
 
+  /* HEADER */
+  .letterhead {
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+
+  .facility-name {
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .facility-details {
+    font-size: 9px;
+  }
+
+  .title {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    margin-top: 4px;
+  }
+
+  .checkline {
+    text-align: center;
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  /* TOP FIELDS */
+  .top-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .field {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+  }
+
+  .label {
+    font-weight: bold;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  .line {
+    flex: 1;
+    border-bottom: 1px solid #000;
+    min-height: 16px;
+  }
+
+  .blank-rule {
+    border-bottom: 1px solid #000;
+    margin: 4px 0;
+  }
+
+  .dob-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+  }
+
+  .history-row {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  /* 🔥 MAIN FIX — FLEX GRID THAT FILLS PAGE */
+  .clinical-grid {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1.2fr 1fr 1.2fr 0.8fr;
+    border: 1px solid #000;
+    border-bottom: none;
+  }
+
+  .box {
+    border-bottom: 1px solid #000;
+    padding: 6px;
+  }
+
+  .box h4 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .box small {
+    font-size: 9px;
+  }
+
+  /* FOOTER */
+  .signature-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto 0.5fr;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .sig-line {
+    border-bottom: 1px solid #000;
+    height: 16px;
+  }
+
+  .pcp-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .stars {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+
+  @media print {
     .sheet {
-      width: 100%;
-      height: 10.76in;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      height: 100%;
     }
-
-    .letterhead {
-      text-align: center;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 0.98;
-      margin-bottom: 0;
-    }
-
-    .facility-name {
-      font-weight: 900;
-      font-size: 9.5px;
-      text-transform: uppercase;
-    }
-
-    .facility-details {
-      font-size: 6.3px;
-      font-weight: 600;
-    }
-
-    .title {
-      text-align: center;
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: 900;
-      font-size: 15px;
-      letter-spacing: -0.45px;
-      margin: 0 0 1px;
-      line-height: 1;
-    }
-
-    .checkline {
-      text-align: center;
-      font-weight: bold;
-      font-size: 7.3px;
-      margin-bottom: 2px;
-      line-height: 1;
-    }
-
-    .top-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      margin-bottom: 0;
-      min-height: 11px;
-    }
-
-    .field {
-      display: flex;
-      align-items: flex-end;
-      min-width: 0;
-    }
-
-    .label {
-      font-weight: bold;
-      white-space: nowrap;
-      margin-right: 2px;
-    }
-
-    .line {
-      border-bottom: 1px solid #000;
-      min-height: 10px;
-      flex: 1;
-      padding: 0 3px;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .blank-rule {
-      border-bottom: 1px solid #000;
-      height: 11px;
-      margin: 0;
-    }
-
-    .dob-row {
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-end;
-      margin-bottom: 0;
-      min-height: 11px;
-    }
-
-    .dob-row .field {
-      width: 255px;
-    }
-
-    .history-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-weight: bold;
-      font-size: 8.3px;
-      margin-bottom: 0;
-      white-space: nowrap;
-      min-height: 10px;
-    }
-
-    .history-row span {
-      font-weight: bold;
-    }
-
-    .history-other {
-      display: inline-flex;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    .history-other-line {
-      display: inline-block;
-      width: 100px;
-      border-bottom: 1px solid #000;
-      height: 8px;
-    }
-
-    .box {
-      border: 1px solid #000;
-      border-bottom: 0;
-      padding: 2px 4px;
-      width: 100%;
-    }
-
-    .box.last {
-      border-bottom: 1px solid #000;
-    }
-
-    .box h4 {
-      margin: 0;
-      padding: 0;
-      font-size: 8px;
-      line-height: 1;
-      font-weight: bold;
-    }
-
-    .box small {
-      font-size: 6.6px;
-      font-weight: bold;
-    }
-
-    .hpi-box {
-      height: 168px;
-    }
-
-    .history-box {
-      height: 154px;
-    }
-
-    .exam-box {
-      height: 168px;
-    }
-
-    .dx-box {
-      height: 115px;
-    }
-
-    .signature-row {
-      display: grid;
-      grid-template-columns: auto 1fr auto 0.55fr;
-      gap: 5px;
-      align-items: end;
-      margin-top: 2px;
-      font-weight: bold;
-      font-size: 8.3px;
-      min-height: 11px;
-    }
-
-    .sig-line {
-      border-bottom: 1px solid #000;
-      height: 10px;
-    }
-
-    .stars {
-      font-size: 6px;
-      line-height: 6px;
-      height: 6px;
-      overflow: hidden;
-      white-space: nowrap;
-      font-weight: bold;
-      margin-top: 0;
-    }
-
-    .pcp-row {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      font-weight: bold;
-      font-size: 8.3px;
-      margin-top: 1px;
-      white-space: nowrap;
-    }
-
-    @media print {
-      html,
-      body {
-        width: 8.5in;
-        height: 11in;
-      }
-
-      .sheet {
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
   <div class="sheet">
