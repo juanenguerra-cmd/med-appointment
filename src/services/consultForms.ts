@@ -73,7 +73,7 @@ export const generateRegularConsultHTML = (
   <style>
     @page {
       size: letter portrait;
-      margin: 0.28in 0.34in 0.28in 0.34in;
+      margin: 0.18in 0.28in 0.16in 0.28in;
     }
 
     * {
@@ -87,52 +87,58 @@ export const generateRegularConsultHTML = (
       color: #000;
       background: #fff;
       font-family: "Times New Roman", Times, serif;
-      font-size: 10.5px;
-      line-height: 1.05;
+      font-size: 9.6px;
+      line-height: 1;
     }
 
     .sheet {
       width: 100%;
+      min-height: 10.62in;
+      display: flex;
+      flex-direction: column;
     }
 
     .letterhead {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.15;
-      margin-bottom: 4px;
+      line-height: 1.02;
+      margin-bottom: 1px;
     }
 
     .facility-name {
-      font-weight: 800;
-      font-size: 11px;
+      font-weight: 900;
+      font-size: 10.2px;
       text-transform: uppercase;
     }
 
     .facility-details {
-      font-size: 8.5px;
+      font-size: 6.8px;
+      font-weight: 600;
     }
 
     .title {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
-      font-size: 17px;
-      letter-spacing: -0.2px;
-      margin: 2px 0 2px;
+      font-size: 15.6px;
+      letter-spacing: -0.45px;
+      margin: 0 0 1px;
     }
 
     .checkline {
       text-align: center;
       font-weight: bold;
-      font-size: 9.5px;
-      margin-bottom: 5px;
+      font-size: 7.8px;
+      margin-bottom: 3px;
+      line-height: 1;
     }
 
     .top-row {
       display: flex;
       align-items: flex-end;
-      gap: 5px;
-      margin-bottom: 2px;
+      gap: 3px;
+      margin-bottom: 1px;
+      min-height: 12px;
     }
 
     .field {
@@ -144,43 +150,45 @@ export const generateRegularConsultHTML = (
     .label {
       font-weight: bold;
       white-space: nowrap;
-      margin-right: 3px;
+      margin-right: 2px;
     }
 
     .line {
       border-bottom: 1px solid #000;
-      min-height: 13px;
+      min-height: 11px;
       flex: 1;
-      padding: 0 3px 1px;
+      padding: 0 3px;
       overflow: hidden;
       white-space: nowrap;
     }
 
     .blank-rule {
       border-bottom: 1px solid #000;
-      height: 13px;
-      margin: 1px 0 2px;
+      height: 12px;
+      margin: 0 0 1px;
     }
 
     .dob-row {
       display: flex;
       justify-content: flex-end;
       align-items: flex-end;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
+      min-height: 12px;
     }
 
     .dob-row .field {
-      width: 265px;
+      width: 260px;
     }
 
     .history-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       font-weight: bold;
-      font-size: 10px;
-      margin-bottom: 2px;
+      font-size: 8.7px;
+      margin-bottom: 1px;
       white-space: nowrap;
+      min-height: 11px;
     }
 
     .history-row span {
@@ -190,20 +198,20 @@ export const generateRegularConsultHTML = (
     .history-other {
       display: inline-flex;
       align-items: flex-end;
-      gap: 3px;
+      gap: 2px;
     }
 
     .history-other-line {
       display: inline-block;
-      width: 115px;
+      width: 105px;
       border-bottom: 1px solid #000;
-      height: 11px;
+      height: 9px;
     }
 
     .box {
       border: 1px solid #000;
       border-bottom: 0;
-      padding: 3px 4px;
+      padding: 2px 4px;
       width: 100%;
     }
 
@@ -214,51 +222,52 @@ export const generateRegularConsultHTML = (
     .box h4 {
       margin: 0;
       padding: 0;
-      font-size: 9.5px;
-      line-height: 1.05;
+      font-size: 8.4px;
+      line-height: 1;
       font-weight: bold;
     }
 
     .box small {
-      font-size: 8.3px;
+      font-size: 7px;
       font-weight: bold;
     }
 
     .hpi-box {
-      height: 126px;
+      height: 153px;
     }
 
     .history-box {
-      height: 116px;
+      height: 145px;
     }
 
     .exam-box {
-      height: 126px;
+      height: 153px;
     }
 
     .dx-box {
-      height: 90px;
+      height: 103px;
     }
 
     .signature-row {
       display: grid;
       grid-template-columns: auto 1fr auto 0.55fr;
-      gap: 6px;
+      gap: 5px;
       align-items: end;
-      margin-top: 5px;
+      margin-top: 3px;
       font-weight: bold;
-      font-size: 10px;
+      font-size: 8.7px;
+      min-height: 12px;
     }
 
     .sig-line {
       border-bottom: 1px solid #000;
-      height: 13px;
+      height: 11px;
     }
 
     .stars {
-      font-size: 8px;
-      line-height: 8px;
-      height: 8px;
+      font-size: 6.5px;
+      line-height: 6.5px;
+      height: 6.5px;
       overflow: hidden;
       white-space: nowrap;
       font-weight: bold;
@@ -268,10 +277,10 @@ export const generateRegularConsultHTML = (
     .pcp-row {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       font-weight: bold;
-      font-size: 10px;
-      margin-top: 4px;
+      font-size: 8.7px;
+      margin-top: 2px;
       white-space: nowrap;
     }
 
