@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Appointment, Doctor, MedicalRecord, Resident, Facility } from '../types';
+import {
+  normalizeAppointment,
+  normalizeFacility,
+  normalizeResident,
+  normalizeResidentKey,
+  safeString,
+  validateAppointment,
+  validateFacility,
+  validateResident,
+} from '../utils/dataValidation';
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -23,99 +33,25 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-const safeString = (value: unknown, fallback = ''): string => {
-  if (value === undefined || value === null) return fallback;
-  return String(value);
+const safeJson = (value: unknown): string => JSON.stringify(value ?? null);
+
+const recordsEqual = (a: unknown, b: unknown): boolean => safeJson(a) === safeJson(b);
+
+const pickChangedFields = <T extends Record<string, any>>(current: T, next: T): Partial<T> => {
+  const changes: Partial<T> = {};
+  Object.keys(next).forEach((key) => {
+    if (!recordsEqual(current?.[key], next?.[key])) {
+      changes[key as keyof T] = next[key];
+    }
+  });
+  return changes;
 };
 
-const safeLower = (value: unknown): string => safeString(value).trim().toLowerCase();
-
-const safeBoolean = (value: unknown): boolean => {
-  if (typeof value === 'boolean') return value;
-  const normalized = safeLower(value);
-  return ['true', 'yes', 'y', '1', 'checked'].includes(normalized);
-};
-
-const normalizeAppointment = (appointment: any): Appointment => ({
-  ...appointment,
-  id: safeString(appointment?.id),
-  facilityId: safeString(appointment?.facilityId),
-  origin: safeString(appointment?.origin),
-  residentName: safeString(appointment?.residentName),
-  unit: safeString(appointment?.unit),
-  roomNumber: safeString(appointment?.roomNumber),
-  providerName: safeString(appointment?.providerName),
-  location: safeString(appointment?.location),
-  contactNumber: safeString(appointment?.contactNumber),
-  schedulingDate: safeString(appointment?.schedulingDate),
-  referralDate: safeString(appointment?.referralDate),
-  status: (safeString(appointment?.status, 'Scheduled') || 'Scheduled') as Appointment['status'],
-  date: safeString(appointment?.date),
-  time: safeString(appointment?.time),
-  pickUpTime: safeString(appointment?.pickUpTime),
-  type: safeString(appointment?.type),
-  description: safeString(appointment?.description),
-  serviceInHouse: safeString(appointment?.serviceInHouse),
-  reasonSendOut: safeString(appointment?.reasonSendOut),
-  transportType: safeString(appointment?.transportType),
-  transportTypeOther: safeString(appointment?.transportTypeOther),
-  transportCompany: safeString(appointment?.transportCompany),
-  payerForRide: safeString(appointment?.payerForRide),
-  payerForRideOther: safeString(appointment?.payerForRideOther),
-  roundTrip: safeString(appointment?.roundTrip),
-  escort: safeString(appointment?.escort),
-  escortDetails: safeString(appointment?.escortDetails),
-  notes: safeString(appointment?.notes),
-  weight: safeString(appointment?.weight),
-  height: safeString(appointment?.height),
-  nurseCompleting: safeString(appointment?.nurseCompleting),
-  reasonConsultation: safeString(appointment?.reasonConsultation),
-  consultReason: safeString(appointment?.consultReason),
-  ambulating: safeBoolean(appointment?.ambulating),
-  wheelchair: safeBoolean(appointment?.wheelchair),
-  withLift: safeBoolean(appointment?.withLift),
-  recliner: safeBoolean(appointment?.recliner),
-  oxygen: safeBoolean(appointment?.oxygen),
-  bariatric: safeBoolean(appointment?.bariatric),
-});
-
-const normalizeResident = (resident: any): Resident => ({
-  ...resident,
-  id: safeString(resident?.id),
-  facilityId: safeString(resident?.facilityId),
-  name: safeString(resident?.name),
-  lastName: safeString(resident?.lastName),
-  firstName: safeString(resident?.firstName),
-  mrn: safeString(resident?.mrn),
-  age: safeString(resident?.age),
-  floor: safeString(resident?.floor),
-  unit: safeString(resident?.unit),
-  roomNumber: safeString(resident?.roomNumber),
-  sex: safeString(resident?.sex),
-  admissionDate: safeString(resident?.admissionDate),
-  allergies: safeString(resident?.allergies),
-  doctor: safeString(resident?.doctor),
-  diagnosis: safeString(resident?.diagnosis),
-  lastVisit: safeString(resident?.lastVisit),
-  notes: safeString(resident?.notes),
-});
-
-const normalizeFacility = (facility: any): Facility => ({
-  ...facility,
-  id: safeString(facility?.id),
-  name: safeString(facility?.name),
-  address: safeString(facility?.address),
-  phone: safeString(facility?.phone),
-  contactPerson: safeString(facility?.contactPerson),
-});
-
-const normalizeResidentKey = (resident: Partial<Resident>) => {
-  const mrn = safeString(resident.mrn).trim();
-  if (mrn && mrn !== '—') return `mrn:${safeLower(mrn)}`;
-
-  const name = safeString(resident.name).trim().replace(/\s+/g, ' ');
-  const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ');
-  return `name-room:${safeLower(name)}|${safeLower(room)}`;
+const validateOrAlert = <T,>(result: { value: T; issues: { message: string; severity: 'warning' | 'error' }[]; isValid: boolean }, title: string): T | null => {
+  if (result.isValid) return result.value;
+  const errors = result.issues.filter((issue) => issue.severity === 'error').map((issue) => `• ${issue.message}`).join('\n');
+  alert(`${title}\n\n${errors || 'Please review the record and try again.'}`);
+  return null;
 };
 
 const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
@@ -253,7 +189,10 @@ export function useHealthData() {
 
   const addFacility = async (facility: Omit<Facility, 'id'>) => {
     const id = crypto.randomUUID();
-    const newFac = normalizeFacility({ ...facility, id });
+    const validated = validateFacility({ ...facility, id });
+    const newFac = validateOrAlert(validated, 'Facility was not saved because required information is missing.');
+    if (!newFac) return;
+
     const previousFacilities = facilities;
     const previousFacilityId = currentFacilityId;
 
@@ -282,14 +221,24 @@ export function useHealthData() {
   };
 
   const updateFacility = async (id: string, updates: Partial<Facility>) => {
+    const current = facilities.find((f) => f.id === id);
+    if (!current) return;
+
+    const validated = validateFacility({ ...current, ...updates, id });
+    const nextFacility = validateOrAlert(validated, 'Facility changes were not saved because required information is missing.');
+    if (!nextFacility) return;
+
+    const changes = pickChangedFields(current, nextFacility);
+    if (Object.keys(changes).length === 0) return;
+
     const previousFacilities = facilities;
-    setFacilities(prev => prev.map(f => f.id === id ? normalizeFacility({ ...f, ...updates }) : f));
+    setFacilities(prev => prev.map(f => f.id === id ? nextFacility : f));
 
     try {
       await apiFetch(`/api/facilities/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(changes),
       });
     } catch (error) {
       setFacilities(previousFacilities);
@@ -368,7 +317,10 @@ export function useHealthData() {
     if (!currentFacilityId) return;
 
     const id = crypto.randomUUID();
-    const newAppointment = normalizeAppointment({ ...appointment, id, facilityId: currentFacilityId });
+    const validated = validateAppointment({ ...appointment, id, facilityId: currentFacilityId });
+    const newAppointment = validateOrAlert(validated, 'Appointment was not saved because required information is missing.');
+    if (!newAppointment) return;
+
     const previousAppointments = appointments;
     setAppointments(prev => [...prev, newAppointment]);
 
@@ -385,14 +337,24 @@ export function useHealthData() {
   };
 
   const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
+    const current = appointments.find((appointment) => appointment.id === id);
+    if (!current) return;
+
+    const validated = validateAppointment({ ...current, ...updates, id, facilityId: current.facilityId || currentFacilityId || '' });
+    const nextAppointment = validateOrAlert(validated, 'Appointment changes were not saved because required information is missing.');
+    if (!nextAppointment) return;
+
+    const changes = pickChangedFields(current, nextAppointment);
+    if (Object.keys(changes).length === 0) return;
+
     const previousAppointments = appointments;
-    setAppointments(prev => prev.map(a => a.id === id ? normalizeAppointment({ ...a, ...updates }) : a));
+    setAppointments(prev => prev.map(a => a.id === id ? nextAppointment : a));
 
     try {
       await apiFetch(`/api/appointments/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(changes),
       });
     } catch (error) {
       setAppointments(previousAppointments);
@@ -415,7 +377,10 @@ export function useHealthData() {
   const addResident = async (resident: Omit<Resident, 'id' | 'facilityId'>) => {
     if (!currentFacilityId) return;
     const id = crypto.randomUUID();
-    const newResident = normalizeResident({ ...resident, id, facilityId: currentFacilityId, status: 'Active' });
+    const validated = validateResident({ ...resident, id, facilityId: currentFacilityId, status: 'Active' });
+    const newResident = validateOrAlert(validated, 'Resident was not saved because required information is missing.');
+    if (!newResident) return;
+
     const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, newResident]) as Resident[]);
 
@@ -432,14 +397,24 @@ export function useHealthData() {
   };
 
   const updateResident = async (id: string, updates: Partial<Resident>) => {
+    const current = residents.find((resident) => resident.id === id);
+    if (!current) return;
+
+    const validated = validateResident({ ...current, ...updates, id, facilityId: current.facilityId || currentFacilityId || '' });
+    const nextResident = validateOrAlert(validated, 'Resident changes were not saved because required information is missing.');
+    if (!nextResident) return;
+
+    const changes = pickChangedFields(current, nextResident);
+    if (Object.keys(changes).length === 0) return;
+
     const previousResidents = residents;
-    setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? normalizeResident({ ...r, ...updates }) : r)) as Resident[]);
+    setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? nextResident : r)) as Resident[]);
 
     try {
       await apiFetch(`/api/residents/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(changes),
       });
     } catch (error) {
       setResidents(previousResidents);
@@ -462,7 +437,8 @@ export function useHealthData() {
   const batchAddResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
     if (!currentFacilityId) return;
     const existingKeys = new Set(residents.map(normalizeResidentKey));
-    const prepared = dedupeResidents(newResidents.map(normalizeResident))
+    const prepared = dedupeResidents(newResidents.map((resident) => validateResident(resident).value))
+      .filter((resident) => validateResident(resident).isValid)
       .filter((resident) => !existingKeys.has(normalizeResidentKey(resident)))
       .map(r => normalizeResident({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active' })) as Resident[];
 
@@ -493,8 +469,13 @@ export function useHealthData() {
       existingResidentsMap.set(normalizeResidentKey(res), res);
     });
 
+    const validNewResidents = newResidents
+      .map((resident) => validateResident(resident))
+      .filter((result) => result.isValid)
+      .map((result) => result.value);
+
     const uniqueNewResidentsMap = new Map<string, Omit<Resident, 'id' | 'facilityId'>>();
-    dedupeResidents(newResidents.map(normalizeResident)).forEach(res => {
+    dedupeResidents(validNewResidents).forEach(res => {
       uniqueNewResidentsMap.set(normalizeResidentKey(res), res as any);
     });
 
@@ -527,10 +508,12 @@ export function useHealthData() {
         const key = normalizeResidentKey(res);
         const existing = existingResidentsMap.get(key);
         if (existing) {
+          const changes = pickChangedFields(existing, res);
+          if (Object.keys(changes).length === 0) continue;
           await apiFetch(`/api/residents/${res.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(res),
+            body: JSON.stringify(changes),
           });
         } else {
           await apiFetch('/api/residents', {
