@@ -106,12 +106,15 @@ export const generateAppointmentPDF = (
 
   doc.setFont("helvetica", "bold");
   doc.text("ALLERGIES:", 12, clinicalStartY + 16);
+
+  const allergiesText = String(resident?.allergies ?? "");
+
   doc.setTextColor(
-    resident?.allergies.toLowerCase().includes("no known") ? 0 : 200,
+    allergiesText.toLowerCase().includes("no known") ? 0 : 200,
     0,
     0,
   );
-  doc.text(resident?.allergies || "N/A", 45, clinicalStartY + 16);
+  doc.text(allergiesText || "N/A", 45, clinicalStartY + 16);
 
   // Notes Area
   doc.setTextColor(11, 42, 111);
