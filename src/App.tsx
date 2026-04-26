@@ -1453,80 +1453,17 @@ if (!isLoaded) {
           )}
 
           {activeTab === "trends" && (
-            <motion.section
-              key="trends"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card
-                  title="Volume by Specialty"
-                  subtitle="Monthly appointment distribution."
-                >
-                  <div className="h-64 flex items-end justify-between gap-4 pt-10 px-4">
-                    {[65, 45, 85, 30, 55, 75, 40].map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 bg-brand-light rounded-t-xl relative group transition-all hover:bg-brand/10"
-                      >
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          className="absolute bottom-0 left-0 right-0 bg-brand rounded-t-xl shadow-[0_-4px_12px_rgba(11,42,111,0.2)]"
-                        />
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          {Math.round(h / 2)} Visit{h / 2 === 1 ? "" : "s"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                    <span>Cardio</span>
-                    <span>Derm</span>
-                    <span>Ortho</span>
-                    <span>Physio</span>
-                    <span>Dental</span>
-                    <span>Onco</span>
-                    <span>Gastro</span>
-                  </div>
-                </Card>
-                <Card
-                  title="Growth Analytics"
-                  subtitle="Provider availability vs network demand."
-                >
-                  <div className="py-12 flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-brand-light flex items-center justify-center text-brand mb-4">
-                      <TrendingUp size={32} />
-                    </div>
-                    <p className="font-black text-slate-900">
-                      12% Monthly Increase
-                    </p>
-                    <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">
-                      Network demand for specialty referrals is currently
-                      outpacing in-house provider capacity.
-                    </p>
-                    <div className="mt-8 grid grid-cols-3 gap-4 w-full px-6">
-                      <div className="text-center">
-                        <p className="text-xs font-black text-slate-400">MAY</p>
-                        <p className="font-extrabold text-brand">+4.2%</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-black text-slate-400">JUN</p>
-                        <p className="font-extrabold text-brand">+7.1%</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-black text-slate-400">JUL</p>
-                        <p className="font-extrabold text-brand">+2.8%</p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </motion.section>
-          )}
+  <motion.section
+    key="trends"
+    initial={{ opacity: 0, y: 12 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -12 }}
+    transition={{ duration: 0.18 }}
+    className="space-y-6"
+  >
+    <TrendsTabContent appointments={appointments} />
+  </motion.section>
+)}
 
           {activeTab === "census" && (
             <motion.section
