@@ -2622,16 +2622,6 @@ if (!isLoaded) {
 
 <button
   onClick={() => {
-    handleGenerateForm(apt, "Medical Clearance");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Medical Clearance"
->
-  <ShieldCheck size={10} /> Medical Clearance
-</button>
-
-<button
-  onClick={() => {
     handleGenerateForm(apt, "Consult");
   }}
   className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
