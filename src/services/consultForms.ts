@@ -129,7 +129,7 @@ export const generateRegularConsultHTML = (
     .title {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 21px;
+      font-size: 18px;
       font-weight: 900;
       letter-spacing: -0.45px;
       line-height: 1;
@@ -140,7 +140,7 @@ export const generateRegularConsultHTML = (
     .checkline {
       text-align: center;
       font-weight: bold;
-      font-size: 11px;
+      font-size: 13px;
       line-height: 1;
       margin-bottom: 5px;
       flex: 0 0 auto;
@@ -177,7 +177,7 @@ export const generateRegularConsultHTML = (
       font-weight: bold;
       white-space: nowrap;
       margin-right: 3px;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .value-line {
@@ -187,7 +187,7 @@ export const generateRegularConsultHTML = (
       padding: 0 4px 1px;
       overflow: hidden;
       white-space: nowrap;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .double-blank {
@@ -216,7 +216,7 @@ export const generateRegularConsultHTML = (
       gap: 5px;
       min-height: 16px;
       margin-bottom: 2px;
-      font-size: 11.5px;
+      font-size: 13px;
       font-weight: bold;
       white-space: nowrap;
       flex: 0 0 auto;
@@ -251,13 +251,13 @@ export const generateRegularConsultHTML = (
     .clinical-box h4 {
       margin: 0;
       padding: 0;
-      font-size: 11.5px;
+      font-size: 12px;
       line-height: 1.08;
       font-weight: bold;
     }
 
     .clinical-box small {
-      font-size: 9px;
+      font-size: 12px;
       font-weight: bold;
     }
 
@@ -268,7 +268,7 @@ export const generateRegularConsultHTML = (
       gap: 6px;
       min-height: 18px;
       margin-top: 5px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: bold;
       flex: 0 0 auto;
     }
@@ -283,7 +283,7 @@ export const generateRegularConsultHTML = (
       line-height: 8px;
       overflow: hidden;
       white-space: nowrap;
-      font-size: 7px;
+      font-size: 10px;
       font-weight: bold;
       margin-top: 1px;
       flex: 0 0 auto;
@@ -295,7 +295,7 @@ export const generateRegularConsultHTML = (
       gap: 14px;
       min-height: 17px;
       margin-top: 3px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: bold;
       white-space: nowrap;
       flex: 0 0 auto;
