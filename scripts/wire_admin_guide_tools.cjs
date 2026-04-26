@@ -35,40 +35,52 @@ const adminGuideToolsBlock = `
               />
 `;
 
-function removeExistingFacilityManagementCards(text) {
-  function findMatchingCardEnd(src, cardStart) {
-    let depth = 0;
-    let i = cardStart;
-    while (i < src.length) {
-      const nextOpen = src.indexOf('<Card', i);
-      const nextClose = src.indexOf('</Card>', i);
-      if (nextClose === -1) return -1;
-      if (nextOpen !== -1 && nextOpen < nextClose) {
-        depth += 1;
-        i = nextOpen + 5;
-        continue;
-      }
-      depth -= 1;
-      i = nextClose + '</Card>'.length;
-      if (depth === 0) return i;
+function findMatchingCardEnd(src, cardStart) {
+  let depth = 0;
+  let i = cardStart;
+  while (i < src.length) {
+    const nextOpen = src.indexOf('<Card', i);
+    const nextClose = src.indexOf('</Card>', i);
+    if (nextClose === -1) return -1;
+    if (nextOpen !== -1 && nextOpen < nextClose) {
+      depth += 1;
+      i = nextOpen + 5;
+      continue;
     }
-    return -1;
+    depth -= 1;
+    i = nextClose + '</Card>'.length;
+    if (depth === 0) return i;
   }
-
-  let result = text;
-  while (true) {
-    const titleIndex = result.indexOf('title="Facility Management"');
-    if (titleIndex < 0) break;
-    const cardStart = result.lastIndexOf('<Card', titleIndex);
-    if (cardStart < 0) break;
-    const cardEnd = findMatchingCardEnd(result, cardStart);
-    if (cardEnd < 0) break;
-    result = result.slice(0, cardStart) + result.slice(cardEnd);
-  }
-  return result;
+  return -1;
 }
 
-source = removeExistingFacilityManagementCards(source);
+function removeCardsByTitle(text, title) {
+  let result = text;
+  let removed = 0;
+
+  while (true) {
+    const titleIndex = result.indexOf(`title="${title}"`);
+    if (titleIndex < 0) break;
+
+    const cardStart = result.lastIndexOf('<Card', titleIndex);
+    if (cardStart < 0) break;
+
+    const cardEnd = findMatchingCardEnd(result, cardStart);
+    if (cardEnd < 0) break;
+
+    result = result.slice(0, cardStart) + result.slice(cardEnd);
+    removed += 1;
+  }
+
+  return { text: result, removed };
+}
+
+// Remove legacy inline admin cards from App.tsx. The canonical copy now lives in AdminGuideTools.tsx.
+let removedFacility = removeCardsByTitle(source, 'Facility Management');
+source = removedFacility.text;
+
+let removedUserAccess = removeCardsByTitle(source, 'User Access Logic');
+source = removedUserAccess.text;
 
 if (!source.includes('<AdminGuideTools')) {
   const versionPanel = '<VersionHistoryPanel currentUserRole={currentUser?.role} />';
@@ -85,5 +97,5 @@ if (source === original) {
   console.log('No changes were needed.');
 } else {
   fs.writeFileSync(appPath, source);
-  console.log('AdminGuideTools wired under VersionHistoryPanel. Run npm run build next.');
+  console.log(`AdminGuideTools wired under VersionHistoryPanel. Removed ${removedFacility.removed} legacy Facility Management card(s) and ${removedUserAccess.removed} legacy User Access Logic card(s). Run npm run build next.`);
 }
