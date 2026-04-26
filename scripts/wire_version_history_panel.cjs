@@ -24,15 +24,41 @@ if (!source.includes(importLine)) {
   source = source.replace(anchor, `${anchor}\n${importLine}`);
 }
 
-// Staff must be able to navigate to Guide & Info. Remove admin-only wrappers around that NavItem only.
-source = source.replace(
-  /\{\s*currentUser\?\.role\s*===\s*["']admin["']\s*&&\s*\(\s*(<NavItem[\s\S]*?label=["']Guide & Info["'][\s\S]*?\/>\s*)\)\s*\}/g,
-  '$1',
-);
+// Add a staff-only Guide & Info nav item instead of trying to remove the existing admin wrapper.
+// This avoids leaving orphan JSX braces in the sidebar/mobile nav sections.
+function addStaffHelpNavItems(text) {
+  if (text.includes('key="nav-help-staff"')) return text;
+
+  const helpLabelRegex = /<NavItem[\s\S]*?label="Help & Info"[\s\S]*?\/>/g;
+  let result = text;
+  let added = 0;
+  const matches = [...text.matchAll(helpLabelRegex)];
+
+  // There are usually two Help nav items: desktop sidebar and top/mobile tabs.
+  // Insert one staff-only item before each existing Help nav item.
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const match = matches[i];
+    const insertAt = match.index ?? -1;
+    if (insertAt < 0) continue;
+
+    const indentMatch = result.slice(0, insertAt).match(/\n(\s*)$/);
+    const indent = indentMatch ? indentMatch[1] : '            ';
+    const staffBlock = `${indent}{currentUser?.role !== "admin" && (\n${indent}  <NavItem\n${indent}    key="nav-help-staff-${added}"\n${indent}    active={activeTab === "help"}\n${indent}    onClick={() => goToTab("help")}\n${indent}    icon={<ShieldCheck size={20} />}\n${indent}    label="Guide & Info"\n${indent}  />\n${indent})}\n`;
+
+    result = result.slice(0, insertAt) + staffBlock + result.slice(insertAt);
+    added += 1;
+  }
+
+  return result;
+}
+
+source = addStaffHelpNavItems(source);
 
 function findTopLevelHelpBlock(text) {
-  const start = text.search(/\{activeTab\s*===\s*["']help["']\s*&&/);
-  if (start < 0) return null;
+  const pattern = /\{activeTab\s*===\s*["']help["']\s*&&[\s\S]*?\(\s*\n\s*<motion\.div/;
+  const match = text.match(pattern);
+  if (!match || match.index === undefined) return null;
+  const start = match.index;
 
   const endMarkers = [
     '{isAddModalOpen',
@@ -123,5 +149,5 @@ if (source === original) {
   console.log('No changes were needed.');
 } else {
   fs.writeFileSync(appPath, source);
-  console.log('Help page replaced: VersionHistoryPanel renders for staff/admin, legacy User Guide/Version History cards removed, admin user access card remains admin-only. Run npm run build next.');
+  console.log('Help page replaced safely: VersionHistoryPanel renders for staff/admin, legacy hard-coded guide/history cards removed, admin user access card remains admin-only. Run npm run build next.');
 }
