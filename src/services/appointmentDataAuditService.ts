@@ -47,7 +47,7 @@ function isIsoDate(value?: string | null): boolean {
 
 function statusMatches(appointment: Appointment, status?: string): boolean {
   if (!status || status === 'All') return true;
-  return String(appointment.status || '').toLowerCase() === status.toLowerCase();
+  return String(appointment.status ?? '').toLowerCase() === String(status ?? '').toLowerCase();
 }
 
 function dateMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
