@@ -70,10 +70,10 @@ export const generateRegularConsultHTML = (
 <head>
   <meta charset="utf-8" />
   <title>Regular Consult</title>
-  <style>
+    <style>
     @page {
       size: letter portrait;
-      margin: 0.18in 0.28in 0.16in 0.28in;
+      margin: 0.12in 0.24in 0.12in 0.24in;
     }
 
     * {
@@ -87,32 +87,33 @@ export const generateRegularConsultHTML = (
       color: #000;
       background: #fff;
       font-family: "Times New Roman", Times, serif;
-      font-size: 9.6px;
-      line-height: 1;
+      font-size: 9.2px;
+      line-height: 0.98;
     }
 
     .sheet {
       width: 100%;
-      min-height: 10.62in;
+      height: 10.76in;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .letterhead {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.02;
-      margin-bottom: 1px;
+      line-height: 0.98;
+      margin-bottom: 0;
     }
 
     .facility-name {
       font-weight: 900;
-      font-size: 10.2px;
+      font-size: 9.5px;
       text-transform: uppercase;
     }
 
     .facility-details {
-      font-size: 6.8px;
+      font-size: 6.3px;
       font-weight: 600;
     }
 
@@ -120,16 +121,17 @@ export const generateRegularConsultHTML = (
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
-      font-size: 15.6px;
+      font-size: 15px;
       letter-spacing: -0.45px;
       margin: 0 0 1px;
+      line-height: 1;
     }
 
     .checkline {
       text-align: center;
       font-weight: bold;
-      font-size: 7.8px;
-      margin-bottom: 3px;
+      font-size: 7.3px;
+      margin-bottom: 2px;
       line-height: 1;
     }
 
@@ -137,8 +139,8 @@ export const generateRegularConsultHTML = (
       display: flex;
       align-items: flex-end;
       gap: 3px;
-      margin-bottom: 1px;
-      min-height: 12px;
+      margin-bottom: 0;
+      min-height: 11px;
     }
 
     .field {
@@ -155,7 +157,7 @@ export const generateRegularConsultHTML = (
 
     .line {
       border-bottom: 1px solid #000;
-      min-height: 11px;
+      min-height: 10px;
       flex: 1;
       padding: 0 3px;
       overflow: hidden;
@@ -164,20 +166,20 @@ export const generateRegularConsultHTML = (
 
     .blank-rule {
       border-bottom: 1px solid #000;
-      height: 12px;
-      margin: 0 0 1px;
+      height: 11px;
+      margin: 0;
     }
 
     .dob-row {
       display: flex;
       justify-content: flex-end;
       align-items: flex-end;
-      margin-bottom: 1px;
-      min-height: 12px;
+      margin-bottom: 0;
+      min-height: 11px;
     }
 
     .dob-row .field {
-      width: 260px;
+      width: 255px;
     }
 
     .history-row {
@@ -185,10 +187,10 @@ export const generateRegularConsultHTML = (
       align-items: center;
       gap: 4px;
       font-weight: bold;
-      font-size: 8.7px;
-      margin-bottom: 1px;
+      font-size: 8.3px;
+      margin-bottom: 0;
       white-space: nowrap;
-      min-height: 11px;
+      min-height: 10px;
     }
 
     .history-row span {
@@ -203,9 +205,9 @@ export const generateRegularConsultHTML = (
 
     .history-other-line {
       display: inline-block;
-      width: 105px;
+      width: 100px;
       border-bottom: 1px solid #000;
-      height: 9px;
+      height: 8px;
     }
 
     .box {
@@ -222,30 +224,30 @@ export const generateRegularConsultHTML = (
     .box h4 {
       margin: 0;
       padding: 0;
-      font-size: 8.4px;
+      font-size: 8px;
       line-height: 1;
       font-weight: bold;
     }
 
     .box small {
-      font-size: 7px;
+      font-size: 6.6px;
       font-weight: bold;
     }
 
     .hpi-box {
-      height: 153px;
+      height: 168px;
     }
 
     .history-box {
-      height: 145px;
+      height: 154px;
     }
 
     .exam-box {
-      height: 153px;
+      height: 168px;
     }
 
     .dx-box {
-      height: 103px;
+      height: 115px;
     }
 
     .signature-row {
@@ -253,34 +255,34 @@ export const generateRegularConsultHTML = (
       grid-template-columns: auto 1fr auto 0.55fr;
       gap: 5px;
       align-items: end;
-      margin-top: 3px;
+      margin-top: 2px;
       font-weight: bold;
-      font-size: 8.7px;
-      min-height: 12px;
+      font-size: 8.3px;
+      min-height: 11px;
     }
 
     .sig-line {
       border-bottom: 1px solid #000;
-      height: 11px;
+      height: 10px;
     }
 
     .stars {
-      font-size: 6.5px;
-      line-height: 6.5px;
-      height: 6.5px;
+      font-size: 6px;
+      line-height: 6px;
+      height: 6px;
       overflow: hidden;
       white-space: nowrap;
       font-weight: bold;
-      margin-top: 1px;
+      margin-top: 0;
     }
 
     .pcp-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 11px;
       font-weight: bold;
-      font-size: 8.7px;
-      margin-top: 2px;
+      font-size: 8.3px;
+      margin-top: 1px;
       white-space: nowrap;
     }
 
