@@ -424,6 +424,17 @@ export function useHealthData() {
     const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, newResident]) as Resident[]);
 
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'create',
+        entity: 'resident',
+        entityId: newResident.id,
+        facilityId: currentFacilityId,
+        actor: auditActor,
+        summary: `Resident added: ${newResident.name}`,
+      }),
+    );
+
     try {
       await apiFetch('/api/residents', {
         method: 'POST',
@@ -450,6 +461,18 @@ export function useHealthData() {
     const previousResidents = residents;
     setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? nextResident : r)) as Resident[]);
 
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'update',
+        entity: 'resident',
+        entityId: id,
+        facilityId: currentFacilityId || undefined,
+        actor: auditActor,
+        summary: 'Resident updated',
+        changedFields: Object.keys(changes),
+      }),
+    );
+
     try {
       await apiFetch(`/api/residents/${id}`, {
         method: 'PATCH',
@@ -465,6 +488,17 @@ export function useHealthData() {
   const deleteResident = async (id: string) => {
     const previousResidents = residents;
     setResidents(prev => prev.filter(r => r.id !== id));
+
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'delete',
+        entity: 'resident',
+        entityId: id,
+        facilityId: currentFacilityId || undefined,
+        actor: auditActor,
+        summary: 'Resident deleted',
+      }),
+    );
 
     try {
       await apiFetch(`/api/residents/${id}`, { method: 'DELETE' });
@@ -486,6 +520,17 @@ export function useHealthData() {
 
     const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, ...prepared]) as Resident[]);
+
+    appendLocalAuditEvent(
+      createAuditEvent({
+        action: 'import',
+        entity: 'census',
+        facilityId: currentFacilityId,
+        actor: auditActor,
+        summary: 'Census import completed',
+        counts: { added: prepared.length },
+      }),
+    );
 
     try {
       for (const res of prepared) {
@@ -543,19 +588,28 @@ export function useHealthData() {
     const previousResidents = residents;
     setResidents(dedupedMerged);
 
+    let createdCount = 0;
+    let updatedCount = 0;
+    let unchangedCount = 0;
+
     try {
       for (const res of dedupedMerged) {
         const key = normalizeResidentKey(res);
         const existing = existingResidentsMap.get(key);
         if (existing) {
           const changes = pickChangedFields(existing, res);
-          if (Object.keys(changes).length === 0) continue;
+          if (Object.keys(changes).length === 0) {
+            unchangedCount += 1;
+            continue;
+          }
+          updatedCount += 1;
           await apiFetch(`/api/residents/${res.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(changes),
           });
         } else {
+          createdCount += 1;
           await apiFetch('/api/residents', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -563,6 +617,22 @@ export function useHealthData() {
           });
         }
       }
+
+      appendLocalAuditEvent(
+        createAuditEvent({
+          action: 'replace',
+          entity: 'census',
+          facilityId: currentFacilityId,
+          actor: auditActor,
+          summary: 'Census replacement completed',
+          counts: {
+            total: dedupedMerged.length,
+            created: createdCount,
+            updated: updatedCount,
+            unchanged: unchangedCount,
+          },
+        }),
+      );
     } catch (error) {
       setResidents(previousResidents);
       reportSaveError('Census replacement was not fully saved. Please try again.', error);
