@@ -61,8 +61,13 @@ const STATUS_ALIASES: Record<string, string> = {
   hospitalized: 'Hospitalized',
 };
 
-export function normalizeSpecialty(value?: string | null): string {
-  const raw = String(value || '').trim();
+function safeString(value: unknown): string {
+  if (value === undefined || value === null) return '';
+  return String(value);
+}
+
+export function normalizeSpecialty(value?: unknown): string {
+  const raw = safeString(value).trim();
   if (!raw) return 'Unspecified';
 
   const compact = raw.replace(/\s+/g, ' ');
@@ -72,26 +77,28 @@ export function normalizeSpecialty(value?: string | null): string {
   return compact
     .split(' ')
     .map((part) => {
-      if (part.toUpperCase() === 'ENT') return 'ENT';
-      if (part.toUpperCase() === 'GI') return 'GI';
+      const upper = part.toUpperCase();
+      if (upper === 'ENT') return 'ENT';
+      if (upper === 'GI') return 'GI';
       return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
     })
     .join(' ');
 }
 
-export function normalizeStatus(value?: string | null): string {
-  const raw = String(value || '').trim();
+export function normalizeStatus(value?: unknown): string {
+  const raw = safeString(value).trim();
   if (!raw) return 'Unknown';
 
   const key = raw.toLowerCase();
   return STATUS_ALIASES[key] || raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
 }
 
-function isValidIsoDate(value?: string | null): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '').trim());
+function isValidIsoDate(value?: unknown): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
 }
 
-function isWithinRange(date: string, range?: AnalyticsDateRange): boolean {
+function isWithinRange(dateValue: unknown, range?: AnalyticsDateRange): boolean {
+  const date = safeString(dateValue).trim();
   if (!isValidIsoDate(date)) return false;
   if (range?.startDate && date < range.startDate) return false;
   if (range?.endDate && date > range.endDate) return false;
@@ -115,7 +122,7 @@ export function buildAnalyticsSummary(
   range?: AnalyticsDateRange,
 ): AnalyticsSummary {
   const totalAppointments = appointments.length;
-  const missingSpecialtyCount = appointments.filter((appointment) => !String(appointment.type || '').trim()).length;
+  const missingSpecialtyCount = appointments.filter((appointment) => !safeString(appointment.type).trim()).length;
   const missingDateCount = appointments.filter((appointment) => !isValidIsoDate(appointment.date)).length;
   const validAppointments = filterAppointmentsForAnalytics(appointments, range);
 
@@ -127,7 +134,8 @@ export function buildAnalyticsSummary(
     const specialty = normalizeSpecialty(appointment.type);
     specialtyMap.set(specialty, (specialtyMap.get(specialty) || 0) + 1);
 
-    const month = appointment.date.slice(0, 7);
+    const date = safeString(appointment.date).trim();
+    const month = date.slice(0, 7);
     monthMap.set(month, (monthMap.get(month) || 0) + 1);
 
     const status = normalizeStatus(appointment.status);
