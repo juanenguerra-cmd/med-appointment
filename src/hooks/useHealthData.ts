@@ -1,6 +1,42 @@
 import { useState, useEffect } from 'react';
 import { Appointment, Doctor, MedicalRecord, Resident, Facility } from '../types';
 
+const normalizeResidentKey = (resident: Partial<Resident>) => {
+  const mrn = String(resident.mrn || '').trim();
+  if (mrn && mrn !== '—') return `mrn:${mrn.toLowerCase()}`;
+
+  const name = String(resident.name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const room = String(resident.roomNumber || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  return `name-room:${name}|${room}`;
+};
+
+const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
+  const seen = new Map<string, T>();
+
+  residentList.forEach((resident) => {
+    const key = normalizeResidentKey(resident);
+    if (!key || key === 'name-room:|') return;
+
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, resident);
+      return;
+    }
+
+    // Preserve the existing id/facility linkage when possible, while keeping newer parsed details.
+    seen.set(key, {
+      ...existing,
+      ...resident,
+      id: (existing as any).id || (resident as any).id,
+      facilityId: (existing as any).facilityId || (resident as any).facilityId,
+      notes: (existing as any).notes || (resident as any).notes,
+      lastVisit: (existing as any).lastVisit || (resident as any).lastVisit,
+    });
+  });
+
+  return Array.from(seen.values());
+};
+
 export function useHealthData() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -83,7 +119,7 @@ export function useHealthData() {
         const residentsData = await resResidents.json();
         const appointmentsData = await resAppointments.json();
         
-        setResidents(residentsData);
+        setResidents(dedupeResidents(residentsData) as Resident[]);
         setAppointments(appointmentsData);
         
         const savedDoctors = localStorage.getItem(`doctors_${currentFacilityId}`);
@@ -229,7 +265,7 @@ export function useHealthData() {
     if (!currentFacilityId) return;
     const id = crypto.randomUUID();
     const newResident = { ...resident, id, facilityId: currentFacilityId } as Resident;
-    setResidents(prev => [...prev, newResident]);
+    setResidents(prev => dedupeResidents([...prev, newResident]) as Resident[]);
     
     fetch('/api/residents', {
       method: 'POST',
@@ -240,7 +276,7 @@ export function useHealthData() {
 
   const updateResident = async (id: string, updates: Partial<Resident>) => {
     // Optimistic Update
-    setResidents(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+    setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? { ...r, ...updates } : r)) as Resident[]);
     
     fetch(`/api/residents/${id}`, {
       method: 'PATCH',
@@ -256,8 +292,14 @@ export function useHealthData() {
 
   const batchAddResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
     if (!currentFacilityId) return;
-    const prepared = newResidents.map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId })) as Resident[];
-    setResidents(prev => [...prev, ...prepared]);
+    const existingKeys = new Set(residents.map(normalizeResidentKey));
+    const prepared = dedupeResidents(newResidents)
+      .filter((resident) => !existingKeys.has(normalizeResidentKey(resident)))
+      .map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId })) as Resident[];
+
+    if (prepared.length === 0) return;
+
+    setResidents(prev => dedupeResidents([...prev, ...prepared]) as Resident[]);
     
     for (const res of prepared) {
       fetch('/api/residents', {
@@ -270,21 +312,19 @@ export function useHealthData() {
 
   const replaceResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
     if (!currentFacilityId) return;
-    const currentResidents = [...residents];
+    const currentResidents = dedupeResidents([...residents]) as Resident[];
     const existingResidentsMap = new Map<string, Resident>();
     currentResidents.forEach(res => {
-      const key = res.mrn !== '—' ? res.mrn : `${res.name}|${res.roomNumber}`.toLowerCase();
-      existingResidentsMap.set(key, res);
+      existingResidentsMap.set(normalizeResidentKey(res), res);
     });
 
     const uniqueNewResidentsMap = new Map<string, Omit<Resident, 'id' | 'facilityId'>>();
-    newResidents.forEach(res => {
-      const key = res.mrn !== '—' ? res.mrn : `${res.name}|${res.roomNumber}`.toLowerCase();
-      uniqueNewResidentsMap.set(key, res);
+    dedupeResidents(newResidents).forEach(res => {
+      uniqueNewResidentsMap.set(normalizeResidentKey(res), res);
     });
 
     const merged = Array.from(uniqueNewResidentsMap.values()).map(newRes => {
-      const key = newRes.mrn !== '—' ? newRes.mrn : `${newRes.name}|${newRes.roomNumber}`.toLowerCase();
+      const key = normalizeResidentKey(newRes);
       const existing = existingResidentsMap.get(key);
 
       if (existing) {
@@ -299,11 +339,12 @@ export function useHealthData() {
       return { ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId } as Resident;
     });
 
-    setResidents(merged);
+    const dedupedMerged = dedupeResidents(merged) as Resident[];
+    setResidents(dedupedMerged);
 
     // Sync to DB
-    for (const res of merged) {
-       const key = res.mrn !== '—' ? res.mrn : `${res.name}|${res.roomNumber}`.toLowerCase();
+    for (const res of dedupedMerged) {
+       const key = normalizeResidentKey(res);
        const existing = existingResidentsMap.get(key);
        if (existing) {
          fetch(`/api/residents/${res.id}`, {
