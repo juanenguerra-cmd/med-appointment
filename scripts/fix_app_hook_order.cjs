@@ -11,27 +11,21 @@ let source = fs.readFileSync(appPath, 'utf8');
 const hookLine = '  const printIframeRef = React.useRef<HTMLIFrameElement>(null);';
 const currentUserGuard = '  if (!currentUser) {';
 
-const hookCount = (source.match(new RegExp(hookLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
-if (hookCount === 0) {
-  console.error('Could not find printIframeRef hook. No changes made.');
-  process.exit(1);
-}
-
-const hookIndex = source.indexOf(hookLine);
-const guardIndex = source.indexOf(currentUserGuard);
-if (guardIndex < 0) {
+if (!source.includes(currentUserGuard)) {
   console.error('Could not find currentUser guard. No changes made.');
   process.exit(1);
 }
 
-if (hookIndex < guardIndex) {
-  console.log('printIframeRef hook is already before the currentUser guard. No changes needed.');
-  process.exit(0);
-}
+// Remove every existing printIframeRef declaration first. This makes the script safe to rerun.
+const hookRegex = /\n?\s*const printIframeRef = React\.useRef<HTMLIFrameElement>\(null\);\s*\n?/g;
+const removedCount = (source.match(hookRegex) || []).length;
+source = source.replace(hookRegex, '\n');
 
-// Remove the later hook line, then insert it before the currentUser early return.
-source = source.replace(`${hookLine}\n\n`, '');
+// Collapse excessive blank lines created by removal.
+source = source.replace(/\n{3,}/g, '\n\n');
+
+// Insert exactly one hook before the currentUser early return.
 source = source.replace(currentUserGuard, `${hookLine}\n\n${currentUserGuard}`);
 
 fs.writeFileSync(appPath, source);
-console.log('Moved printIframeRef hook before currentUser early return. Run npm run build next.');
+console.log(`Fixed printIframeRef hook order. Removed ${removedCount} old declaration(s), inserted 1 declaration before currentUser guard. Run npm run build next.`);
