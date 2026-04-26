@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Filter, Calendar, RotateCcw } from 'lucide-react';
+import { Filter, Calendar, RotateCcw, Download } from 'lucide-react';
 import { Appointment } from '../types';
 import { SpecialtyTrendsPanel } from './SpecialtyTrendsPanel';
+import { generateSpecialtyTrendsPDF } from '../services/specialtyTrendsPdfService';
 
 type TrendsDateMode = 'all' | 'next7days' | 'month' | 'custom';
 
@@ -62,6 +63,10 @@ export function TrendsTabContent({ appointments }: TrendsTabContentProps) {
     setCustomEndDate('');
   };
 
+  const handleExportPDF = () => {
+    generateSpecialtyTrendsPDF(appointments, trendFilters);
+  };
+
   return (
     <div className="space-y-6">
       <div className="transport-card p-5">
@@ -76,13 +81,23 @@ export function TrendsTabContent({ appointments }: TrendsTabContentProps) {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-black text-slate-700 hover:bg-slate-50"
-          >
-            <RotateCcw size={16} /> Reset
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 text-white px-4 py-2 text-sm font-black hover:bg-blue-700"
+            >
+              <Download size={16} /> Export PDF
+            </button>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-black text-slate-700 hover:bg-slate-50"
+            >
+              <RotateCcw size={16} /> Reset
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
