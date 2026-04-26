@@ -2590,6 +2590,7 @@ if (!isLoaded) {
                             </div>
                             <div className="text-right">
                               <div className="flex items-center gap-2 justify-<<button
+
 <button
   onClick={(e) => {
     e.stopPropagation();
@@ -3469,7 +3470,7 @@ Time: ${formatTimeAMPM(apt.time)}`;
                   >
                     <ClipboardCheck size={12} /> Checklist
                   </button>
-                  <button
+<button
   onClick={(e) => {
     e.stopPropagation();
     onGenerateForm && onGenerateForm(apt, "Medical Clearance");
