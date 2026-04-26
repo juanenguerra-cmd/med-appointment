@@ -2589,29 +2589,31 @@ if (!isLoaded) {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="flex items-center gap-2 justify-end">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleGenerateForm(apt, 'Visit Form');
-                                  }}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-                                  title="Visit Form"
-                                >
-                                  <FileText size={10} /> Visit Form
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleGenerateForm(apt, 'Checklist');
-                                  }}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-                                  title="Checklist"
-                                >
-                                  <ClipboardCheck size={10} /> Checklist
-                                </button>
+                              <div className="flex items-center gap-2 justify-<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleGenerateForm(apt, "Visit Form");
+  }}
+  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
+  title="Visit Form"
+>
+  <FileText size={10} /> Visit Form
+</button>
+
 <button
-  onClick={() => {
+  onClick={(e) => {
+    e.stopPropagation();
+    handleGenerateForm(apt, "Checklist");
+  }}
+  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
+  title="Checklist"
+>
+  <ClipboardCheck size={10} /> Checklist
+</button>
+
+<button
+  onClick={(e) => {
+    e.stopPropagation();
     handleGenerateForm(apt, "Medical Clearance");
   }}
   className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
@@ -2621,7 +2623,8 @@ if (!isLoaded) {
 </button>
 
 <button
-  onClick={() => {
+  onClick={(e) => {
+    e.stopPropagation();
     handleGenerateForm(apt, "Consult");
   }}
   className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
@@ -2629,6 +2632,7 @@ if (!isLoaded) {
 >
   <FileText size={10} /> {getConsultFormLabel(apt)}
 </button>
+
 
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
