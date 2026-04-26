@@ -242,7 +242,9 @@ export default function App() {
     null,
   );
   const [isResidentDetailOpen, setIsResidentDetailOpen] = useState(false);
-if (!currentUser) {
+  const printIframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  if (!currentUser) {
     return (
       <LockScreen 
         onLogin={login}
