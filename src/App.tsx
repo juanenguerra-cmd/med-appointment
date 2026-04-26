@@ -141,6 +141,8 @@ const MEDICAL_SPECIALTIES = [
   "Wound Care",
 ];
 
+const safeLower = (value: unknown) => String(value ?? "").toLowerCase();
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -696,13 +698,17 @@ if (!isLoaded) {
     });
   };
 
-  const filteredResidents = residents
-    .filter(
-      (r) =>
-        r.name.toLowerCase().includes(residentSearchTerm.toLowerCase()) ||
-        r.mrn.toLowerCase().includes(residentSearchTerm.toLowerCase()),
-    )
-    .slice(0, 5);
+  const safeLower = (value: unknown) => String(value ?? "").toLowerCase();
+
+const filteredResidents = residents
+  .filter((r) => {
+    const search = safeLower(residentSearchTerm);
+    return (
+      safeLower(r.name).includes(search) ||
+      safeLower(r.mrn).includes(search)
+    );
+  })
+  .slice(0, 5);
 
   const handleResidentInputChange = (val: string) => {
     setResidentSearchTerm(val);
@@ -787,12 +793,8 @@ if (!isLoaded) {
     ? appointments.filter(
         (a) =>
           a.residentName === selectedResident.name ||
-          (a.residentName
-            .toLowerCase()
-            .includes(selectedResident.lastName.toLowerCase()) &&
-            a.residentName
-              .toLowerCase()
-              .includes(selectedResident.firstName.toLowerCase())),
+          (safeLower(a.residentName).includes(safeLower(selectedResident.lastName)) &&
+safeLower(a.residentName).includes(safeLower(selectedResident.firstName)),
       )
     : [];
 
