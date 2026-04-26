@@ -1725,56 +1725,7 @@ if (!isLoaded) {
                 setEditingUser={setEditingUser}
                 setIsUserModalOpen={setIsUserModalOpen}
               />
-
-
-              {currentUser?.role === "admin" && (
-                <Card
-                  icon={<User size={22} />}
-                  title="User Access Logic"
-                  subtitle="Manage facility visibility for staff members"
-                  action={
-                    <Button
-                      variant="primary"
-                      icon={<Plus size={16} />}
-                      onClick={() => {
-                        setEditingUser(null);
-                        setIsUserModalOpen(true);
-                      }}
-                    >
-                      New User
-                    </Button>
-                  }
-                >
-                  <div className="space-y-3">
-                    {users.map((u: any) => (
-                      <div key={u.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
-                            <User size={18} />
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-800">{u.name || u.email}</p>
-                            <p className="text-xs font-semibold text-slate-500">{u.email}</p>
-                          </div>
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase text-slate-500">
-                            {u.role}
-                          </span>
-                        </div>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            setEditingUser(u);
-                            setIsUserModalOpen(true);
-                          }}
-                        >
-                          Access Logic
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </motion.div>
+</motion.div>
           )}
 
 </AnimatePresence>
