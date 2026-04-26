@@ -21,8 +21,17 @@ export type TransportUtilizationSummary = {
   topTransportCompany: TransportUtilizationRow | null;
 };
 
-function isIsoDate(value?: string | null): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '').trim());
+function safeString(value: unknown): string {
+  if (value === undefined || value === null) return '';
+  return String(value);
+}
+
+function safeLower(value: unknown): string {
+  return safeString(value).trim().toLowerCase();
+}
+
+function isIsoDate(value?: unknown): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
 }
 
 function percentage(count: number, total: number): number {
@@ -30,12 +39,12 @@ function percentage(count: number, total: number): number {
   return Math.round((count / total) * 1000) / 10;
 }
 
-function normalizeText(value?: string | null, fallback = 'Unspecified') {
-  const raw = String(value || '').trim().replace(/\s+/g, ' ');
+function normalizeText(value?: unknown, fallback = 'Unspecified') {
+  const raw = safeString(value).trim().replace(/\s+/g, ' ');
   if (!raw) return fallback;
   return raw
     .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => safeString(word).charAt(0).toUpperCase() + safeString(word).slice(1).toLowerCase())
     .join(' ');
 }
 
@@ -53,23 +62,24 @@ function normalizePayer(appointment: Appointment) {
   return normalizeText(appointment.payerForRide);
 }
 
-function normalizeEscort(value?: string | null) {
-  const raw = String(value || '').trim().toLowerCase();
+function normalizeEscort(value?: unknown) {
+  const raw = safeLower(value);
   if (!raw) return 'Unspecified';
   if (['yes', 'y', 'true', 'required'].includes(raw)) return 'Escort Required';
   if (['no', 'n', 'false', 'not required'].includes(raw)) return 'No Escort';
   return normalizeText(value);
 }
 
-function statusMatches(appointment: Appointment, status?: string): boolean {
-  if (!status || status === 'All') return true;
-  return String(appointment.status || '').toLowerCase() === status.toLowerCase();
+function statusMatches(appointment: Appointment, status?: unknown): boolean {
+  if (!status || safeLower(status) === 'all') return true;
+  return safeLower(appointment.status) === safeLower(status);
 }
 
 function dateMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
-  if (!isIsoDate(appointment.date)) return false;
-  if (filters?.startDate && appointment.date < filters.startDate) return false;
-  if (filters?.endDate && appointment.date > filters.endDate) return false;
+  const date = safeString(appointment.date).trim();
+  if (!isIsoDate(date)) return false;
+  if (filters?.startDate && date < filters.startDate) return false;
+  if (filters?.endDate && date > filters.endDate) return false;
   return true;
 }
 
@@ -87,7 +97,7 @@ export function buildTransportUtilization(
   appointments: Appointment[],
   filters: SpecialtyTrendFilters = {},
 ): TransportUtilizationSummary {
-  const included = appointments.filter((appointment) => statusMatches(appointment, filters) && dateMatches(appointment, filters));
+  const included = appointments.filter((appointment) => statusMatches(appointment, filters.status) && dateMatches(appointment, filters));
   const totalIncluded = included.length;
 
   const transportTypeMap = new Map<string, number>();
