@@ -2589,8 +2589,7 @@ if (!isLoaded) {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="flex items-center gap-2 justify-<<button
-
+                           <div className="flex items-center gap-2 justify-end">
 <button
   onClick={(e) => {
     e.stopPropagation();
