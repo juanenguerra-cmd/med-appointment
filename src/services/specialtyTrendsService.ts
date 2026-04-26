@@ -47,19 +47,23 @@ function safeString(value: unknown): string {
   return String(value);
 }
 
+function safeLower(value: unknown): string {
+  return safeString(value).trim().toLowerCase();
+}
+
 export function normalizeSpecialtyForTrend(value?: unknown): string {
   const raw = safeString(value).trim().replace(/\s+/g, ' ');
   if (!raw) return '';
 
-  const key = raw.toLowerCase();
+  const key = safeLower(raw);
   if (SPECIALTY_ALIASES[key]) return SPECIALTY_ALIASES[key];
 
   return raw
     .split(' ')
     .map((word) => {
-      const upper = word.toUpperCase();
+      const upper = safeString(word).toUpperCase();
       if (['ENT', 'GI', 'OB/GYN'].includes(upper)) return upper;
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      return safeString(word).charAt(0).toUpperCase() + safeString(word).slice(1).toLowerCase();
     })
     .join(' ');
 }
@@ -76,7 +80,7 @@ function percentage(count: number, total: number): number {
 function statusMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
   const status = safeString(filters?.status).trim();
   if (!status || status === 'All') return true;
-  return safeString(appointment.status).toLowerCase() === status.toLowerCase();
+  return safeLower(appointment.status) === safeLower(status);
 }
 
 function dateMatches(appointment: Appointment, filters?: SpecialtyTrendFilters): boolean {
