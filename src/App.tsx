@@ -57,6 +57,7 @@ import { AppointmentCalendar } from "./components/AppointmentCalendar";
 import { TrendsTabContent } from "./components/TrendsTabContent";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
+import { TransportUtilizationPanel } from "./components/TransportUtilizationPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
