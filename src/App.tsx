@@ -54,6 +54,7 @@ import { Card } from "./components/Card";
 import { Button } from "./components/Button";
 import { LockScreen } from "./components/LockScreen";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
+import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 
@@ -1678,130 +1679,16 @@ export default function App() {
                 </div>
 
                 <div className="xl:col-span-7">
-                  <Card
-                    title="Active Patient Census"
-                    subtitle="Current resident directory for auto-complete systems."
-                  >
-                    <div className="mb-6">
-                      <div className="relative">
-                        <Search
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                          size={18}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Search census by name or MRN..."
-                          className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-[#d6deeb] rounded-2xl focus:ring-2 focus:ring-brand-2/20 outline-none transition-all font-medium text-sm"
-                          value={censusSearchQuery}
-                          onChange={(e) => setCensusSearchQuery(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead className="bg-[#f8fbff] border-y border-[#d6deeb] text-[10px] font-black uppercase text-slate-500">
-                          <tr>
-                            <th className="px-6 py-4">Resident Info</th>
-                            <th className="px-6 py-4">Unit / Room</th>
-                            <th className="px-6 py-4">Clinical Data</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#d6deeb]">
-                          {residents
-                            .filter(
-                              (r) =>
-                                r.name
-                                  .toLowerCase()
-                                  .includes(censusSearchQuery.toLowerCase()) ||
-                                r.mrn
-                                  .toLowerCase()
-                                  .includes(censusSearchQuery.toLowerCase()),
-                            )
-                            .map((res) => (
-                              <tr
-                                key={res.id}
-                                className="hover:bg-brand-light/30 transition-colors group"
-                              >
-                                <td className="px-6 py-4">
-                                  <p className="font-black text-slate-900 leading-tight">
-                                    {res.name}
-                                  </p>
-                                  <p className="text-[10px] text-slate-500 mt-0.5">
-                                    MRN:{" "}
-                                    <span className="font-mono">{res.mrn}</span>{" "}
-                                    • {res.sex === "M" ? "Male" : "Female"} •
-                                    Age {res.age}
-                                  </p>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <p className="text-sm text-slate-600 font-medium italic">
-                                    {res.floor !== "—" ? `${res.floor} • ` : ""}{res.unit}
-                                  </p>
-                                  <span className="px-3 py-1 bg-white border border-[#d6deeb] rounded-lg text-[11px] font-black shadow-sm mt-1 inline-block">
-                                    {res.roomNumber}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <p className="text-xs text-slate-700 font-bold">
-                                    {res.doctor}
-                                  </p>
-                                  <p
-                                    className="text-[10px] text-slate-500 truncate max-w-[150px]"
-                                    title={res.diagnosis}
-                                  >
-                                    {res.diagnosis}
-                                  </p>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={() => {
-                                        setSelectedResident(res);
-                                        setIsResidentDetailOpen(true);
-                                      }}
-                                      className="p-2 hover:bg-brand-light rounded-lg text-brand transition-colors"
-                                      title="View Detailed Profile"
-                                    >
-                                      <User size={16} />
-                                    </button>
-                                    <button
-                                      onClick={() => deleteResident(res.id)}
-                                      className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
-                                      title="Delete Resident"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          {residents.length === 0 && (
-                            <tr>
-                              <td colSpan={4} className="py-20 text-center">
-                                <Users
-                                  size={40}
-                                  className="mx-auto mb-3 opacity-20"
-                                />
-                                <p className="font-extrabold text-slate-400">
-                                  Registry is currently empty
-                                </p>
-                                <p className="text-xs text-slate-400 mt-1">
-                                  Upload data on the left to begin.
-                                </p>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                      <span>
-                        Database: {residents.length || 0} Total Records
-                      </span>
-                      <span>v1.2 Secure Ledger</span>
-                    </div>
-                  </Card>
+                  <PatientCensusUnitList
+                residents={residents}
+                searchQuery={censusSearchQuery}
+                onSearchChange={setCensusSearchQuery}
+                onViewDetails={(resident) => {
+                  setSelectedResident(resident);
+                  setIsResidentDetailOpen(true);
+                }}
+                onDeleteResident={deleteResident}
+              />
                 </div>
               </div>
             </motion.section>
