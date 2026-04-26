@@ -141,7 +141,7 @@ const MEDICAL_SPECIALTIES = [
   "Wound Care",
 ];
 
-const safeLower = (value: unknown) => String(value ?? "").toLowerCase();
+const safeLower = (value: unknown) => String(value ?? "").toLocaleLowerCase();
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -287,7 +287,7 @@ export default function App() {
         currentBuffer = trimmed;
       } else {
         // Check if it's a header line to skip
-        const lower = trimmed.toLowerCase();
+        const lower = safeLower(trimmed);
         const isHeader = lower.includes("resident listing report") || 
                          lower.includes("facility #") || 
                          lower.includes("floor") || 
@@ -317,7 +317,7 @@ export default function App() {
       if (!trimmed || trimmed.length < 10) return;
 
       // Skip common header noise
-      const lower = trimmed.toLowerCase();
+      const lower = safeLower(trimmed);
       if (
         lower.includes("resident listing report") ||
         lower.includes("facility #") ||
@@ -377,7 +377,7 @@ export default function App() {
         if (fallbackMrn) mrn = fallbackMrn[1];
       }
       name = name.replace(/,/g, ", ").replace(/\s+/g, " ").trim();
-      if (name.toLowerCase() === "name") return;
+      if (safeLower(name) === "name") return;
 
       // Map columns based on anchored pattern (robust to fragmented columns)
       // Standard: [Name/MRN, Age, BirthDate, ...Location..., Sex, AdmissionDate, Allergies, Doctor, Diagnosis]
@@ -464,7 +464,7 @@ export default function App() {
       }
 
       // Final cleanup
-      if (doctor !== "—" && !doctor.toLowerCase().startsWith("dr.")) {
+      if (doctor !== "—" && !safeLower(doctor).startsWith("dr.")) {
         doctor = "Dr. " + doctor;
       }
       
@@ -504,14 +504,14 @@ export default function App() {
         notes: birthDate !== "—" ? `DOB: ${birthDate}` : "",
       };
 
-      const uniqueKey = mrn !== "—" ? mrn : `${name}-${room}`.toLowerCase();
+      const uniqueKey = mrn !== "—" ? mrn : safeLower(`${name}-${room}`);
 
       // Duplicate detection
       const alreadyInSystem = residents.some(
         (r) =>
           (resData.mrn !== "—" && r.mrn === resData.mrn) ||
-          `${r.name}|${r.roomNumber}`.toLowerCase() ===
-            `${resData.name}|${resData.roomNumber}`.toLowerCase(),
+          safeLower(`${r.name ?? ""}|${r.roomNumber ?? ""}`) ===
+            safeLower(`${resData.name ?? ""}|${resData.roomNumber ?? ""}`),
       );
 
       // If skipping duplicates, we don't even add to the map for preview
@@ -533,8 +533,8 @@ export default function App() {
             !residents.some(
               (r) =>
                 (newRes.mrn !== "—" && r.mrn === newRes.mrn) ||
-                `${r.name}|${r.roomNumber}`.toLowerCase() ===
-                  `${newRes.name}|${newRes.roomNumber}`.toLowerCase(),
+                safeLower(`${r.name ?? ""}|${r.roomNumber ?? ""}`) ===
+                  safeLower(`${newRes.name ?? ""}|${newRes.roomNumber ?? ""}`),
             ),
         );
         batchAddResidents(trulyNew);
@@ -653,7 +653,7 @@ if (!isLoaded) {
   const handleSelectResident = (resident: Resident) => {
     // Normalize unit to match dropdown values if possible
     let matchedUnit = "";
-    const unitStr = (resident.unit || "").trim();
+    const unitStr = String(resident.unit ?? "").trim();
     const units = [
       "Unit A",
       "Unit B",
@@ -666,13 +666,13 @@ if (!isLoaded) {
 
     // Try exact match first (case-insensitive)
     const exactMatch = units.find(
-      (u) => u.toLowerCase() === unitStr.toLowerCase(),
+      (u) => safeLower(u) === safeLower(unitStr),
     );
     if (exactMatch) {
       matchedUnit = exactMatch;
     } else {
       // Try partial match
-      const lower = unitStr.toLowerCase();
+      const lower = safeLower(unitStr);
       if (lower.includes("unit a")) matchedUnit = "Unit A";
       else if (lower.includes("unit b")) matchedUnit = "Unit B";
       else if (lower.includes("rehab")) matchedUnit = "Rehab";
@@ -2478,7 +2478,7 @@ const filteredResidents = residents
                         Allergies
                       </p>
                       <p
-                        className={`text-sm font-bold p-3 rounded-xl border ${selectedResident.allergies.toLowerCase() === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
+                        className={`text-sm font-bold p-3 rounded-xl border ${safeLower(selectedResident.allergies) === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
                       >
                         {selectedResident.allergies}
                       </p>
