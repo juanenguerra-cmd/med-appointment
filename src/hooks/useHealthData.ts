@@ -23,12 +23,96 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+const safeString = (value: unknown, fallback = ''): string => {
+  if (value === undefined || value === null) return fallback;
+  return String(value);
+};
+
+const safeBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  const normalized = safeString(value).trim().toLowerCase();
+  return ['true', 'yes', 'y', '1', 'checked'].includes(normalized);
+};
+
+const normalizeAppointment = (appointment: any): Appointment => ({
+  ...appointment,
+  id: safeString(appointment?.id),
+  facilityId: safeString(appointment?.facilityId),
+  origin: safeString(appointment?.origin),
+  residentName: safeString(appointment?.residentName),
+  unit: safeString(appointment?.unit),
+  roomNumber: safeString(appointment?.roomNumber),
+  providerName: safeString(appointment?.providerName),
+  location: safeString(appointment?.location),
+  contactNumber: safeString(appointment?.contactNumber),
+  schedulingDate: safeString(appointment?.schedulingDate),
+  referralDate: safeString(appointment?.referralDate),
+  status: (safeString(appointment?.status, 'Scheduled') || 'Scheduled') as Appointment['status'],
+  date: safeString(appointment?.date),
+  time: safeString(appointment?.time),
+  pickUpTime: safeString(appointment?.pickUpTime),
+  type: safeString(appointment?.type),
+  description: safeString(appointment?.description),
+  serviceInHouse: safeString(appointment?.serviceInHouse),
+  reasonSendOut: safeString(appointment?.reasonSendOut),
+  transportType: safeString(appointment?.transportType),
+  transportTypeOther: safeString(appointment?.transportTypeOther),
+  transportCompany: safeString(appointment?.transportCompany),
+  payerForRide: safeString(appointment?.payerForRide),
+  payerForRideOther: safeString(appointment?.payerForRideOther),
+  roundTrip: safeString(appointment?.roundTrip),
+  escort: safeString(appointment?.escort),
+  escortDetails: safeString(appointment?.escortDetails),
+  notes: safeString(appointment?.notes),
+  weight: safeString(appointment?.weight),
+  height: safeString(appointment?.height),
+  nurseCompleting: safeString(appointment?.nurseCompleting),
+  reasonConsultation: safeString(appointment?.reasonConsultation),
+  consultReason: safeString(appointment?.consultReason),
+  ambulating: safeBoolean(appointment?.ambulating),
+  wheelchair: safeBoolean(appointment?.wheelchair),
+  withLift: safeBoolean(appointment?.withLift),
+  recliner: safeBoolean(appointment?.recliner),
+  oxygen: safeBoolean(appointment?.oxygen),
+  bariatric: safeBoolean(appointment?.bariatric),
+});
+
+const normalizeResident = (resident: any): Resident => ({
+  ...resident,
+  id: safeString(resident?.id),
+  facilityId: safeString(resident?.facilityId),
+  name: safeString(resident?.name),
+  lastName: safeString(resident?.lastName),
+  firstName: safeString(resident?.firstName),
+  mrn: safeString(resident?.mrn),
+  age: safeString(resident?.age),
+  floor: safeString(resident?.floor),
+  unit: safeString(resident?.unit),
+  roomNumber: safeString(resident?.roomNumber),
+  sex: safeString(resident?.sex),
+  admissionDate: safeString(resident?.admissionDate),
+  allergies: safeString(resident?.allergies),
+  doctor: safeString(resident?.doctor),
+  diagnosis: safeString(resident?.diagnosis),
+  lastVisit: safeString(resident?.lastVisit),
+  notes: safeString(resident?.notes),
+});
+
+const normalizeFacility = (facility: any): Facility => ({
+  ...facility,
+  id: safeString(facility?.id),
+  name: safeString(facility?.name),
+  address: safeString(facility?.address),
+  phone: safeString(facility?.phone),
+  contactPerson: safeString(facility?.contactPerson),
+});
+
 const normalizeResidentKey = (resident: Partial<Resident>) => {
-  const mrn = String(resident.mrn || '').trim();
+  const mrn = safeString(resident.mrn).trim();
   if (mrn && mrn !== '—') return `mrn:${mrn.toLowerCase()}`;
 
-  const name = String(resident.name || '').trim().replace(/\s+/g, ' ').toLowerCase();
-  const room = String(resident.roomNumber || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const name = safeString(resident.name).trim().replace(/\s+/g, ' ').toLowerCase();
+  const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ').toLowerCase();
   return `name-room:${name}|${room}`;
 };
 
@@ -45,7 +129,6 @@ const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
       return;
     }
 
-    // Preserve the existing id/facility linkage when possible, while keeping newer parsed details.
     seen.set(key, {
       ...existing,
       ...resident,
@@ -80,7 +163,6 @@ export function useHealthData() {
     alert(message);
   };
 
-  // Persistence for user and facility
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -95,7 +177,6 @@ export function useHealthData() {
     }
   }, [currentFacilityId]);
 
-  // Fetch Facilities initially
   useEffect(() => {
     if (!currentUser) {
       setIsLoaded(true);
@@ -104,9 +185,9 @@ export function useHealthData() {
     async function fetchFacilities() {
       try {
         const data = await apiFetch<Facility[]>(`/api/facilities?userId=${currentUser.id}`);
-        setFacilities(data);
+        setFacilities(data.map(normalizeFacility));
         if (data.length > 0 && !currentFacilityId) {
-          setCurrentFacilityId(data[0].id);
+          setCurrentFacilityId(safeString(data[0].id));
         }
       } catch (err) {
         console.error('Failed to fetch facilities', err);
@@ -121,7 +202,6 @@ export function useHealthData() {
     }
   }, [currentUser?.role]);
 
-  // Main Data Fetch dependent on currentFacilityId
   useEffect(() => {
     if (!currentFacilityId || !currentUser) {
       if (!currentUser) setIsLoaded(true);
@@ -135,8 +215,8 @@ export function useHealthData() {
           apiFetch<Appointment[]>(`/api/appointments?facilityId=${currentFacilityId}`),
         ]);
         
-        setResidents(dedupeResidents(residentsData) as Resident[]);
-        setAppointments(appointmentsData);
+        setResidents(dedupeResidents(residentsData.map(normalizeResident)) as Resident[]);
+        setAppointments(appointmentsData.map(normalizeAppointment));
         
         const savedDoctors = localStorage.getItem(`doctors_${currentFacilityId}`);
         const savedRecords = localStorage.getItem(`records_${currentFacilityId}`);
@@ -162,7 +242,6 @@ export function useHealthData() {
     fetchData();
   }, [currentFacilityId]);
 
-  // Persist doctors/records to localStorage
   useEffect(() => {
     if (isLoaded && currentFacilityId) {
       localStorage.setItem(`doctors_${currentFacilityId}`, JSON.stringify(doctors));
@@ -172,7 +251,7 @@ export function useHealthData() {
 
   const addFacility = async (facility: Omit<Facility, 'id'>) => {
     const id = crypto.randomUUID();
-    const newFac = { ...facility, id };
+    const newFac = normalizeFacility({ ...facility, id });
     const previousFacilities = facilities;
     const previousFacilityId = currentFacilityId;
 
@@ -202,7 +281,7 @@ export function useHealthData() {
 
   const updateFacility = async (id: string, updates: Partial<Facility>) => {
     const previousFacilities = facilities;
-    setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+    setFacilities(prev => prev.map(f => f.id === id ? normalizeFacility({ ...f, ...updates }) : f));
 
     try {
       await apiFetch(`/api/facilities/${id}`, {
@@ -287,7 +366,7 @@ export function useHealthData() {
     if (!currentFacilityId) return;
 
     const id = crypto.randomUUID();
-    const newAppointment = { ...appointment, id, facilityId: currentFacilityId } as Appointment;
+    const newAppointment = normalizeAppointment({ ...appointment, id, facilityId: currentFacilityId });
     const previousAppointments = appointments;
     setAppointments(prev => [...prev, newAppointment]);
 
@@ -305,7 +384,7 @@ export function useHealthData() {
 
   const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
     const previousAppointments = appointments;
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    setAppointments(prev => prev.map(a => a.id === id ? normalizeAppointment({ ...a, ...updates }) : a));
 
     try {
       await apiFetch(`/api/appointments/${id}`, {
@@ -334,7 +413,7 @@ export function useHealthData() {
   const addResident = async (resident: Omit<Resident, 'id' | 'facilityId'>) => {
     if (!currentFacilityId) return;
     const id = crypto.randomUUID();
-    const newResident = { ...resident, id, facilityId: currentFacilityId, status: 'Active' } as Resident;
+    const newResident = normalizeResident({ ...resident, id, facilityId: currentFacilityId, status: 'Active' });
     const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, newResident]) as Resident[]);
 
@@ -352,7 +431,7 @@ export function useHealthData() {
 
   const updateResident = async (id: string, updates: Partial<Resident>) => {
     const previousResidents = residents;
-    setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? { ...r, ...updates } : r)) as Resident[]);
+    setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? normalizeResident({ ...r, ...updates }) : r)) as Resident[]);
 
     try {
       await apiFetch(`/api/residents/${id}`, {
@@ -381,9 +460,9 @@ export function useHealthData() {
   const batchAddResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
     if (!currentFacilityId) return;
     const existingKeys = new Set(residents.map(normalizeResidentKey));
-    const prepared = dedupeResidents(newResidents)
+    const prepared = dedupeResidents(newResidents.map(normalizeResident))
       .filter((resident) => !existingKeys.has(normalizeResidentKey(resident)))
-      .map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active' })) as Resident[];
+      .map(r => normalizeResident({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active' })) as Resident[];
 
     if (prepared.length === 0) return;
 
@@ -413,8 +492,8 @@ export function useHealthData() {
     });
 
     const uniqueNewResidentsMap = new Map<string, Omit<Resident, 'id' | 'facilityId'>>();
-    dedupeResidents(newResidents).forEach(res => {
-      uniqueNewResidentsMap.set(normalizeResidentKey(res), res);
+    dedupeResidents(newResidents.map(normalizeResident)).forEach(res => {
+      uniqueNewResidentsMap.set(normalizeResidentKey(res), res as any);
     });
 
     const censusStamp = new Date().toISOString();
@@ -423,7 +502,7 @@ export function useHealthData() {
       const existing = existingResidentsMap.get(key);
 
       if (existing) {
-        return {
+        return normalizeResident({
           ...newRes,
           id: existing.id,
           facilityId: currentFacilityId,
@@ -432,9 +511,9 @@ export function useHealthData() {
           status: 'Active',
           dischargedAt: undefined,
           lastSeenCensusAt: censusStamp,
-        } as Resident;
+        });
       }
-      return { ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active', lastSeenCensusAt: censusStamp } as Resident;
+      return normalizeResident({ ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active', lastSeenCensusAt: censusStamp });
     });
 
     const dedupedMerged = dedupeResidents(merged) as Resident[];
