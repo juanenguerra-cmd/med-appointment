@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "mkdir -p dist && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
+    "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
+    "dev:vite": "vite --port 3000 --host",
     "build": "vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
