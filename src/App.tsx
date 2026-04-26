@@ -242,8 +242,7 @@ export default function App() {
     null,
   );
   const [isResidentDetailOpen, setIsResidentDetailOpen] = useState(false);
-
-  if (!currentUser) {
+if (!currentUser) {
     return (
       <LockScreen 
         onLogin={login}
@@ -561,10 +560,7 @@ export default function App() {
       endDate: end.toISOString().split("T")[0],
     }));
   };
-
-  const printIframeRef = React.useRef<HTMLIFrameElement>(null);
-
-  if (!isLoaded) {
+if (!isLoaded) {
     return (
       <div className="h-screen flex items-center justify-center bg-soft-bg text-brand font-black">
         Loading HealthSync...
