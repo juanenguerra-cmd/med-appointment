@@ -1463,6 +1463,8 @@ if (!isLoaded) {
     className="space-y-6"
   >
     <TrendsTabContent appointments={appointments} />
+
+    <TransportUtilizationPanel appointments={appointments} />
   </motion.section>
 )}
 
