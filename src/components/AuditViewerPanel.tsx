@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Download, Filter, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
+import { Download, Filter, RefreshCw, ShieldCheck, Trash2, Activity, CalendarDays, Edit3, Database } from 'lucide-react';
 import { AuditAction, AuditEntity, AuditEvent, clearLocalAuditEvents, getLocalAuditEvents } from '../utils/auditLog';
 
 const safeLower = (value: unknown) => String(value ?? '').toLowerCase();
@@ -25,6 +25,13 @@ function formatDateTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
+}
+
+function isToday(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const now = new Date();
+  return date.toDateString() === now.toDateString();
 }
 
 function csvEscape(value: unknown) {
@@ -63,6 +70,21 @@ function downloadCsv(events: AuditEvent[]) {
   URL.revokeObjectURL(url);
 }
 
+function SummaryCard({ label, value, sublabel, icon }: { label: string; value: string | number; sublabel: string; icon: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-[#d6deeb] bg-white p-4 flex items-center gap-3 shadow-sm">
+      <div className="w-11 h-11 rounded-2xl bg-brand-light flex items-center justify-center text-[#0b2a6f]">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-black">{label}</p>
+        <p className="text-2xl font-black text-[#0b2a6f] leading-tight">{value}</p>
+        <p className="text-[11px] text-slate-500 font-semibold mt-0.5">{sublabel}</p>
+      </div>
+    </div>
+  );
+}
+
 export function AuditViewerPanel() {
   const [events, setEvents] = useState<AuditEvent[]>(() => getLocalAuditEvents().reverse());
   const [actionFilter, setActionFilter] = useState<'All' | AuditAction>('All');
@@ -86,6 +108,23 @@ export function AuditViewerPanel() {
       return safeLower(haystack).includes(safeLower(search));
     });
   }, [events, actionFilter, entityFilter, search]);
+
+  const summary = useMemo(() => {
+    const todayCount = events.filter((event) => isToday(event.timestamp)).length;
+    const updateCount = events.filter((event) => event.action === 'update').length;
+    const appointmentCount = events.filter((event) => event.entity === 'appointment').length;
+    const uniqueActors = new Set(events.map((event) => event.actorId).filter(Boolean)).size;
+    const lastEvent = events[0];
+
+    return {
+      total: events.length,
+      todayCount,
+      updateCount,
+      appointmentCount,
+      uniqueActors,
+      lastEventText: lastEvent ? formatDateTime(lastEvent.timestamp) : 'No events yet',
+    };
+  }, [events]);
 
   const refresh = () => setEvents(getLocalAuditEvents().reverse());
 
@@ -126,6 +165,14 @@ export function AuditViewerPanel() {
       </div>
 
       <div className="p-5 border-b border-[#d6deeb] bg-[#f8fbff]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-4">
+          <SummaryCard label="Total Events" value={summary.total} sublabel="Local audit entries" icon={<Activity size={20} />} />
+          <SummaryCard label="Today" value={summary.todayCount} sublabel="Events logged today" icon={<CalendarDays size={20} />} />
+          <SummaryCard label="Updates" value={summary.updateCount} sublabel="Changed records" icon={<Edit3 size={20} />} />
+          <SummaryCard label="Appointments" value={summary.appointmentCount} sublabel="Appointment actions" icon={<Database size={20} />} />
+          <SummaryCard label="Actors" value={summary.uniqueActors} sublabel={`Last: ${summary.lastEventText}`} icon={<ShieldCheck size={20} />} />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <label className="text-xs font-black text-slate-600">
             <span className="block mb-1 uppercase tracking-wider text-[10px] text-slate-400">Search</span>
