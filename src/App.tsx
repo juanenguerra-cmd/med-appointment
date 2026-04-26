@@ -2639,11 +2639,7 @@ if (!isLoaded) {
 >
   <FileText size={10} /> {getConsultFormLabel(apt)}
 </button>
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-                                  title="Medical Clearance"
-                                >
-                                  <ShieldCheck size={10} /> Medical Clearance
-                                </button>
+
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
                                     apt.status === "Completed"
