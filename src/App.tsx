@@ -55,6 +55,7 @@ import { Button } from "./components/Button";
 import { LockScreen } from "./components/LockScreen";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
+import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 
@@ -1691,7 +1692,21 @@ if (!isLoaded) {
               </div>
             </motion.section>
           )}
-          {activeTab === "help" && currentUser?.role === "admin" && (
+          
+          {activeTab === "help" && currentUser?.role !== "admin" && (
+            <motion.div
+              key="help-staff"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-6"
+            >
+              <VersionHistoryPanel currentUserRole={currentUser?.role} />
+            </motion.div>
+          )}
+
+{activeTab === "help" && currentUser?.role === "admin" && (
             <motion.section
               key="help"
               initial={{ opacity: 0, y: 12 }}
@@ -1701,7 +1716,9 @@ if (!isLoaded) {
               className="space-y-6 pb-20"
             >
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <Card className="p-6">
+                
+              <VersionHistoryPanel currentUserRole={currentUser?.role} />
+<Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-2xl bg-brand-light text-brand">
