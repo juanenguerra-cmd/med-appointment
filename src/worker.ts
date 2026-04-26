@@ -9,6 +9,106 @@ const app = new Hono<{ Bindings: Env }>().basePath('/api');
 // Helper to convert undefined to null for D1
 const toNull = (val: any) => (val === undefined ? null : val);
 
+const safeString = (value: unknown, fallback = ''): string => {
+  if (value === undefined || value === null) return fallback;
+  return String(value);
+};
+
+const safeLower = (value: unknown): string => safeString(value).trim().toLowerCase();
+const isIsoDate = (value: unknown): boolean => /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
+const isBlank = (value: unknown): boolean => {
+  const text = safeString(value).trim();
+  return !text || text === '—';
+};
+
+type ValidationIssue = { field: string; message: string; severity: 'warning' | 'error' };
+
+type ValidationResult = {
+  ok: boolean;
+  issues: ValidationIssue[];
+};
+
+const VALID_APPOINTMENT_STATUSES = new Set(['Scheduled', 'Completed', 'Cancelled', 'Pending', 'Hospitalized', 'Discontinued', 'Deferred']);
+
+function validateRequired(issues: ValidationIssue[], field: string, value: unknown, label: string) {
+  if (isBlank(value)) {
+    issues.push({ field, message: `${label} is required.`, severity: 'error' });
+  }
+}
+
+function validateOptionalIsoDate(issues: ValidationIssue[], field: string, value: unknown, label: string) {
+  const text = safeString(value).trim();
+  if (text && text !== '—' && !isIsoDate(text)) {
+    issues.push({ field, message: `${label} should use YYYY-MM-DD format.`, severity: 'error' });
+  }
+}
+
+function buildValidationResponse(issues: ValidationIssue[]): ValidationResult {
+  return {
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    issues,
+  };
+}
+
+function validateFacilityPayload(payload: any, mode: 'create' | 'patch'): ValidationResult {
+  const issues: ValidationIssue[] = [];
+  if (mode === 'create') {
+    validateRequired(issues, 'id', payload?.id, 'Facility ID');
+    validateRequired(issues, 'name', payload?.name, 'Facility name');
+  } else if ('name' in (payload || {})) {
+    validateRequired(issues, 'name', payload?.name, 'Facility name');
+  }
+  return buildValidationResponse(issues);
+}
+
+function validateResidentPayload(payload: any, mode: 'create' | 'patch'): ValidationResult {
+  const issues: ValidationIssue[] = [];
+  if (mode === 'create') {
+    validateRequired(issues, 'id', payload?.id, 'Resident ID');
+    validateRequired(issues, 'facilityId', payload?.facilityId, 'Facility ID');
+    validateRequired(issues, 'name', payload?.name, 'Resident name');
+    validateRequired(issues, 'roomNumber', payload?.roomNumber, 'Room number');
+  }
+
+  if ('name' in (payload || {})) validateRequired(issues, 'name', payload?.name, 'Resident name');
+  if ('roomNumber' in (payload || {})) validateRequired(issues, 'roomNumber', payload?.roomNumber, 'Room number');
+  if ('admissionDate' in (payload || {})) validateOptionalIsoDate(issues, 'admissionDate', payload?.admissionDate, 'Admission date');
+
+  return buildValidationResponse(issues);
+}
+
+function validateAppointmentPayload(payload: any, mode: 'create' | 'patch'): ValidationResult {
+  const issues: ValidationIssue[] = [];
+  if (mode === 'create') {
+    validateRequired(issues, 'id', payload?.id, 'Appointment ID');
+    validateRequired(issues, 'facilityId', payload?.facilityId, 'Facility ID');
+    validateRequired(issues, 'residentName', payload?.residentName, 'Resident name');
+    validateRequired(issues, 'date', payload?.date, 'Appointment date');
+    validateRequired(issues, 'time', payload?.time, 'Appointment time');
+    validateRequired(issues, 'type', payload?.type, 'Specialty');
+  }
+
+  if ('residentName' in (payload || {})) validateRequired(issues, 'residentName', payload?.residentName, 'Resident name');
+  if ('date' in (payload || {})) {
+    validateRequired(issues, 'date', payload?.date, 'Appointment date');
+    validateOptionalIsoDate(issues, 'date', payload?.date, 'Appointment date');
+  }
+  if ('time' in (payload || {})) validateRequired(issues, 'time', payload?.time, 'Appointment time');
+  if ('type' in (payload || {})) validateRequired(issues, 'type', payload?.type, 'Specialty');
+  if ('schedulingDate' in (payload || {})) validateOptionalIsoDate(issues, 'schedulingDate', payload?.schedulingDate, 'Transport scheduling date');
+  if ('referralDate' in (payload || {})) validateOptionalIsoDate(issues, 'referralDate', payload?.referralDate, 'Referral date');
+  if ('status' in (payload || {}) && payload?.status && !VALID_APPOINTMENT_STATUSES.has(safeString(payload.status))) {
+    issues.push({ field: 'status', message: 'Appointment status is not recognized.', severity: 'error' });
+  }
+
+  return buildValidationResponse(issues);
+}
+
+function rejectIfInvalid(c: any, result: ValidationResult) {
+  if (result.ok) return null;
+  return c.json({ success: false, error: 'Validation failed', issues: result.issues }, 400);
+}
+
 const FACILITY_UPDATE_FIELDS = new Set([
   'name',
   'address',
@@ -148,6 +248,9 @@ app.get('/facilities', async (c) => {
 
 app.post('/facilities', async (c) => {
   const fac = await c.req.json() as any;
+  const validationResponse = rejectIfInvalid(c, validateFacilityPayload(fac, 'create'));
+  if (validationResponse) return validationResponse;
+
   await c.env.DB.prepare(`
     INSERT INTO facilities (id, name, address, phone, contactPerson)
     VALUES (?, ?, ?, ?, ?)
@@ -163,6 +266,10 @@ app.patch('/facilities/:id', async (c) => {
   if (!safeUpdate) {
     return c.json({ success: false, error: 'No valid facility fields to update' }, 400);
   }
+
+  const validationPayload = Object.fromEntries(safeUpdate.keys.map((key) => [key, updates[key]]));
+  const validationResponse = rejectIfInvalid(c, validateFacilityPayload(validationPayload, 'patch'));
+  if (validationResponse) return validationResponse;
   
   await c.env.DB.prepare(`UPDATE facilities SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .bind(...safeUpdate.values, id)
@@ -284,6 +391,8 @@ app.get('/residents', async (c) => {
 app.post('/residents', async (c) => {
   const res = await c.req.json() as any;
   if (!res.facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const validationResponse = rejectIfInvalid(c, validateResidentPayload(res, 'create'));
+  if (validationResponse) return validationResponse;
 
   await c.env.DB.prepare(`
     INSERT INTO residents (id, name, mrn, lastName, firstName, age, floor, unit, roomNumber, sex, admissionDate, allergies, doctor, diagnosis, notes, lastVisit, status, dischargedAt, lastSeenCensusAt, facilityId)
@@ -303,6 +412,10 @@ app.patch('/residents/:id', async (c) => {
   if (!safeUpdate) {
     return c.json({ success: false, error: 'No valid resident fields to update' }, 400);
   }
+
+  const validationPayload = Object.fromEntries(safeUpdate.keys.map((key) => [key, updates[key]]));
+  const validationResponse = rejectIfInvalid(c, validateResidentPayload(validationPayload, 'patch'));
+  if (validationResponse) return validationResponse;
 
   await c.env.DB.prepare(`UPDATE residents SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .bind(...safeUpdate.values, id)
@@ -328,6 +441,8 @@ app.get('/appointments', async (c) => {
 app.post('/appointments', async (c) => {
   const apt = await c.req.json() as any;
   if (!apt.facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const validationResponse = rejectIfInvalid(c, validateAppointmentPayload(apt, 'create'));
+  if (validationResponse) return validationResponse;
 
   await c.env.DB.prepare(`
     INSERT INTO appointments (
@@ -360,6 +475,10 @@ app.patch('/appointments/:id', async (c) => {
   if (!safeUpdate) {
     return c.json({ success: false, error: 'No valid appointment fields to update' }, 400);
   }
+
+  const validationPayload = Object.fromEntries(safeUpdate.keys.map((key) => [key, updates[key]]));
+  const validationResponse = rejectIfInvalid(c, validateAppointmentPayload(validationPayload, 'patch'));
+  if (validationResponse) return validationResponse;
 
   await c.env.DB.prepare(`UPDATE appointments SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
     .bind(...safeUpdate.values, id)
