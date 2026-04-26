@@ -89,8 +89,8 @@ export const generateRegularConsultHTML = (
       background: #ffffff;
       color: #000000;
       font-family: "Times New Roman", Times, serif;
-      font-size: 11px;
-      line-height: 1.05;
+      font-size: 12.2px;
+      line-height: 1.08;
     }
 
     body {
@@ -100,7 +100,7 @@ export const generateRegularConsultHTML = (
     .sheet {
       width: 8.5in;
       height: 11in;
-      padding: 0.16in 0.28in 0.12in 0.28in;
+      padding: 0.16in 0.30in 0.12in 0.30in;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -116,20 +116,20 @@ export const generateRegularConsultHTML = (
     }
 
     .facility-name {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 900;
       text-transform: uppercase;
     }
 
     .facility-details {
-      font-size: 8px;
+      font-size: 8.5px;
       font-weight: 600;
     }
 
     .title {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 900;
       letter-spacing: -0.45px;
       line-height: 1;
@@ -140,7 +140,7 @@ export const generateRegularConsultHTML = (
     .checkline {
       text-align: center;
       font-weight: bold;
-      font-size: 10px;
+      font-size: 11px;
       line-height: 1;
       margin-bottom: 5px;
       flex: 0 0 auto;
@@ -150,7 +150,7 @@ export const generateRegularConsultHTML = (
       display: grid;
       align-items: end;
       column-gap: 5px;
-      min-height: 15px;
+      min-height: 16px;
       margin-bottom: 2px;
       flex: 0 0 auto;
     }
@@ -177,19 +177,21 @@ export const generateRegularConsultHTML = (
       font-weight: bold;
       white-space: nowrap;
       margin-right: 3px;
+      font-size: 12px;
     }
 
     .value-line {
       flex: 1;
-      min-height: 13px;
+      min-height: 14px;
       border-bottom: 1.2px solid #000;
       padding: 0 4px 1px;
       overflow: hidden;
       white-space: nowrap;
+      font-size: 12px;
     }
 
     .double-blank {
-      height: 26px;
+      height: 24px;
       border-top: 1.2px solid #000;
       border-bottom: 1.2px solid #000;
       margin: 2px 0 2px;
@@ -199,22 +201,22 @@ export const generateRegularConsultHTML = (
     .dob-row {
       display: flex;
       justify-content: flex-end;
-      min-height: 15px;
+      min-height: 16px;
       margin-bottom: 2px;
       flex: 0 0 auto;
     }
 
     .dob-row .field {
-      width: 310px;
+      width: 315px;
     }
 
     .history-row {
       display: flex;
       align-items: center;
       gap: 5px;
-      min-height: 15px;
+      min-height: 16px;
       margin-bottom: 2px;
-      font-size: 10.5px;
+      font-size: 11.5px;
       font-weight: bold;
       white-space: nowrap;
       flex: 0 0 auto;
@@ -249,13 +251,13 @@ export const generateRegularConsultHTML = (
     .clinical-box h4 {
       margin: 0;
       padding: 0;
-      font-size: 10.5px;
-      line-height: 1.05;
+      font-size: 11.5px;
+      line-height: 1.08;
       font-weight: bold;
     }
 
     .clinical-box small {
-      font-size: 8.2px;
+      font-size: 9px;
       font-weight: bold;
     }
 
@@ -264,15 +266,15 @@ export const generateRegularConsultHTML = (
       grid-template-columns: auto 1fr auto 0.52fr;
       align-items: end;
       gap: 6px;
-      min-height: 17px;
+      min-height: 18px;
       margin-top: 5px;
-      font-size: 10.5px;
+      font-size: 11.5px;
       font-weight: bold;
       flex: 0 0 auto;
     }
 
     .sig-line {
-      height: 13px;
+      height: 14px;
       border-bottom: 1.2px solid #000;
     }
 
@@ -291,9 +293,9 @@ export const generateRegularConsultHTML = (
       display: flex;
       align-items: center;
       gap: 14px;
-      min-height: 16px;
+      min-height: 17px;
       margin-top: 3px;
-      font-size: 10.5px;
+      font-size: 11.5px;
       font-weight: bold;
       white-space: nowrap;
       flex: 0 0 auto;
