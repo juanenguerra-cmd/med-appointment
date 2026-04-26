@@ -75,12 +75,21 @@ function removeCardsByTitle(text, title) {
   return { text: result, removed };
 }
 
+function removeEmptyAdminGuard(text) {
+  return text.replace(/\n\s*\{currentUser\?\.role\s*===\s*["']admin["']\s*&&\s*\(\s*\n\s*\)\}\s*/g, '\n');
+}
+
 // Remove legacy inline admin cards from App.tsx. The canonical copy now lives in AdminGuideTools.tsx.
 let removedFacility = removeCardsByTitle(source, 'Facility Management');
 source = removedFacility.text;
 
 let removedUserAccess = removeCardsByTitle(source, 'User Access Logic');
 source = removedUserAccess.text;
+
+// Prior cleanup may leave an empty JSX block like:
+// {currentUser?.role === "admin" && (
+// )}
+source = removeEmptyAdminGuard(source);
 
 if (!source.includes('<AdminGuideTools')) {
   const versionPanel = '<VersionHistoryPanel currentUserRole={currentUser?.role} />';
@@ -97,5 +106,5 @@ if (source === original) {
   console.log('No changes were needed.');
 } else {
   fs.writeFileSync(appPath, source);
-  console.log(`AdminGuideTools wired under VersionHistoryPanel. Removed ${removedFacility.removed} legacy Facility Management card(s) and ${removedUserAccess.removed} legacy User Access Logic card(s). Run npm run build next.`);
+  console.log(`AdminGuideTools wired under VersionHistoryPanel. Removed ${removedFacility.removed} legacy Facility Management card(s), ${removedUserAccess.removed} legacy User Access Logic card(s), and any empty admin guard. Run npm run build next.`);
 }
