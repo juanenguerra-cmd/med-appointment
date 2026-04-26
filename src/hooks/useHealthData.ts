@@ -28,9 +28,11 @@ const safeString = (value: unknown, fallback = ''): string => {
   return String(value);
 };
 
+const safeLower = (value: unknown): string => safeString(value).trim().toLowerCase();
+
 const safeBoolean = (value: unknown): boolean => {
   if (typeof value === 'boolean') return value;
-  const normalized = safeString(value).trim().toLowerCase();
+  const normalized = safeLower(value);
   return ['true', 'yes', 'y', '1', 'checked'].includes(normalized);
 };
 
@@ -109,11 +111,11 @@ const normalizeFacility = (facility: any): Facility => ({
 
 const normalizeResidentKey = (resident: Partial<Resident>) => {
   const mrn = safeString(resident.mrn).trim();
-  if (mrn && mrn !== '—') return `mrn:${mrn.toLowerCase()}`;
+  if (mrn && mrn !== '—') return `mrn:${safeLower(mrn)}`;
 
-  const name = safeString(resident.name).trim().replace(/\s+/g, ' ').toLowerCase();
-  const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ').toLowerCase();
-  return `name-room:${name}|${room}`;
+  const name = safeString(resident.name).trim().replace(/\s+/g, ' ');
+  const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ');
+  return `name-room:${safeLower(name)}|${safeLower(room)}`;
 };
 
 const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
