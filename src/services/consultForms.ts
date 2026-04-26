@@ -519,20 +519,20 @@ export const generateOrthoConsultHTML = (
     }
 
     .facility-name {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 900;
       text-transform: uppercase;
     }
 
     .facility-details {
-      font-size: 8px;
+      font-size: 10px;
       font-weight: 600;
     }
 
     .title {
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 900;
       letter-spacing: -0.35px;
       line-height: 1;
@@ -701,9 +701,9 @@ export const generateOrthoConsultHTML = (
     }
 
     .push-space {
-      flex: 1 1 auto;
-      min-height: 12px;
-    }
+  flex: 0 0 0.9in;
+  min-height: 0;
+}
 
     .signature-row {
       display: grid;
