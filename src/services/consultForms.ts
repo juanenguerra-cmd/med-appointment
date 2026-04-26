@@ -70,158 +70,259 @@ export const generateRegularConsultHTML = (
 <head>
   <meta charset="utf-8" />
   <title>Regular Consult</title>
-    <style>
-  @page {
-    size: letter portrait;
-    margin: 0.25in 0.35in;
-  }
-
-  html, body {
-    width: 8.5in;
-    height: 11in;
-    margin: 0;
-    padding: 0;
-    font-family: "Times New Roman", serif;
-    font-size: 11.5px;
-    line-height: 1.1;
-    color: #000;
-  }
-
-  .sheet {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  /* HEADER */
-  .letterhead {
-    text-align: center;
-    font-family: Arial, sans-serif;
-  }
-
-  .facility-name {
-    font-size: 13px;
-    font-weight: 900;
-  }
-
-  .facility-details {
-    font-size: 9px;
-  }
-
-  .title {
-    text-align: center;
-    font-family: Arial, sans-serif;
-    font-size: 20px;
-    font-weight: 900;
-    margin-top: 4px;
-  }
-
-  .checkline {
-    text-align: center;
-    font-size: 11px;
-    margin-bottom: 6px;
-  }
-
-  /* TOP FIELDS */
-  .top-row {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 3px;
-  }
-
-  .field {
-    display: flex;
-    flex: 1;
-    align-items: flex-end;
-  }
-
-  .label {
-    font-weight: bold;
-    margin-right: 4px;
-    white-space: nowrap;
-  }
-
-  .line {
-    flex: 1;
-    border-bottom: 1px solid #000;
-    min-height: 16px;
-  }
-
-  .blank-rule {
-    border-bottom: 1px solid #000;
-    margin: 4px 0;
-  }
-
-  .dob-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 4px;
-  }
-
-  .history-row {
-    font-size: 11px;
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
-
-  /* 🔥 MAIN FIX — FLEX GRID THAT FILLS PAGE */
-  .clinical-grid {
-    flex: 1;
-    display: grid;
-    grid-template-rows: 1.2fr 1fr 1.2fr 0.8fr;
-    border: 1px solid #000;
-    border-bottom: none;
-  }
-
-  .box {
-    border-bottom: 1px solid #000;
-    padding: 6px;
-  }
-
-  .box h4 {
-    margin: 0;
-    font-size: 11px;
-    font-weight: bold;
-  }
-
-  .box small {
-    font-size: 9px;
-  }
-
-  /* FOOTER */
-  .signature-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto 0.5fr;
-    gap: 6px;
-    margin-top: 6px;
-    font-size: 11px;
-    font-weight: bold;
-  }
-
-  .sig-line {
-    border-bottom: 1px solid #000;
-    height: 16px;
-  }
-
-  .pcp-row {
-    display: flex;
-    gap: 16px;
-    margin-top: 6px;
-    font-size: 11px;
-    font-weight: bold;
-  }
-
-  .stars {
-    font-size: 8px;
-    margin-top: 2px;
-  }
-
-  @media print {
-    .sheet {
-      height: 100%;
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 0;
     }
-  }
-</style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 8.5in;
+      height: 11in;
+      background: #ffffff;
+      color: #000000;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11px;
+      line-height: 1.05;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .sheet {
+      width: 8.5in;
+      height: 11in;
+      padding: 0.16in 0.28in 0.12in 0.28in;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .letterhead {
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.05;
+      margin: 0 0 2px;
+      flex: 0 0 auto;
+    }
+
+    .facility-name {
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .facility-details {
+      font-size: 8px;
+      font-weight: 600;
+    }
+
+    .title {
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.45px;
+      line-height: 1;
+      margin: 1px 0 2px;
+      flex: 0 0 auto;
+    }
+
+    .checkline {
+      text-align: center;
+      font-weight: bold;
+      font-size: 10px;
+      line-height: 1;
+      margin-bottom: 5px;
+      flex: 0 0 auto;
+    }
+
+    .form-row {
+      display: grid;
+      align-items: end;
+      column-gap: 5px;
+      min-height: 15px;
+      margin-bottom: 2px;
+      flex: 0 0 auto;
+    }
+
+    .row-1 {
+      grid-template-columns: 1.45fr 0.45fr 0.95fr;
+    }
+
+    .row-2 {
+      grid-template-columns: 1.05fr 1fr;
+    }
+
+    .row-3 {
+      grid-template-columns: 1fr;
+    }
+
+    .field {
+      display: flex;
+      align-items: end;
+      min-width: 0;
+    }
+
+    .label {
+      font-weight: bold;
+      white-space: nowrap;
+      margin-right: 3px;
+    }
+
+    .value-line {
+      flex: 1;
+      min-height: 13px;
+      border-bottom: 1.2px solid #000;
+      padding: 0 4px 1px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .double-blank {
+      height: 26px;
+      border-top: 1.2px solid #000;
+      border-bottom: 1.2px solid #000;
+      margin: 2px 0 2px;
+      flex: 0 0 auto;
+    }
+
+    .dob-row {
+      display: flex;
+      justify-content: flex-end;
+      min-height: 15px;
+      margin-bottom: 2px;
+      flex: 0 0 auto;
+    }
+
+    .dob-row .field {
+      width: 310px;
+    }
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 15px;
+      margin-bottom: 2px;
+      font-size: 10.5px;
+      font-weight: bold;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .history-row span {
+      font-weight: bold;
+    }
+
+    .other-line {
+      display: inline-block;
+      width: 120px;
+      height: 10px;
+      border-bottom: 1.2px solid #000;
+    }
+
+    .clinical-area {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-rows: 1.08fr 0.95fr 1.08fr 0.70fr;
+      border: 1.2px solid #000;
+      border-bottom: 0;
+      min-height: 0;
+    }
+
+    .clinical-box {
+      border-bottom: 1.2px solid #000;
+      padding: 4px 6px;
+      min-height: 0;
+    }
+
+    .clinical-box h4 {
+      margin: 0;
+      padding: 0;
+      font-size: 10.5px;
+      line-height: 1.05;
+      font-weight: bold;
+    }
+
+    .clinical-box small {
+      font-size: 8.2px;
+      font-weight: bold;
+    }
+
+    .signature-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto 0.52fr;
+      align-items: end;
+      gap: 6px;
+      min-height: 17px;
+      margin-top: 5px;
+      font-size: 10.5px;
+      font-weight: bold;
+      flex: 0 0 auto;
+    }
+
+    .sig-line {
+      height: 13px;
+      border-bottom: 1.2px solid #000;
+    }
+
+    .stars {
+      height: 8px;
+      line-height: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 7px;
+      font-weight: bold;
+      margin-top: 1px;
+      flex: 0 0 auto;
+    }
+
+    .pcp-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 16px;
+      margin-top: 3px;
+      font-size: 10.5px;
+      font-weight: bold;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    @media screen {
+      body {
+        background: #f5f5f5;
+      }
+
+      .sheet {
+        margin: 0 auto;
+        background: #ffffff;
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        width: 8.5in;
+        height: 11in;
+      }
+
+      .sheet {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="sheet">
@@ -238,48 +339,45 @@ export const generateRegularConsultHTML = (
       ☐ Subsequent Management
     </div>
 
-    <div class="top-row">
-      <div class="field" style="flex: 1.45;">
+    <div class="form-row row-1">
+      <div class="field">
         <span class="label">Resident’s Name:</span>
-        <span class="line">${residentName}</span>
+        <span class="value-line">${residentName}</span>
       </div>
-
-      <div class="field" style="flex: 0.38;">
+      <div class="field">
         <span class="label">Rm. #</span>
-        <span class="line">${room}</span>
+        <span class="value-line">${room}</span>
       </div>
-
-      <div class="field" style="flex: 0.82;">
+      <div class="field">
         <span class="label">Date of Request:</span>
-        <span class="line">${dateOfRequest}</span>
+        <span class="value-line">${dateOfRequest}</span>
       </div>
     </div>
 
-    <div class="top-row">
-      <div class="field" style="flex: 1;">
+    <div class="form-row row-2">
+      <div class="field">
         <span class="label">Specialty:</span>
-        <span class="line">${specialty}</span>
+        <span class="value-line">${specialty}</span>
       </div>
-
-      <div class="field" style="flex: 1;">
+      <div class="field">
         <span class="label">Requesting Physician:</span>
-        <span class="line">${requestingPhysician}</span>
+        <span class="value-line">${requestingPhysician}</span>
       </div>
     </div>
 
-    <div class="top-row">
-      <div class="field" style="flex: 1;">
+    <div class="form-row row-3">
+      <div class="field">
         <span class="label">Reason for Consultation:</span>
-        <span class="line">${reason}</span>
+        <span class="value-line">${reason}</span>
       </div>
     </div>
 
-    <div class="blank-rule"></div>
+    <div class="double-blank"></div>
 
     <div class="dob-row">
       <div class="field">
         <span class="label">Resident’s Date of Birth:</span>
-        <span class="line">${dob}</span>
+        <span class="value-line">${dob}</span>
       </div>
     </div>
 
@@ -288,30 +386,32 @@ export const generateRegularConsultHTML = (
       <span>☐ Dementia</span>
       <span>☐Aphasia</span>
       <span>☐Coma</span>
-      <span class="history-other">☐Other:<span class="history-other-line"></span></span>
+      <span>☐Other:</span><span class="other-line"></span>
     </div>
 
-    <div class="box hpi-box">
-      <h4>
-        Chief Complaint/HPI:
-        <small>(location, duration, timing, quality, severity, context, modifying factors, assoc, S&amp;S or status, etc.)</small>
-      </h4>
-      <h4>
-        ROS:
-        <small>(questions/answers regarding systems related to presenting problem(s))</small>
-      </h4>
-    </div>
+    <div class="clinical-area">
+      <div class="clinical-box">
+        <h4>
+          Chief Complaint/HPI:
+          <small>(location, duration, timing, quality, severity, context, modifying factors, assoc, S&amp;S or status, etc.)</small>
+        </h4>
+        <h4>
+          ROS:
+          <small>(questions/answers regarding systems related to presenting problem(s))</small>
+        </h4>
+      </div>
 
-    <div class="box history-box">
-      <h4>Past Medical/Family/Social History:</h4>
-    </div>
+      <div class="clinical-box">
+        <h4>Past Medical/Family/Social History:</h4>
+      </div>
 
-    <div class="box exam-box">
-      <h4>Physical Exam:</h4>
-    </div>
+      <div class="clinical-box">
+        <h4>Physical Exam:</h4>
+      </div>
 
-    <div class="box dx-box last">
-      <h4>Diagnosis(es)/Recommendation(s):</h4>
+      <div class="clinical-box">
+        <h4>Diagnosis(es)/Recommendation(s):</h4>
+      </div>
     </div>
 
     <div class="signature-row">
