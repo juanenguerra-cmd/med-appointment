@@ -16,37 +16,47 @@ if (!source.includes(importLine)) {
     'import { PatientCensusUnitList } from "./components/PatientCensusUnitList";',
     'import { AppointmentCalendar } from "./components/AppointmentCalendar";',
   ];
-
   const anchor = anchors.find((candidate) => source.includes(candidate));
   if (!anchor) {
     console.error('Could not find a safe import anchor. No changes made.');
     process.exit(1);
   }
-
   source = source.replace(anchor, `${anchor}\n${importLine}`);
 }
 
-if (source.includes('<VersionHistoryPanel') && source.includes('key="help-staff"')) {
-  if (source !== original) {
-    fs.writeFileSync(appPath, source);
-    console.log('VersionHistoryPanel import added. Staff/admin help panel was already wired.');
-  } else {
-    console.log('VersionHistoryPanel already wired for staff/admin Help page. No changes made.');
-  }
-  process.exit(0);
+// Staff must be able to navigate to Guide & Info. Remove admin-only wrappers around that NavItem only.
+source = source.replace(
+  /\{\s*currentUser\?\.role\s*===\s*["']admin["']\s*&&\s*\(\s*(<NavItem[\s\S]*?label=["']Guide & Info["'][\s\S]*?\/>\s*)\)\s*\}/g,
+  '$1',
+);
+
+function findTopLevelHelpBlock(text) {
+  const start = text.search(/\{activeTab\s*===\s*["']help["']\s*&&/);
+  if (start < 0) return null;
+
+  const endMarkers = [
+    '{isAddModalOpen',
+    '{isFacModalOpen',
+    '{isUserModalOpen',
+    '{selectedResident &&',
+    '</AnimatePresence>',
+  ]
+    .map((marker) => text.indexOf(marker, start + 1))
+    .filter((index) => index > start);
+
+  if (!endMarkers.length) return null;
+  return { start, end: Math.min(...endMarkers) };
 }
 
-const adminHelpMarker = '{activeTab === "help" && currentUser?.role === "admin" && (';
-const adminHelpStart = source.indexOf(adminHelpMarker);
-if (adminHelpStart < 0) {
-  console.error('Could not find admin-gated Help/System Guide tab block. No changes made.');
+const helpBlock = findTopLevelHelpBlock(source);
+if (!helpBlock) {
+  console.error('Could not find the Help/System Guide render block. No changes made.');
   process.exit(1);
 }
 
-const staffHelpBlock = `
-          {activeTab === "help" && currentUser?.role !== "admin" && (
+const replacement = `          {activeTab === "help" && (
             <motion.div
-              key="help-staff"
+              key="help"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
@@ -54,33 +64,64 @@ const staffHelpBlock = `
               className="space-y-6"
             >
               <VersionHistoryPanel currentUserRole={currentUser?.role} />
+
+              {currentUser?.role === "admin" && (
+                <Card
+                  icon={<User size={22} />}
+                  title="User Access Logic"
+                  subtitle="Manage facility visibility for staff members"
+                  action={
+                    <Button
+                      variant="primary"
+                      icon={<Plus size={16} />}
+                      onClick={() => {
+                        setEditingUser(null);
+                        setIsUserModalOpen(true);
+                      }}
+                    >
+                      New User
+                    </Button>
+                  }
+                >
+                  <div className="space-y-3">
+                    {users.map((u: any) => (
+                      <div key={u.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                            <User size={18} />
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-800">{u.name || u.email}</p>
+                            <p className="text-xs font-semibold text-slate-500">{u.email}</p>
+                          </div>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase text-slate-500">
+                            {u.role}
+                          </span>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setEditingUser(u);
+                            setIsUserModalOpen(true);
+                          }}
+                        >
+                          Access Logic
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </motion.div>
           )}
 
 `;
 
-if (!source.includes('key="help-staff"')) {
-  source = source.slice(0, adminHelpStart) + staffHelpBlock + source.slice(adminHelpStart);
+source = source.slice(0, helpBlock.start) + replacement + source.slice(helpBlock.end);
+
+if (source === original) {
+  console.log('No changes were needed.');
+} else {
+  fs.writeFileSync(appPath, source);
+  console.log('Help page replaced: VersionHistoryPanel renders for staff/admin, legacy User Guide/Version History cards removed, admin user access card remains admin-only. Run npm run build next.');
 }
-
-// Insert the panel at the top of the existing admin Help block, before the first Card.
-if (!source.includes('<VersionHistoryPanel currentUserRole={currentUser?.role} />\n              <Card')) {
-  const updatedAdminHelpStart = source.indexOf(adminHelpMarker);
-  const nextBlockStart = source.indexOf('{activeTab ===', updatedAdminHelpStart + adminHelpMarker.length);
-  const searchEnd = nextBlockStart > updatedAdminHelpStart ? nextBlockStart : source.length;
-  const firstCard = source.indexOf('<Card', updatedAdminHelpStart);
-
-  if (firstCard < 0 || firstCard > searchEnd) {
-    console.error('Could not find first Card in admin Help block. Staff block/import may have been added; no admin panel inserted.');
-    fs.writeFileSync(appPath, source);
-    process.exit(1);
-  }
-
-  const panelBlock = `
-              <VersionHistoryPanel currentUserRole={currentUser?.role} />
-`;
-  source = source.slice(0, firstCard) + panelBlock + source.slice(firstCard);
-}
-
-fs.writeFileSync(appPath, source);
-console.log('VersionHistoryPanel wired into Help/System Guide page for staff and admin. Run npm run build next.');
