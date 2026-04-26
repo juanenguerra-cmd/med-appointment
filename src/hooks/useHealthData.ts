@@ -1,6 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Appointment, Doctor, MedicalRecord, Resident, Facility } from '../types';
 
+async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, options);
+
+  if (!res.ok) {
+    let message = `API error ${res.status}`;
+    try {
+      const body = await res.json();
+      message = body?.error || body?.message || JSON.stringify(body);
+    } catch {
+      const text = await res.text().catch(() => '');
+      if (text) message = text;
+    }
+    throw new Error(message);
+  }
+
+  if (res.status === 204) {
+    return null as T;
+  }
+
+  return res.json();
+}
+
 const normalizeResidentKey = (resident: Partial<Resident>) => {
   const mrn = String(resident.mrn || '').trim();
   if (mrn && mrn !== '—') return `mrn:${mrn.toLowerCase()}`;
@@ -53,6 +75,11 @@ export function useHealthData() {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const reportSaveError = (message: string, error: unknown) => {
+    console.error(message, error);
+    alert(message);
+  };
+
   // Persistence for user and facility
   useEffect(() => {
     if (currentUser) {
@@ -76,17 +103,13 @@ export function useHealthData() {
     }
     async function fetchFacilities() {
       try {
-        // Fetch restricted facilities for current user
-        const res = await fetch(`/api/facilities?userId=${currentUser.id}`);
-        if (res.ok) {
-          const data: Facility[] = await res.json();
-          setFacilities(data);
-          if (data.length > 0 && !currentFacilityId) {
-            setCurrentFacilityId(data[0].id);
-          }
+        const data = await apiFetch<Facility[]>(`/api/facilities?userId=${currentUser.id}`);
+        setFacilities(data);
+        if (data.length > 0 && !currentFacilityId) {
+          setCurrentFacilityId(data[0].id);
         }
       } catch (err) {
-        console.error("Failed to fetch facilities", err);
+        console.error('Failed to fetch facilities', err);
       }
     }
     fetchFacilities();
@@ -94,7 +117,7 @@ export function useHealthData() {
 
   useEffect(() => {
     if (currentUser?.role === 'admin') {
-      fetch('/api/users').then(res => res.json()).then(setUsers).catch(console.error);
+      apiFetch<any[]>('/api/users').then(setUsers).catch(console.error);
     }
   }, [currentUser?.role]);
 
@@ -107,17 +130,10 @@ export function useHealthData() {
 
     async function fetchData(retries = 3) {
       try {
-        const [resResidents, resAppointments] = await Promise.all([
-          fetch(`/api/residents?facilityId=${currentFacilityId}`),
-          fetch(`/api/appointments?facilityId=${currentFacilityId}`)
+        const [residentsData, appointmentsData] = await Promise.all([
+          apiFetch<Resident[]>(`/api/residents?facilityId=${currentFacilityId}`),
+          apiFetch<Appointment[]>(`/api/appointments?facilityId=${currentFacilityId}`),
         ]);
-        
-        if (!resResidents.ok || !resAppointments.ok) {
-          throw new Error(`Failed to fetch: ${resResidents.status} / ${resAppointments.status}`);
-        }
-
-        const residentsData = await resResidents.json();
-        const appointmentsData = await resAppointments.json();
         
         setResidents(dedupeResidents(residentsData) as Resident[]);
         setAppointments(appointmentsData);
@@ -125,7 +141,7 @@ export function useHealthData() {
         const savedDoctors = localStorage.getItem(`doctors_${currentFacilityId}`);
         const savedRecords = localStorage.getItem(`records_${currentFacilityId}`);
         if (savedDoctors) setDoctors(JSON.parse(savedDoctors));
-        else setDoctors([]); // Reset if switching facilities
+        else setDoctors([]);
         
         if (savedRecords) setRecords(JSON.parse(savedRecords));
         else setRecords([]);
@@ -136,13 +152,13 @@ export function useHealthData() {
           console.warn(`Fetch failed, retrying... (${retries} left)`, error);
           setTimeout(() => fetchData(retries - 1), 2000);
         } else {
-          console.error("Failed to fetch data from API after retries:", error);
+          console.error('Failed to fetch data from API after retries:', error);
           setIsLoaded(true);
         }
       }
     }
     
-    setIsLoaded(false); // Trigger loading state on facility switch
+    setIsLoaded(false);
     fetchData();
   }, [currentFacilityId]);
 
@@ -157,77 +173,114 @@ export function useHealthData() {
   const addFacility = async (facility: Omit<Facility, 'id'>) => {
     const id = crypto.randomUUID();
     const newFac = { ...facility, id };
+    const previousFacilities = facilities;
+    const previousFacilityId = currentFacilityId;
+
     setFacilities(prev => [...prev, newFac]);
-    
-    await fetch('/api/facilities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newFac)
-    });
-    
     if (!currentFacilityId) setCurrentFacilityId(id);
 
-    // If admin, auto-grant permission to the created facility
-    if (currentUser.id) {
-      await fetch(`/api/users/${currentUser.id}/facilities`, {
+    try {
+      await apiFetch('/api/facilities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ facilityIds: [...facilities.map(f => f.id), id] })
+        body: JSON.stringify(newFac),
       });
+
+      if (currentUser.id) {
+        await apiFetch(`/api/users/${currentUser.id}/facilities`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ facilityIds: [...facilities.map(f => f.id), id] }),
+        });
+      }
+    } catch (error) {
+      setFacilities(previousFacilities);
+      setCurrentFacilityId(previousFacilityId);
+      reportSaveError('Facility was not saved. Please try again.', error);
     }
   };
 
   const updateFacility = async (id: string, updates: Partial<Facility>) => {
+    const previousFacilities = facilities;
     setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
-    await fetch(`/api/facilities/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
+
+    try {
+      await apiFetch(`/api/facilities/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch (error) {
+      setFacilities(previousFacilities);
+      reportSaveError('Facility changes were not saved. Please try again.', error);
+    }
   };
 
   const deleteFacility = async (id: string) => {
+    const previousFacilities = facilities;
+    const previousFacilityId = currentFacilityId;
     setFacilities(prev => prev.filter(f => f.id !== id));
     if (currentFacilityId === id) {
       const next = facilities.find(f => f.id !== id);
       setCurrentFacilityId(next?.id || null);
     }
-    await fetch(`/api/facilities/${id}`, { method: 'DELETE' });
+
+    try {
+      await apiFetch(`/api/facilities/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      setFacilities(previousFacilities);
+      setCurrentFacilityId(previousFacilityId);
+      reportSaveError('Facility was not deleted. Please try again.', error);
+    }
   };
 
   const addUser = async (user: any) => {
     const id = crypto.randomUUID();
     const newUser = { ...user, id };
+    const previousUsers = users;
     setUsers(prev => [...prev, newUser]);
-    await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUser)
-    });
-    return id;
+
+    try {
+      await apiFetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser),
+      });
+      return id;
+    } catch (error) {
+      setUsers(previousUsers);
+      reportSaveError('User was not saved. Please try again.', error);
+      return null;
+    }
   };
 
   const updateUser = async (id: string, user: any) => {
     const updatedUser = { ...user, id };
+    const previousUsers = users;
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updatedUser } : u));
-    await fetch(`/api/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedUser)
-    });
+
+    try {
+      await apiFetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedUser),
+      });
+    } catch (error) {
+      setUsers(previousUsers);
+      reportSaveError('User changes were not saved. Please try again.', error);
+    }
   };
 
   const updateUserPermissions = async (userId: string, facilityIds: string[]) => {
-    await fetch(`/api/users/${userId}/facilities`, {
+    await apiFetch(`/api/users/${userId}/facilities`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ facilityIds })
+      body: JSON.stringify({ facilityIds }),
     });
   };
 
   const fetchUserPermissions = async (userId: string) => {
-    const res = await fetch(`/api/users/${userId}/facilities`);
-    return await res.json();
+    return apiFetch<string[]>(`/api/users/${userId}/facilities`);
   };
 
   const addAppointment = async (appointment: Omit<Appointment, 'id' | 'facilityId'>) => {
@@ -235,59 +288,94 @@ export function useHealthData() {
 
     const id = crypto.randomUUID();
     const newAppointment = { ...appointment, id, facilityId: currentFacilityId } as Appointment;
+    const previousAppointments = appointments;
     setAppointments(prev => [...prev, newAppointment]);
-    
-    fetch('/api/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newAppointment)
-    });
+
+    try {
+      await apiFetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAppointment),
+      });
+    } catch (error) {
+      setAppointments(previousAppointments);
+      reportSaveError('Appointment was not saved. Please try again.', error);
+    }
   };
 
   const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
-    // Optimistic Update
+    const previousAppointments = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
-    
-    // PARTIAL UPDATE (Efficient / Non-wasting) - Matches D1 request
-    fetch(`/api/appointments/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
+
+    try {
+      await apiFetch(`/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch (error) {
+      setAppointments(previousAppointments);
+      reportSaveError('Appointment changes were not saved. Please try again.', error);
+    }
   };
 
   const deleteAppointment = async (id: string) => {
+    const previousAppointments = appointments;
     setAppointments(prev => prev.filter(a => a.id !== id));
-    fetch(`/api/appointments/${id}`, { method: 'DELETE' });
+
+    try {
+      await apiFetch(`/api/appointments/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      setAppointments(previousAppointments);
+      reportSaveError('Appointment was not deleted. Please try again.', error);
+    }
   };
 
   const addResident = async (resident: Omit<Resident, 'id' | 'facilityId'>) => {
     if (!currentFacilityId) return;
     const id = crypto.randomUUID();
-    const newResident = { ...resident, id, facilityId: currentFacilityId } as Resident;
+    const newResident = { ...resident, id, facilityId: currentFacilityId, status: 'Active' } as Resident;
+    const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, newResident]) as Resident[]);
-    
-    fetch('/api/residents', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newResident)
-    });
+
+    try {
+      await apiFetch('/api/residents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newResident),
+      });
+    } catch (error) {
+      setResidents(previousResidents);
+      reportSaveError('Resident was not saved. Please try again.', error);
+    }
   };
 
   const updateResident = async (id: string, updates: Partial<Resident>) => {
-    // Optimistic Update
+    const previousResidents = residents;
     setResidents(prev => dedupeResidents(prev.map(r => r.id === id ? { ...r, ...updates } : r)) as Resident[]);
-    
-    fetch(`/api/residents/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
+
+    try {
+      await apiFetch(`/api/residents/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch (error) {
+      setResidents(previousResidents);
+      reportSaveError('Resident changes were not saved. Please try again.', error);
+    }
   };
 
   const deleteResident = async (id: string) => {
+    const previousResidents = residents;
     setResidents(prev => prev.filter(r => r.id !== id));
-    fetch(`/api/residents/${id}`, { method: 'DELETE' });
+
+    try {
+      await apiFetch(`/api/residents/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      setResidents(previousResidents);
+      reportSaveError('Resident was not deleted. Please try again.', error);
+    }
   };
 
   const batchAddResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
@@ -295,18 +383,24 @@ export function useHealthData() {
     const existingKeys = new Set(residents.map(normalizeResidentKey));
     const prepared = dedupeResidents(newResidents)
       .filter((resident) => !existingKeys.has(normalizeResidentKey(resident)))
-      .map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId })) as Resident[];
+      .map(r => ({ ...r, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active' })) as Resident[];
 
     if (prepared.length === 0) return;
 
+    const previousResidents = residents;
     setResidents(prev => dedupeResidents([...prev, ...prepared]) as Resident[]);
-    
-    for (const res of prepared) {
-      fetch('/api/residents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(res)
-      });
+
+    try {
+      for (const res of prepared) {
+        await apiFetch('/api/residents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(res),
+        });
+      }
+    } catch (error) {
+      setResidents(previousResidents);
+      reportSaveError('Census residents were not fully saved. Please try again.', error);
     }
   };
 
@@ -323,6 +417,7 @@ export function useHealthData() {
       uniqueNewResidentsMap.set(normalizeResidentKey(res), res);
     });
 
+    const censusStamp = new Date().toISOString();
     const merged = Array.from(uniqueNewResidentsMap.values()).map(newRes => {
       const key = normalizeResidentKey(newRes);
       const existing = existingResidentsMap.get(key);
@@ -333,32 +428,40 @@ export function useHealthData() {
           id: existing.id,
           facilityId: currentFacilityId,
           notes: existing.notes || newRes.notes,
-          lastVisit: existing.lastVisit || newRes.lastVisit
+          lastVisit: existing.lastVisit || newRes.lastVisit,
+          status: 'Active',
+          dischargedAt: undefined,
+          lastSeenCensusAt: censusStamp,
         } as Resident;
       }
-      return { ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId } as Resident;
+      return { ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active', lastSeenCensusAt: censusStamp } as Resident;
     });
 
     const dedupedMerged = dedupeResidents(merged) as Resident[];
+    const previousResidents = residents;
     setResidents(dedupedMerged);
 
-    // Sync to DB
-    for (const res of dedupedMerged) {
-       const key = normalizeResidentKey(res);
-       const existing = existingResidentsMap.get(key);
-       if (existing) {
-         fetch(`/api/residents/${res.id}`, {
-           method: 'PATCH',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify(res)
-         });
-       } else {
-         fetch('/api/residents', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify(res)
-         });
-       }
+    try {
+      for (const res of dedupedMerged) {
+        const key = normalizeResidentKey(res);
+        const existing = existingResidentsMap.get(key);
+        if (existing) {
+          await apiFetch(`/api/residents/${res.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(res),
+          });
+        } else {
+          await apiFetch('/api/residents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(res),
+          });
+        }
+      }
+    } catch (error) {
+      setResidents(previousResidents);
+      reportSaveError('Census replacement was not fully saved. Please try again.', error);
     }
   };
 
@@ -373,12 +476,11 @@ export function useHealthData() {
   };
 
   const login = async (email: string, password?: string) => {
-    const res = await fetch('/api/login', {
+    return apiFetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
-    return await res.json();
   };
 
   const logout = () => {
@@ -390,12 +492,11 @@ export function useHealthData() {
   };
 
   const setupPassword = async (userId: string, password: string) => {
-    const res = await fetch('/api/setup-password', {
+    return apiFetch('/api/setup-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, password })
+      body: JSON.stringify({ userId, password }),
     });
-    return await res.json();
   };
 
   return {
