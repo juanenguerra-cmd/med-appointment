@@ -74,6 +74,7 @@ type Tab =
   | "trends"
   | "reports"
   | "census"
+  | "directory"
   | "help";
 
 const TAB_META: Record<
@@ -866,6 +867,12 @@ if (!isLoaded) {
                 onClick={() => goToTab("help")}
                 icon={<ShieldCheck size={20} />}
                 label="Help & Info"
+              />
+            <NavItem
+                active={activeTab === "directory"}
+                onClick={() => goToTab("directory")}
+                icon={<Phone size={20} />}
+                label="Directory"
               />
             )}
           </nav>
