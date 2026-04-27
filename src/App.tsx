@@ -62,6 +62,7 @@ import { AdminGuideTools } from "./components/AdminGuideTools";
 import { AuditViewerPanel } from "./components/AuditViewerPanel";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
+import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
 import {
   getConsultFormLabel,
   openConsultForm,
@@ -117,30 +118,6 @@ const TAB_META: Record<
   },
 };
 
-const MEDICAL_SPECIALTIES = [
-  "Cardiology",
-  "Dermatology",
-  "Dentistry",
-  "Endocrinology",
-  "ENT",
-  "Gastroenterology",
-  "Hematology",
-  "Infectious Disease",
-  "Nephrology",
-  "Neurology",
-  "Oncology",
-  "Ophthalmology",
-  "Optometry",
-  "Orthopedics",
-  "Physiatry (PM&R)",
-  "Podiatry",
-  "Psychiatry",
-  "Pulmonology",
-  "Rheumatology",
-  "Urology",
-  "Vascular Surgery",
-  "Wound Care",
-];
 
 const safeLower = (value: unknown) => String(value ?? "").toLocaleLowerCase();
 
