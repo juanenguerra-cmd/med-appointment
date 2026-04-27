@@ -2,6 +2,42 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Appointment, Resident, Facility } from "../types";
 
+const formatTimeAMPMForPdf = (value?: string) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "—";
+  if (/\b(AM|PM)\b/i.test(raw)) return raw;
+  const match = raw.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return raw;
+  const date = new Date(`1970-01-01T${match[1].padStart(2, "0")}:${match[2]}:00`);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+};
+
+const getTransportCompanyDisplay = (appointment: Appointment) => {
+  return appointment.transportCompanyOther || appointment.transportCompany || "";
+};
+
+const getTransportDetailsForPdf = (appointment: Appointment) => {
+  const transportType =
+    appointment.transportType === "Others" && appointment.transportTypeOther
+      ? appointment.transportTypeOther
+      : appointment.transportType || "";
+  const company = getTransportCompanyDisplay(appointment);
+  const phone = appointment.transportCompanyPhone || "";
+  return [transportType, company, phone ? `Phone: ${phone}` : ""]
+    .filter(Boolean)
+    .join("\n");
+};
+
+const getEscortDetailsForPdf = (appointment: Appointment) => {
+  const escortName =
+    appointment.escort === "Yes" && appointment.escortDetails
+      ? appointment.escortDetails
+      : appointment.escort || "";
+  const phone = appointment.escortPhone || "";
+  return [escortName, phone ? `Phone: ${phone}` : ""].filter(Boolean).join("\n") || "—";
+};
+
 export const generateAppointmentPDF = (
   appointment: Appointment,
   resident?: Resident,
@@ -71,7 +107,7 @@ export const generateAppointmentPDF = (
       ["Service Type", appointment.type],
       ["Provider/Center", appointment.providerName],
       ["Location", appointment.location],
-      ["Date & Time", `${appointment.date} at ${appointment.time}`],
+      ["Date & Time", `${appointment.date} at ${formatTimeAMPMForPdf(appointment.time)}`],
       [
         "Transport",
         `${appointment.transportType === 'Others' && appointment.transportTypeOther ? appointment.transportTypeOther : appointment.transportType} ${appointment.transportCompany ? `(${appointment.transportCompany})` : ''}`,
@@ -185,12 +221,12 @@ export const generateFullReport = (
   const columnMap: Record<string, keyof Appointment | ((apt: Appointment) => string)> = {
     "Resident Name": "residentName",
     Date: "date",
-    Time: "time",
+    Time: (apt: Appointment) => formatTimeAMPMForPdf(apt.time),
     Provider: "providerName",
     Specialty: "type",
     "Transport": (apt: Appointment) => {
       const type = apt.transportType === "Others" && apt.transportTypeOther ? apt.transportTypeOther : apt.transportType;
-      return type ? `${type} ${apt.transportCompany ? `(${apt.transportCompany})` : ''}` : "";
+      return getTransportDetailsForPdf(apt).replace(/\n/g, " ");
     },
     Status: "status",
     Origin: "origin" as any,
@@ -296,11 +332,11 @@ export const generateTransportSchedulePDF = (
       apt.date,
       `${apt.unit || ""}\n${apt.roomNumber || ""}`,
       apt.residentName,
-      apt.time,
-      apt.pickUpTime || "—",
-      `${apt.transportType === 'Others' && apt.transportTypeOther ? apt.transportTypeOther : (apt.transportType || "")}\n${apt.transportCompany || ""}`,
+      formatTimeAMPMForPdf(apt.time),
+      formatTimeAMPMForPdf(apt.pickUpTime),
+      getTransportDetailsForPdf(apt),
       details,
-      apt.escort === "Yes" && apt.escortDetails ? `Yes: ${apt.escortDetails}` : (apt.escort || "—"),
+      getEscortDetailsForPdf(apt),
       apt.notes || "",
     ];
   });
@@ -554,17 +590,17 @@ export const generateOutsideAppointmentChecklistPDF = (
           styles: { halign: "left" },
         },
         {
-          content: `APPOINTMENT TIME:  ${appointment.time}`,
+          content: `APPOINTMENT TIME:  ${formatTimeAMPMForPdf(appointment.time)}`,
           styles: { halign: "left" },
         },
         {
-          content: `PICK-UP TIME:  ${appointment.pickUpTime || ""}`,
+          content: `PICK-UP TIME:  ${formatTimeAMPMForPdf(appointment.pickUpTime)}`,
           styles: { halign: "left" },
         },
       ],
       [
         {
-          content: `To be transported by: ${appointment.transportCompany || ""}\nPhone # of Ambulette: _____________________\nInvoice number of MAS (Medical Answering Services for Medicaid resident: ____________________`,
+          content: `To be transported by: ${getTransportCompanyDisplay(appointment)}\nPhone #: ${appointment.transportCompanyPhone || "_____________________"}\nInvoice number of MAS (Medical Answering Services for Medicaid resident: ____________________`,
           colSpan: 3,
           styles: { halign: "left" },
         },

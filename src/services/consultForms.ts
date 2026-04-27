@@ -23,10 +23,10 @@ const getDateOfRequest = (apt: Appointment) => {
 
 const getReasonForConsultation = (apt: Appointment) => {
   return (
-    apt.description ||
-    apt.reasonConsultation ||
-    apt.consultReason ||
-    apt.reasonSendOut ||
+    apt.reasonConsultation?.trim() ||
+    apt.consultReason?.trim() ||
+    apt.description?.trim() ||
+    apt.reasonSendOut?.trim() ||
     ""
   );
 };
@@ -358,7 +358,7 @@ export const generateRegularConsultHTML = (
 
     <div class="form-row row-2">
       <div class="field">
-        <span class="label">Specialty:</span>
+        <span class="label">Visit Category:</span>
         <span class="value-line">${specialty}</span>
       </div>
       <div class="field">
@@ -369,7 +369,7 @@ export const generateRegularConsultHTML = (
 
     <div class="form-row row-3">
       <div class="field">
-        <span class="label">Reason for Consultation:</span>
+        <span class="label">Reason for Consultation (Notes):</span>
         <span class="value-line">${reason}</span>
       </div>
     </div>
