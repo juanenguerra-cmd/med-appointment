@@ -564,8 +564,10 @@ export function useHealthData() {
       uniqueNewResidentsMap.set(normalizeResidentKey(res), res as any);
     });
 
+    const incomingKeys = new Set(uniqueNewResidentsMap.keys());
     const censusStamp = new Date().toISOString();
-    const merged = Array.from(uniqueNewResidentsMap.values()).map(newRes => {
+
+    const activeMerged = Array.from(uniqueNewResidentsMap.values()).map(newRes => {
       const key = normalizeResidentKey(newRes);
       const existing = existingResidentsMap.get(key);
 
@@ -581,19 +583,36 @@ export function useHealthData() {
           lastSeenCensusAt: censusStamp,
         });
       }
-      return normalizeResident({ ...newRes, id: crypto.randomUUID(), facilityId: currentFacilityId, status: 'Active', lastSeenCensusAt: censusStamp });
+
+      return normalizeResident({
+        ...newRes,
+        id: crypto.randomUUID(),
+        facilityId: currentFacilityId,
+        status: 'Active',
+        dischargedAt: undefined,
+        lastSeenCensusAt: censusStamp,
+      });
     });
 
-    const dedupedMerged = dedupeResidents(merged) as Resident[];
+    const dischargedResidents = currentResidents
+      .filter(existing => !incomingKeys.has(normalizeResidentKey(existing)))
+      .map(existing => normalizeResident({
+        ...existing,
+        status: 'Discharged',
+        dischargedAt: existing.dischargedAt || censusStamp,
+      }));
+
+    const finalResidents = dedupeResidents([...activeMerged, ...dischargedResidents]) as Resident[];
     const previousResidents = residents;
-    setResidents(dedupedMerged);
+    setResidents(finalResidents);
 
     let createdCount = 0;
     let updatedCount = 0;
     let unchangedCount = 0;
+    let markedDischargedCount = 0;
 
     try {
-      for (const res of dedupedMerged) {
+      for (const res of finalResidents) {
         const key = normalizeResidentKey(res);
         const existing = existingResidentsMap.get(key);
         if (existing) {
@@ -601,6 +620,9 @@ export function useHealthData() {
           if (Object.keys(changes).length === 0) {
             unchangedCount += 1;
             continue;
+          }
+          if (changes.status === 'Discharged') {
+            markedDischargedCount += 1;
           }
           updatedCount += 1;
           await apiFetch(`/api/residents/${res.id}`, {
@@ -624,12 +646,14 @@ export function useHealthData() {
           entity: 'census',
           facilityId: currentFacilityId,
           actor: auditActor,
-          summary: 'Census replacement completed',
+          summary: 'Census replacement completed; missing residents preserved as discharged',
           counts: {
-            total: dedupedMerged.length,
+            total: finalResidents.length,
+            active: activeMerged.length,
             created: createdCount,
             updated: updatedCount,
             unchanged: unchangedCount,
+            markedDischarged: markedDischargedCount,
           },
         }),
       );
