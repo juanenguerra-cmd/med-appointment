@@ -17,6 +17,15 @@ export interface Facility {
   contactPerson?: string;
 }
 
+export interface TransportationCompany {
+  id: string;
+  name: string;
+  phone: string;
+  address?: string;
+  notes?: string;
+  active?: boolean;
+}
+
 export interface Appointment {
   id: string;
   facilityId: string;
@@ -51,11 +60,15 @@ export interface Appointment {
   transportType: string;
   transportTypeOther?: string;
   transportCompany: string;
+  transportCompanyId?: string;
+  transportCompanyPhone?: string;
+  transportCompanyOther?: string;
   payerForRide: string;
   payerForRideOther?: string;
   roundTrip: string;
   escort: string;
   escortDetails?: string;
+  escortPhone?: string;
   
   notes: string;
   weight?: string;
@@ -95,6 +108,10 @@ export interface Resident {
   allergies: string;
   doctor: string;
   diagnosis: string;
+  status?: 'Active' | 'Discharged' | string;
+  dischargedAt?: string;
+  lastSeenCensusAt?: string;
+  dischargeBatchId?: string;
   lastVisit?: string;
   notes?: string;
 }
