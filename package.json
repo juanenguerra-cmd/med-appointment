@@ -10,7 +10,10 @@
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "build:clean": "npm run clean && npm run build",
+    "build:verify": "npm run clean && npm run build",
+    "predeploy": "npm run build:verify"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
