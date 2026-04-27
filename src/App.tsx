@@ -117,11 +117,7 @@ const TAB_META: Record<
   },
 };
 
-<<<<<<< HEAD
-=======
-
 const safeLower = (value: unknown) => String(value ?? "").toLocaleLowerCase();
->>>>>>> feature/v1.1-step4c-report-ui
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
