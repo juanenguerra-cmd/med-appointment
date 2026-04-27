@@ -59,7 +59,7 @@ import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { TransportUtilizationPanel } from "./components/TransportUtilizationPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
-import { Appointment, Resident, Facility } from "./types";
+import { Appointment, Resident, Facility, TransportationCompany } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
 import { TransportationDirectory } from "./components/TransportationDirectory";
@@ -155,6 +155,7 @@ export default function App() {
     reasonSendOut: "",
     transportType: "",
     transportCompany: "",
+    transportCompanyId: "",
     transportCompanyPhone: "",
     transportCompanyOther: "",
     payerForRide: "",
@@ -203,6 +204,22 @@ export default function App() {
   const [userFacPermissions, setUserFacPermissions] = useState<string[]>([]);
 
   const currentFacility = facilities.find((f) => f.id === currentFacilityId);
+  const [transportCompanies, setTransportCompanies] = useState<TransportationCompany[]>([]);
+
+  React.useEffect(() => {
+    if (!currentFacilityId) {
+      setTransportCompanies([]);
+      return;
+    }
+
+    fetch(`/api/transportation-companies?facilityId=${encodeURIComponent(currentFacilityId)}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setTransportCompanies(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error("Failed to load transportation directory", error);
+        setTransportCompanies([]);
+      });
+  }, [currentFacilityId]);
 
   const [censusPasteText, setCensusPasteText] = useState("");
   const [parsedResidentsPreview, setParsedResidentsPreview] = useState<
@@ -618,9 +635,13 @@ if (!isLoaded) {
       reasonSendOut: "",
       transportType: "",
       transportCompany: "",
+      transportCompanyId: "",
+      transportCompanyPhone: "",
+      transportCompanyOther: "",
       payerForRide: "",
       roundTrip: "",
       escort: "",
+      escortPhone: "",
       notes: "",
       reasonConsultation: "",
       consultReason: "",
@@ -2203,17 +2224,74 @@ if (!isLoaded) {
                     </div>
                     
                     <FormField label="Transport Company">
+                      <select
+                        value={newAppt.transportCompanyId || (newAppt.transportCompany === "Others" ? "others" : "")}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "others") {
+                            setNewAppt({
+                              ...newAppt,
+                              transportCompanyId: "",
+                              transportCompany: "Others",
+                              transportCompanyOther: "",
+                              transportCompanyPhone: "",
+                            });
+                            return;
+                          }
+
+                          const selected = transportCompanies.find((company) => company.id === value);
+                          if (selected) {
+                            setNewAppt({
+                              ...newAppt,
+                              transportCompanyId: selected.id,
+                              transportCompany: selected.name,
+                              transportCompanyOther: "",
+                              transportCompanyPhone: selected.phone || "",
+                            });
+                          }
+                        }}
+                        className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                      >
+                        <option value="">Select transportation company</option>
+                        {transportCompanies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}{company.phone ? ` — ${company.phone}` : ""}
+                          </option>
+                        ))}
+                        <option value="others">Others / Not in Directory</option>
+                      </select>
+                    </FormField>
+
+                    {newAppt.transportCompany === "Others" && (
+                      <FormField label="Manual Transport Company">
+                        <input
+                          type="text"
+                          value={newAppt.transportCompanyOther || ""}
+                          onChange={(e) =>
+                            setNewAppt({
+                              ...newAppt,
+                              transportCompanyOther: e.target.value,
+                              transportCompany: e.target.value || "Others",
+                            })
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                          placeholder="Enter company name"
+                        />
+                      </FormField>
+                    )}
+
+                    <FormField label="Transport Company Contact #">
                       <input
                         type="text"
-                        value={newAppt.transportCompany}
+                        value={newAppt.transportCompanyPhone || ""}
                         onChange={(e) =>
                           setNewAppt({
                             ...newAppt,
-                            transportCompany: e.target.value,
+                            transportCompanyPhone: e.target.value,
                           })
                         }
                         className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
-                        placeholder="Vendor name"
+                        placeholder="Auto-filled from directory or enter manually"
                       />
                     </FormField>
 
@@ -2285,17 +2363,30 @@ if (!isLoaded) {
                         </select>
                       </FormField>
                       {newAppt.escort === "Yes" && (
-                        <FormField label="Escort Details">
-                          <input
-                            type="text"
-                            value={newAppt.escortDetails || ""}
-                            onChange={(e) =>
-                              setNewAppt({ ...newAppt, escortDetails: e.target.value })
-                            }
-                            className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
-                            placeholder="Enter escort info..."
-                          />
-                        </FormField>
+                        <>
+                          <FormField label="Escort Details">
+                            <input
+                              type="text"
+                              value={newAppt.escortDetails || ""}
+                              onChange={(e) =>
+                                setNewAppt({ ...newAppt, escortDetails: e.target.value })
+                              }
+                              className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                              placeholder="Enter escort name/details..."
+                            />
+                          </FormField>
+                          <FormField label="Escort Phone #">
+                            <input
+                              type="text"
+                              value={newAppt.escortPhone || ""}
+                              onChange={(e) =>
+                                setNewAppt({ ...newAppt, escortPhone: e.target.value })
+                              }
+                              className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
+                              placeholder="Escort contact number"
+                            />
+                          </FormField>
+                        </>
                       )}
                     </div>
                   </div>
