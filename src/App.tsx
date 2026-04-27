@@ -1635,7 +1635,19 @@ if (!isLoaded) {
               </div>
             </motion.section>
           )}
-          
+
+{activeTab === "directory" && (
+  <motion.section
+    key="directory"
+    initial={{ opacity: 0, y: 12 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -12 }}
+    transition={{ duration: 0.18 }}
+    className="space-y-6"
+  >
+    <TransportationDirectory />
+  </motion.section>
+)}
                     {activeTab === "help" && (
             <motion.div
               key="help"
