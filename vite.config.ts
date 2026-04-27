@@ -15,6 +15,19 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            react: ["react", "react-dom"],
+            pdf: ["jspdf", "jspdf-autotable"],
+            motion: ["motion"],
+            icons: ["lucide-react"],
+          },
+        },
+      },
+    },
     server: {
       port: 3000,
       host: '0.0.0.0',
