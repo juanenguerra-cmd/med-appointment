@@ -59,7 +59,6 @@ import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { TransportUtilizationPanel } from "./components/TransportUtilizationPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
-import { AuditViewerPanel } from "./components/AuditViewerPanel";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
@@ -118,7 +117,6 @@ const TAB_META: Record<
   },
 };
 
-const safeLower = (value: unknown) => String(value ?? "").toLocaleLowerCase();
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -264,7 +262,7 @@ export default function App() {
         currentBuffer = trimmed;
       } else {
         // Check if it's a header line to skip
-        const lower = safeLower(trimmed);
+        const lower = trimmed.toLowerCase();
         const isHeader = lower.includes("resident listing report") || 
                          lower.includes("facility #") || 
                          lower.includes("floor") || 
@@ -294,7 +292,7 @@ export default function App() {
       if (!trimmed || trimmed.length < 10) return;
 
       // Skip common header noise
-      const lower = safeLower(trimmed);
+      const lower = trimmed.toLowerCase();
       if (
         lower.includes("resident listing report") ||
         lower.includes("facility #") ||
@@ -354,7 +352,7 @@ export default function App() {
         if (fallbackMrn) mrn = fallbackMrn[1];
       }
       name = name.replace(/,/g, ", ").replace(/\s+/g, " ").trim();
-      if (safeLower(name) === "name") return;
+      if (name.toLowerCase() === "name") return;
 
       // Map columns based on anchored pattern (robust to fragmented columns)
       // Standard: [Name/MRN, Age, BirthDate, ...Location..., Sex, AdmissionDate, Allergies, Doctor, Diagnosis]
@@ -441,7 +439,7 @@ export default function App() {
       }
 
       // Final cleanup
-      if (doctor !== "—" && !safeLower(doctor).startsWith("dr.")) {
+      if (doctor !== "—" && !doctor.toLowerCase().startsWith("dr.")) {
         doctor = "Dr. " + doctor;
       }
       
@@ -481,14 +479,14 @@ export default function App() {
         notes: birthDate !== "—" ? `DOB: ${birthDate}` : "",
       };
 
-      const uniqueKey = mrn !== "—" ? mrn : safeLower(`${name}-${room}`);
+      const uniqueKey = mrn !== "—" ? mrn : `${name}-${room}`.toLowerCase();
 
       // Duplicate detection
       const alreadyInSystem = residents.some(
         (r) =>
           (resData.mrn !== "—" && r.mrn === resData.mrn) ||
-          safeLower(`${r.name ?? ""}|${r.roomNumber ?? ""}`) ===
-            safeLower(`${resData.name ?? ""}|${resData.roomNumber ?? ""}`),
+          `${r.name}|${r.roomNumber}`.toLowerCase() ===
+            `${resData.name}|${resData.roomNumber}`.toLowerCase(),
       );
 
       // If skipping duplicates, we don't even add to the map for preview
@@ -510,8 +508,8 @@ export default function App() {
             !residents.some(
               (r) =>
                 (newRes.mrn !== "—" && r.mrn === newRes.mrn) ||
-                safeLower(`${r.name ?? ""}|${r.roomNumber ?? ""}`) ===
-                  safeLower(`${newRes.name ?? ""}|${newRes.roomNumber ?? ""}`),
+                `${r.name}|${r.roomNumber}`.toLowerCase() ===
+                  `${newRes.name}|${newRes.roomNumber}`.toLowerCase(),
             ),
         );
         batchAddResidents(trulyNew);
@@ -630,7 +628,7 @@ if (!isLoaded) {
   const handleSelectResident = (resident: Resident) => {
     // Normalize unit to match dropdown values if possible
     let matchedUnit = "";
-    const unitStr = String(resident.unit ?? "").trim();
+    const unitStr = (resident.unit || "").trim();
     const units = [
       "Unit A",
       "Unit B",
@@ -643,13 +641,13 @@ if (!isLoaded) {
 
     // Try exact match first (case-insensitive)
     const exactMatch = units.find(
-      (u) => safeLower(u) === safeLower(unitStr),
+      (u) => u.toLowerCase() === unitStr.toLowerCase(),
     );
     if (exactMatch) {
       matchedUnit = exactMatch;
     } else {
       // Try partial match
-      const lower = safeLower(unitStr);
+      const lower = unitStr.toLowerCase();
       if (lower.includes("unit a")) matchedUnit = "Unit A";
       else if (lower.includes("unit b")) matchedUnit = "Unit B";
       else if (lower.includes("rehab")) matchedUnit = "Rehab";
@@ -675,15 +673,13 @@ if (!isLoaded) {
     });
   };
 
-const filteredResidents = residents
-  .filter((r) => {
-    const search = safeLower(residentSearchTerm);
-    return (
-      safeLower(r.name).includes(search) ||
-      safeLower(r.mrn).includes(search)
-    );
-  })
-  .slice(0, 5);
+  const filteredResidents = residents
+    .filter(
+      (r) =>
+        r.name.toLowerCase().includes(residentSearchTerm.toLowerCase()) ||
+        r.mrn.toLowerCase().includes(residentSearchTerm.toLowerCase()),
+    )
+    .slice(0, 5);
 
   const handleResidentInputChange = (val: string) => {
     setResidentSearchTerm(val);
@@ -765,16 +761,17 @@ const filteredResidents = residents
   };
 
   const residentAppointments = selectedResident
-  ? appointments.filter((a) => {
-      return (
-        a.residentName === selectedResident.name ||
-        (
-          safeLower(a.residentName).includes(safeLower(selectedResident.lastName)) &&
-          safeLower(a.residentName).includes(safeLower(selectedResident.firstName))
-        )
-      );
-    })
-  : [];
+    ? appointments.filter(
+        (a) =>
+          a.residentName === selectedResident.name ||
+          (a.residentName
+            .toLowerCase()
+            .includes(selectedResident.lastName.toLowerCase()) &&
+            a.residentName
+              .toLowerCase()
+              .includes(selectedResident.firstName.toLowerCase())),
+      )
+    : [];
 
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
@@ -1652,7 +1649,6 @@ const filteredResidents = residents
                 setEditingUser={setEditingUser}
                 setIsUserModalOpen={setIsUserModalOpen}
               />
-              <AuditViewerPanel />
 </motion.div>
           )}
 
@@ -1872,7 +1868,7 @@ const filteredResidents = residents
                           ...newAppt,
                           status: val as any,
                         });
-                        if (["Cancelled", "Deferred", "Discontinued"].includes(val)) {
+                        if (["Cancelled", "Rescheduled", "Deferred", "Discontinued"].includes(val)) {
                            setModalStatusPrompt({ status: val, reason: "" });
                         }
                       }}
@@ -2456,7 +2452,7 @@ const filteredResidents = residents
                         Allergies
                       </p>
                       <p
-                        className={`text-sm font-bold p-3 rounded-xl border ${safeLower(selectedResident.allergies) === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
+                        className={`text-sm font-bold p-3 rounded-xl border ${selectedResident.allergies.toLowerCase() === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
                       >
                         {selectedResident.allergies}
                       </p>
