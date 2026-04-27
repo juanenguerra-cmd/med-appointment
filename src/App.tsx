@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -3793,3 +3794,6 @@ function formatShortDate(iso: string) {
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+=======
+__CONTENT__
+>>>>>>> 15bdb945e8358b653242eb03ec3790d61078609e
