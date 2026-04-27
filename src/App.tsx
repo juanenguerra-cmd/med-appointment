@@ -111,6 +111,12 @@ const TAB_META: Record<
       "Manage resident data, unit assignments, and room allocations for auto-fill.",
     badge: "Registry",
   },
+  directory: {
+    title: "Transportation Directory",
+    subtitle:
+      "Manage transportation company names and contact details for appointment auto-fill.",
+    badge: "Directory",
+  },
   help: {
     title: "System Guide",
     subtitle:
@@ -149,9 +155,12 @@ export default function App() {
     reasonSendOut: "",
     transportType: "",
     transportCompany: "",
+    transportCompanyPhone: "",
+    transportCompanyOther: "",
     payerForRide: "",
     roundTrip: "",
     escort: "",
+    escortPhone: "",
     notes: "",
     reasonConsultation: "",
     consultReason: "",
@@ -822,7 +831,7 @@ if (!isLoaded) {
           </div>
 
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
-                        {currentUser?.role !== "admin" && (
+            {currentUser?.role !== "admin" && (
               <NavItem
                 key="nav-help-staff-0"
                 active={activeTab === "help"}
@@ -831,7 +840,8 @@ if (!isLoaded) {
                 label="Guide & Info"
               />
             )}
-<NavItem
+
+            <NavItem
               active={activeTab === "dashboard"}
               onClick={() => goToTab("dashboard")}
               icon={<Activity size={20} />}
@@ -861,18 +871,19 @@ if (!isLoaded) {
               icon={<Users size={20} />}
               label="Census"
             />
+            <NavItem
+              active={activeTab === "directory"}
+              onClick={() => goToTab("directory")}
+              icon={<Phone size={20} />}
+              label="Directory"
+            />
+
             {currentUser?.role === "admin" && (
               <NavItem
                 active={activeTab === "help"}
                 onClick={() => goToTab("help")}
                 icon={<ShieldCheck size={20} />}
                 label="Help & Info"
-              />
-            <NavItem
-                active={activeTab === "directory"}
-                onClick={() => goToTab("directory")}
-                icon={<Phone size={20} />}
-                label="Directory"
               />
             )}
           </nav>
@@ -981,6 +992,11 @@ if (!isLoaded) {
               active={activeTab === "census"}
               onClick={() => goToTab("census")}
               label="Patient Census"
+            />
+            <TopTab
+              active={activeTab === "directory"}
+              onClick={() => goToTab("directory")}
+              label="Directory"
             />
             {currentUser?.role === "admin" && (
               <TopTab
