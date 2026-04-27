@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local accidental command-output files
+/git
+/main
+/npm
+/vite
+/react-example@*
+patch_*.cjs
