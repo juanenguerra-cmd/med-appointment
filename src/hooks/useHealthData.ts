@@ -528,101 +528,6 @@ export function useHealthData() {
       facilityId: currentFacilityId,
     });
 
-<<<<<<< HEAD
-    const incomingKeys = new Set(uniqueNewResidentsMap.keys());
-    const censusStamp = new Date().toISOString();
-
-    const activeMerged = Array.from(uniqueNewResidentsMap.values()).map(newRes => {
-      const key = normalizeResidentKey(newRes);
-      const existing = existingResidentsMap.get(key);
-
-      if (existing) {
-        return normalizeResident({
-          ...newRes,
-          id: existing.id,
-          facilityId: currentFacilityId,
-          notes: existing.notes || newRes.notes,
-          lastVisit: existing.lastVisit || newRes.lastVisit,
-          status: 'Active',
-          dischargedAt: undefined,
-          lastSeenCensusAt: censusStamp,
-        });
-      }
-
-      return normalizeResident({
-        ...newRes,
-        id: crypto.randomUUID(),
-        facilityId: currentFacilityId,
-        status: 'Active',
-        dischargedAt: undefined,
-        lastSeenCensusAt: censusStamp,
-      });
-    });
-
-    const dischargedResidents = currentResidents
-      .filter(existing => !incomingKeys.has(normalizeResidentKey(existing)))
-      .map(existing => normalizeResident({
-        ...existing,
-        status: 'Discharged',
-        dischargedAt: existing.dischargedAt || censusStamp,
-      }));
-
-    const finalResidents = dedupeResidents([...activeMerged, ...dischargedResidents]) as Resident[];
-    const previousResidents = residents;
-    setResidents(finalResidents);
-
-    let createdCount = 0;
-    let updatedCount = 0;
-    let unchangedCount = 0;
-    let markedDischargedCount = 0;
-
-    try {
-      for (const res of finalResidents) {
-        const key = normalizeResidentKey(res);
-        const existing = existingResidentsMap.get(key);
-        if (existing) {
-          const changes = pickChangedFields(existing, res);
-          if (Object.keys(changes).length === 0) {
-            unchangedCount += 1;
-            continue;
-          }
-          if (changes.status === 'Discharged') {
-            markedDischargedCount += 1;
-          }
-          updatedCount += 1;
-          await apiFetch(`/api/residents/${res.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(changes),
-          });
-        } else {
-          createdCount += 1;
-          await apiFetch('/api/residents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(res),
-          });
-        }
-      }
-
-      appendLocalAuditEvent(
-        createAuditEvent({
-          action: 'replace',
-          entity: 'census',
-          facilityId: currentFacilityId,
-          actor: auditActor,
-          summary: 'Census replacement completed; missing residents preserved as discharged',
-          counts: {
-            total: finalResidents.length,
-            active: activeMerged.length,
-            created: createdCount,
-            updated: updatedCount,
-            unchanged: unchangedCount,
-            markedDischarged: markedDischargedCount,
-          },
-        }),
-      );
-=======
     const previousResidents = residents;
     setResidents(dedupeResidents(reconciliation.residents) as Resident[]);
 
@@ -676,7 +581,6 @@ export function useHealthData() {
       if (reconciliation.summary.discharged > 0) {
         console.info('Smart census discharge summary', reconciliation.summary);
       }
->>>>>>> feature/v1.1-step4c-report-ui
     } catch (error) {
       setResidents(previousResidents);
       reportSaveError('Smart census reconciliation was not fully saved. Previous resident list was restored.', error);
