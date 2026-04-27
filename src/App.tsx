@@ -62,6 +62,7 @@ import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
+import { TransportationDirectory } from "./components/TransportationDirectory";
 import {
   getConsultFormLabel,
   openConsultForm,
