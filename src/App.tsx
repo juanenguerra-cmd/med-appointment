@@ -53,15 +53,14 @@ import { Card } from "./components/Card";
 import { Button } from "./components/Button";
 import { LockScreen } from "./components/LockScreen";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
-import { TrendsTabContent } from "./components/TrendsTabContent";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
-import { TransportUtilizationPanel } from "./components/TransportUtilizationPanel";
 import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility, TransportationCompany } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
 import { DirectoryPage } from "./pages/DirectoryPage";
+import { TrendsPage } from "./pages/TrendsPage";
 import {
   getConsultFormLabel,
   openConsultForm,
@@ -1577,20 +1576,7 @@ if (!isLoaded) {
             </motion.section>
           )}
 
-          {activeTab === "trends" && (
-  <motion.section
-    key="trends"
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -12 }}
-    transition={{ duration: 0.18 }}
-    className="space-y-6"
-  >
-    <TrendsTabContent appointments={appointments} />
-
-    <TransportUtilizationPanel appointments={appointments} />
-  </motion.section>
-)}
+          {activeTab === "trends" && <TrendsPage appointments={appointments} />}
 
           {activeTab === "census" && (
             <motion.section
