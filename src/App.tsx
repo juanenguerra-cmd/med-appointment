@@ -61,7 +61,7 @@ import { AdminGuideTools } from "./components/AdminGuideTools";
 import { Appointment, Resident, Facility, TransportationCompany } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
-import { TransportationDirectory } from "./components/TransportationDirectory";
+import { DirectoryPage } from "./pages/DirectoryPage";
 import {
   getConsultFormLabel,
   openConsultForm,
@@ -1774,18 +1774,7 @@ if (!isLoaded) {
             </motion.section>
           )}
 
-{activeTab === "directory" && (
-  <motion.section
-    key="directory"
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -12 }}
-    transition={{ duration: 0.18 }}
-    className="space-y-6"
-  >
-    <TransportationDirectory />
-  </motion.section>
-)}
+{activeTab === "directory" && <DirectoryPage />}
                     {activeTab === "help" && (
             <motion.div
               key="help"
