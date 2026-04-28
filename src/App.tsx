@@ -56,6 +56,7 @@ import { HelpPage } from "./pages/HelpPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { CensusPage } from "./pages/CensusPage";
+import { AppointmentsPage } from "./pages/AppointmentsPage";
 import {
   getConsultFormLabel,
   openConsultForm,
@@ -1200,87 +1201,21 @@ if (!isLoaded) {
           )}
 
           {activeTab === "appointments" && (
-            <motion.section
-              key="appointments"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-5"
-            >
-              <Card
-                title="Consolidated Appointment Log"
-                subtitle="High-definition tabular view of all medical visits and logistics."
-                actions={
-                  <Button size="sm" onClick={handleOpenAdd}>
-                    <Plus size={15} /> Add Record
-                  </Button>
-                }
-                className="overflow-hidden"
-              >
-                <div className="flex flex-wrap items-center gap-4 px-4 py-3 bg-slate-50 border-y border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase">Date Range</span>
-                    <select 
-                      className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer shadow-sm text-slate-700"
-                      value={appointmentsFilter.dateRange}
-                      onChange={e => setAppointmentsFilter({...appointmentsFilter, dateRange: e.target.value})}
-                    >
-                      <option value="next7days">Today + Next 7 Days</option>
-                      <option value="month">Specific Month</option>
-                      <option value="all">All Dates</option>
-                    </select>
-                    
-                    {appointmentsFilter.dateRange === "month" && (
-                      <input 
-                        type="month"
-                        className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-brand/20 transition-all shadow-sm text-slate-700 h-[34px]"
-                        value={appointmentsFilter.month}
-                        onChange={e => setAppointmentsFilter({...appointmentsFilter, month: e.target.value})}
-                      />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase ml-2">Status</span>
-                    <select 
-                      className="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand/20 transition-all cursor-pointer shadow-sm text-slate-700"
-                      value={appointmentsFilter.status}
-                      onChange={e => setAppointmentsFilter({...appointmentsFilter, status: e.target.value})}
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Scheduled">Scheduled</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                      <option value="Discontinued">Discontinued</option>
-                      <option value="Deferred">Deferred</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  {filteredTabAppointments.length > 0 ? (
-                    <WideAppointmentTable
-                      appointments={filteredTabAppointments.sort(
-                        (a, b) =>
-                          getAppointmentSortTime(a) -
-                          getAppointmentSortTime(b),
-                      )}
-                      residents={residents}
-                      currentFacility={currentFacility}
-                      onEdit={handleOpenEdit}
-                      onSaveAll={handleSaveAllAppointments}
-                      onDuplicate={handleDuplicateAppt}
-                      onGenerateForm={handleGenerateForm}
-                    />
-                  ) : (
-                    <EmptyState
-                      icon={<Database size={44} />}
-                      title="No entries found"
-                      text="No appointments match the current filters."
-                    />
-                  )}
-                </div>
-              </Card>
-            </motion.section>
+            <AppointmentsPage
+              appointmentsFilter={appointmentsFilter}
+              setAppointmentsFilter={setAppointmentsFilter}
+              filteredTabAppointments={filteredTabAppointments}
+              residents={residents}
+              currentFacility={currentFacility}
+              handleOpenAdd={handleOpenAdd}
+              handleOpenEdit={handleOpenEdit}
+              handleSaveAllAppointments={handleSaveAllAppointments}
+              handleDuplicateAppt={handleDuplicateAppt}
+              handleGenerateForm={handleGenerateForm}
+              getAppointmentSortTime={getAppointmentSortTime}
+              EmptyState={EmptyState}
+              WideAppointmentTable={WideAppointmentTable}
+            />
           )}
 
           {activeTab === "reports" && (
