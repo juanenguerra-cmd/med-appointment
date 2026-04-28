@@ -52,7 +52,6 @@ import { useHealthData } from "./hooks/useHealthData";
 import { Card } from "./components/Card";
 import { Button } from "./components/Button";
 import { LockScreen } from "./components/LockScreen";
-import { AppointmentCalendar } from "./components/AppointmentCalendar";
 import { PatientCensusUnitList } from "./components/PatientCensusUnitList";
 import { Appointment, Resident, Facility, TransportationCompany } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
@@ -60,6 +59,7 @@ import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
 import { DirectoryPage } from "./pages/DirectoryPage";
 import { TrendsPage } from "./pages/TrendsPage";
 import { HelpPage } from "./pages/HelpPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import {
   getConsultFormLabel,
   openConsultForm,
@@ -1183,62 +1183,24 @@ if (!isLoaded) {
 
         <AnimatePresence mode="wait">
           {activeTab === "dashboard" && (
-            <motion.section
-              key="dashboard"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <StatCard
-                  label="Appointments"
-                  value={appointments.length.toString()}
-                  hint="Total saved visits"
-                  icon={<Calendar />}
-                  onClick={() => goToTab("appointments")}
-                />
-                <StatCard
-                  label="Patient Census"
-                  value={residents.length.toString()}
-                  hint="Active Registry"
-                  icon={<Users />}
-                  onClick={() => goToTab("census")}
-                />
-                <StatCard
-                  label="Completed"
-                  value={completedAppointments.length.toString()}
-                  hint="Closed visit records"
-                  icon={<ShieldCheck />}
-                  onClick={() => goToTab("appointments")}
-                />
-                <StatCard
-                  label="Next Visit"
-                  value={
-                    nextAppointment
-                      ? formatShortDate(nextAppointment.date)
-                      : "—"
-                  }
-                  hint={
-                    nextAppointment ? formatTimeAMPM(nextAppointment.time) : "No upcoming visit"
-                  }
-                  icon={<Activity />}
-                  onClick={() => goToTab("appointments")}
-                />
-              </div>
-
-              <div className="w-full">
-                <div className="min-h-[620px]">
-                  <AppointmentCalendar 
-                    appointments={appointments}
-                    residents={residents}
-                    getDoctorNameDisplay={getDoctorNameDisplay}
-                    onAppointmentClick={handleOpenEdit}
-                  />
-                </div>
-              </div>
-            </motion.section>
+            <DashboardPage
+              appointments={appointments}
+              residents={residents}
+              completedAppointmentsCount={completedAppointments.length}
+              nextAppointmentDateLabel={
+                nextAppointment ? formatShortDate(nextAppointment.date) : "—"
+              }
+              nextAppointmentTimeLabel={
+                nextAppointment
+                  ? formatTimeAMPM(nextAppointment.time)
+                  : "No upcoming visit"
+              }
+              getDoctorNameDisplay={getDoctorNameDisplay}
+              onNavigateAppointments={() => goToTab("appointments")}
+              onNavigateCensus={() => goToTab("census")}
+              onAppointmentClick={handleOpenEdit}
+              StatCard={StatCard}
+            />
           )}
 
           {activeTab === "appointments" && (
