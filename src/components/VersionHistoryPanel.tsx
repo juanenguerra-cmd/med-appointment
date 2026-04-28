@@ -20,6 +20,69 @@ interface VersionHistoryPanelProps {
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: "2.0.0",
+    releaseDate: "2026-04-27",
+    title: "V2 Reporting, Calendar Print, and Resident Summary Release",
+    summary:
+      "This version completes the V2 operational reporting layer with filtered reports, survey-ready PDF and CSV export, printable week/month calendar views, full-width dashboard calendar, and resident-level appointment summary printing.",
+    capabilities: [
+      "V2 Reporting Engine with filters for date range, unit, resident status, specialty, and transportation company.",
+      "Role-aware reporting dashboard with additional administrative metrics for missing transport phone, escort required, and cancelled/deferred visits.",
+      "Filtered CSV export for appointment data review and QAPI analysis.",
+      "Survey-ready PDF export with summary metrics, specialty utilization, transportation utilization, appointment line listing, and resident appointment history.",
+      "Calendar print tools for Week and Month views using a structured print layout instead of a screen capture.",
+      "Dashboard calendar expanded to full-width display with Quick Actions and Daily Health Tips removed for a cleaner operational view.",
+      "Resident Detail appointment history converted to a table format for easier review.",
+      "Resident Appointment Summary print options added for All, Historical, and Future appointments.",
+      "Resident summary print excludes transport and escort information by design to keep the report clinically focused.",
+    ],
+    processFlow: [
+      "Open Dashboard to review the larger full-width calendar and print Week or Month calendar views when needed.",
+      "Open Reports to apply date, unit, resident status, specialty, or transportation filters.",
+      "Export filtered appointment results to CSV for spreadsheet/QAPI review.",
+      "Export filtered appointment results to survey-ready PDF for leadership, compliance, and operational review.",
+      "Open Patient Census, select a resident, and review the appointment history table.",
+      "Use Print All, Print History, or Print Future to generate a resident-specific appointment summary.",
+    ],
+    userImpact: [
+      "Improves daily appointment visibility by giving the calendar more space and removing nonessential dashboard panels.",
+      "Makes reports more useful for DON/ADON review, QAPI discussion, and survey preparation.",
+      "Allows resident-specific appointment history to be printed quickly without unrelated transport or escort details.",
+      "Improves readability of appointment history by replacing card-style history with a table format.",
+      "Provides a clean Version 2 baseline for future audit log and activity tracking enhancements.",
+    ],
+  },
+  {
+    version: "1.1.1",
+    releaseDate: "2026-04-27",
+    title: "Shared Transportation Directory and Appointment Output Update",
+    summary:
+      "This version completes the shared transportation directory workflow, connects transport auto-fill to the New Appointment Request modal, updates consult form wording, improves PDF time/contact output, and documents the user workflow before Version 2 work begins.",
+    capabilities: [
+      "Shared Transportation Directory stored in D1 so transport records are available to all authorized users.",
+      "New Appointment Request loads transportation companies from the shared directory.",
+      "Selecting a transportation company auto-populates company name and contact phone number.",
+      "Others option supports manual transportation company entry when the company is not yet in the directory.",
+      "Escort phone number and transportation phone number are saved with the appointment record.",
+      "Checklist PDF and Transport Calendar PDF display AM/PM time formatting and transportation contact details.",
+      "Regular Consult form now uses Visit Category and Reason for Consultation (Notes), with fallback to Consult Reason (Admin).",
+    ],
+    processFlow: [
+      "Staff or admin opens Directory and adds or updates transportation company contact details.",
+      "Staff creates a New Appointment Request and selects a transportation company from the directory.",
+      "The appointment form auto-populates transportation phone details from the shared database.",
+      "Staff enters escort name/phone when available and saves the appointment.",
+      "Generated Checklist and Transport Calendar PDFs pull the saved transport and escort details into the output.",
+      "Consult forms prioritize the entered consultation note and use admin consult reason only as fallback.",
+    ],
+    userImpact: [
+      "Reduces repeated typing and inconsistent transportation contact information.",
+      "Makes transportation records shared across users instead of browser-only.",
+      "Improves appointment packet clarity for nursing staff, transport coordination, and survey-ready review.",
+      "Creates a stable baseline before starting Version 2 reporting and workflow upgrades.",
+    ],
+  },
+  {
     version: "1.0.0",
     releaseDate: "2026-04-26",
     title: "Production Baseline (LOCKED)",
@@ -81,8 +144,6 @@ const VERSION_HISTORY: VersionEntry[] = [
 ];
 
 export function VersionHistoryPanel({ currentUserRole }: VersionHistoryPanelProps) {
-  const normalizedRole = String(currentUserRole || "").trim().toLowerCase();
-  const isAdmin = normalizedRole === "admin";
   const visibleVersionHistory = VERSION_HISTORY;
 
   return (
@@ -93,14 +154,33 @@ export function VersionHistoryPanel({ currentUserRole }: VersionHistoryPanelProp
 
       <div className="mt-4 space-y-3">
         {visibleVersionHistory.map((entry) => (
-          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "1.0.0"}>
+          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.0.0"}>
             <summary className="cursor-pointer text-sm font-black text-slate-800">
               v{entry.version} — {entry.title}
             </summary>
             <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-600">{entry.summary}</p>
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              <VersionSection title="Capabilities" items={entry.capabilities} />
+              <VersionSection title="Workflow" items={entry.processFlow} />
+              <VersionSection title="User Impact" items={entry.userImpact} />
+            </div>
           </details>
         ))}
       </div>
     </div>
   );
 }
+
+const VersionSection = ({ title, items }: { title: string; items: string[] }) => (
+  <div className="rounded-2xl border border-slate-100 bg-white p-3">
+    <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">{title}</p>
+    <ul className="space-y-2 text-xs font-semibold leading-relaxed text-slate-600">
+      {items.map((item, index) => (
+        <li key={`${title}-${index}`} className="flex gap-2">
+          <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-600" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
