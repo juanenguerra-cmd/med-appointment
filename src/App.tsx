@@ -22,7 +22,6 @@ import {
   Clock,
   MapPin,
   ChevronRight,
-  Bell,
   Search,
   Menu,
   X,
@@ -806,6 +805,142 @@ if (!isLoaded) {
       )
     : [];
 
+  const printResidentAppointmentSummary = (
+    type: "all" | "history" | "future",
+  ) => {
+    if (!selectedResident) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const escapePrintHtml = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const source = residentAppointments
+      .filter((apt) => {
+        if (type === "history") return String(apt.date || "") < today;
+        if (type === "future") return String(apt.date || "") >= today;
+        return true;
+      })
+      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+
+    const title =
+      type === "history"
+        ? "Historical Appointment Summary"
+        : type === "future"
+          ? "Future Appointment Summary"
+          : "All Appointment Summary";
+
+    const scheduled = source.filter((a) => a.status === "Scheduled").length;
+    const completed = source.filter((a) => a.status === "Completed").length;
+    const cancelled = source.filter((a) =>
+      ["Cancelled", "Deferred", "Discontinued"].includes(String(a.status)),
+    ).length;
+    const historical = source.filter((a) => String(a.date || "") < today).length;
+    const future = source.filter((a) => String(a.date || "") >= today).length;
+
+    const rows = source
+      .map(
+        (apt) => `
+          <tr>
+            <td>${escapePrintHtml(formatFullDate(apt.date))}</td>
+            <td>${escapePrintHtml(formatTimeAMPM(apt.time))}</td>
+            <td>${escapePrintHtml(apt.type || "—")}</td>
+            <td>${escapePrintHtml(apt.providerName || "—")}</td>
+            <td>${escapePrintHtml(apt.location || "—")}</td>
+            <td>${escapePrintHtml(apt.status || "Scheduled")}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escapePrintHtml(title)}</title>
+  <style>
+    @page { size: letter landscape; margin: 0.35in; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; background: #ffffff; }
+    .header { border-bottom: 3px solid #0b2a6f; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; gap: 24px; }
+    h1 { color: #0b2a6f; font-size: 19px; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .02em; }
+    .subtitle { color: #475569; font-size: 11px; font-weight: 800; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; font-size: 11px; line-height: 1.35; margin: 12px 0; padding: 10px; background: #f8fbff; border: 1px solid #d6deeb; border-radius: 10px; }
+    .meta strong { color: #0b2a6f; }
+    h2 { color: #0b2a6f; font-size: 13px; margin: 14px 0 8px; text-transform: uppercase; letter-spacing: .08em; }
+    table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 7px; text-align: left; vertical-align: top; }
+    th { background: #0b2a6f; color: #ffffff; font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .summary { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+    .summary-card { border: 1px solid #d6deeb; background: #f8fbff; border-radius: 10px; padding: 8px; }
+    .summary-card span { display: block; color: #64748b; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .summary-card strong { color: #0b2a6f; font-size: 18px; }
+    .footer { margin-top: 16px; border-top: 1px solid #cbd5e1; padding-top: 6px; text-align: center; font-size: 8px; color: #64748b; font-weight: 800; }
+    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Resident Appointment Summary Report</h1>
+      <div class="subtitle">${escapePrintHtml(title)}</div>
+    </div>
+    <div class="subtitle">Generated: ${escapePrintHtml(new Date().toLocaleString())}</div>
+  </div>
+
+  <div class="meta">
+    <div><strong>Resident:</strong> ${escapePrintHtml(selectedResident.name)}</div>
+    <div><strong>MRN:</strong> ${escapePrintHtml(selectedResident.mrn || "—")}</div>
+    <div><strong>Room:</strong> ${escapePrintHtml(selectedResident.roomNumber || "—")}</div>
+    <div><strong>Unit:</strong> ${escapePrintHtml(selectedResident.unit || selectedResident.floor || "—")}</div>
+    <div><strong>Primary Doctor:</strong> ${escapePrintHtml(selectedResident.doctor || "—")}</div>
+    <div><strong>Report Type:</strong> ${escapePrintHtml(title)}</div>
+  </div>
+
+  <h2>Appointment & Visit History</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Visit Category</th>
+        <th>Provider / Clinic</th>
+        <th>Location</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || `<tr><td colspan="6" style="text-align:center; color:#64748b; font-weight:700;">No appointments found.</td></tr>`}
+    </tbody>
+  </table>
+
+  <h2>Summary</h2>
+  <div class="summary">
+    <div class="summary-card"><span>Total</span><strong>${source.length}</strong></div>
+    <div class="summary-card"><span>Historical</span><strong>${historical}</strong></div>
+    <div class="summary-card"><span>Future</span><strong>${future}</strong></div>
+    <div class="summary-card"><span>Scheduled</span><strong>${scheduled}</strong></div>
+    <div class="summary-card"><span>Completed</span><strong>${completed}</strong></div>
+    <div class="summary-card"><span>Cancelled / Deferred</span><strong>${cancelled}</strong></div>
+  </div>
+
+  <div class="footer">CONFIDENTIAL MEDICAL RECORD / APPOINTMENT SUMMARY</div>
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
       <iframe ref={printIframeRef} style={{ display: "none" }} title="Print iframe" />
@@ -1039,7 +1174,7 @@ if (!isLoaded) {
               transition={{ duration: 0.18 }}
               className="space-y-6"
             >
-              <div className="w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
                   label="Appointments"
                   value={appointments.length.toString()}
@@ -1076,55 +1211,14 @@ if (!isLoaded) {
                 />
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="xl:col-span-2 min-h-[500px]">
+              <div className="w-full">
+                <div className="min-h-[620px]">
                   <AppointmentCalendar 
                     appointments={appointments}
                     residents={residents}
                     getDoctorNameDisplay={getDoctorNameDisplay}
                     onAppointmentClick={handleOpenEdit}
                   />
-                </div>
-
-                <div className="space-y-6">
-                  <Card title="Quick Actions" subtitle="Common tracker tasks">
-                    <div className="grid gap-3">
-                      <Button
-                        className="w-full justify-start gap-3"
-                        onClick={handleOpenAdd}
-                      >
-                        <Plus size={18} /> Add Appointment
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => goToTab("census")}
-                      >
-                        <Users size={18} /> Manage Census
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => goToTab("reports")}
-                      >
-                        <FileText size={18} /> Build Reports
-                      </Button>
-                    </div>
-                  </Card>
-
-                  <div className="transport-gradient rounded-2xl p-6 text-white shadow-[0_10px_30px_rgba(11,42,111,.12)]">
-                    <h4 className="font-black text-lg mb-2 flex items-center gap-2">
-                      <Bell size={20} /> Daily Health Tip
-                    </h4>
-                    <p className="text-sm opacity-90 leading-relaxed">
-                      Keep appointment details updated with provider, date,
-                      time, location, and follow-up notes so records stay
-                      survey-ready and easy to review.
-                    </p>
-                    <button className="mt-4 text-xs font-black bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors">
-                      View All Tips
-                    </button>
-                  </div>
                 </div>
               </div>
             </motion.section>
@@ -2600,113 +2694,85 @@ if (!isLoaded) {
 
                 {/* Appointment History */}
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                    <Calendar size={16} /> Appointment & Visit History
+                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-2 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
+                      <Calendar size={16} /> Appointment & Visit History
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("all")}>Print All</Button>
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("history")}>Print History</Button>
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("future")}>Print Future</Button>
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {residentAppointments.length > 0 ? (
-                      residentAppointments
-                        .sort(
-                          (a, b) =>
-                            new Date(b.date).getTime() -
-                            new Date(a.date).getTime(),
-                        )
-                        .map((apt) => (
-                          <div
-                            key={apt.id}
-                            className="bg-white border border-[#d6deeb] rounded-2xl p-4 flex items-center justify-between hover:border-brand/30 transition-all group"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={`p-3 rounded-xl ${apt.status === "Completed" ? "bg-green-100 text-green-600" : "bg-brand-light text-brand"}`}
-                              >
-                                <Clock size={18} />
-                              </div>
-                              <div>
-                                <p className="font-black text-slate-800">
-                                  {apt.type}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                  {formatFullDate(apt.date)} at {formatTimeAMPM(apt.time)}
-                                </p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                                  {apt.providerName} • {apt.location}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                           <div className="flex items-center gap-2 justify-end">
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Visit Form");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Visit Form"
->
-  <FileText size={10} /> Visit Form
-</button>
 
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Checklist");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Checklist"
->
-  <ClipboardCheck size={10} /> Checklist
-</button>
-
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Medical Clearance");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Medical Clearance"
->
-  <ShieldCheck size={10} /> Medical Clearance
-</button>
-
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Consult");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title={getConsultFormLabel(apt)}
->
-  <FileText size={10} /> {getConsultFormLabel(apt)}
-</button>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                                    apt.status === "Completed"
-                                      ? "bg-green-100 text-green-600"
-                                      : apt.status === "Cancelled"
-                                        ? "bg-red-100 text-red-600"
-                                        : "bg-brand-light text-brand"
-                                  }`}
-                                >
-                                  {apt.status}
-                                </span>
-                              </div>
-                              {apt.notes && (
-                                <p className="text-[10px] text-slate-400 mt-1 italic truncate max-w-[150px]">
-                                  "{apt.notes}"
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                    ) : (
-                      <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                        <p className="text-slate-400 font-bold text-sm">
-                          No appointment records found for this resident.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  {residentAppointments.length > 0 ? (
+                    <div className="overflow-x-auto rounded-2xl border border-[#d6deeb] bg-white shadow-sm">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-[#f8fbff] text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <tr>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Date / Time</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Visit Category</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Provider / Clinic</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Location</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Status</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#eef2f7]">
+                          {residentAppointments
+                            .sort(
+                              (a, b) =>
+                                new Date(b.date).getTime() -
+                                new Date(a.date).getTime(),
+                            )
+                            .map((apt) => (
+                              <tr key={apt.id} className="hover:bg-brand-light/20 transition-colors">
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-black text-slate-800">{formatFullDate(apt.date)}</p>
+                                  <p className="text-xs font-bold text-brand">{formatTimeAMPM(apt.time)}</p>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-black text-slate-800">{apt.type || "—"}</p>
+                                  {(apt.reasonConsultation || apt.consultReason || apt.description) && (
+                                    <p className="mt-1 text-xs font-semibold text-slate-500 line-clamp-2">
+                                      {apt.reasonConsultation || apt.consultReason || apt.description}
+                                    </p>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-bold text-slate-700">{apt.providerName || "—"}</p>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="text-xs font-semibold text-slate-500 line-clamp-2">{apt.location || "—"}</p>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <span
+                                    className={`inline-flex rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wider ${
+                                      apt.status === "Completed"
+                                        ? "bg-green-100 text-green-700"
+                                        : apt.status === "Cancelled" || apt.status === "Discontinued" || apt.status === "Deferred"
+                                          ? "bg-red-100 text-red-700"
+                                          : "bg-brand-light text-brand"
+                                    }`}
+                                  >
+                                    {apt.status || "Scheduled"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 align-top text-xs font-semibold text-slate-500 max-w-[260px]">
+                                  <p className="line-clamp-3">{apt.notes || "—"}</p>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold text-sm">
+                        No appointment records found for this resident.
+                      </p>
+                    </div>
+                  )}
                 </section>
               </div>
 
