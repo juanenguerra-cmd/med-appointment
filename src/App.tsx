@@ -1039,7 +1039,7 @@ if (!isLoaded) {
               transition={{ duration: 0.18 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="w-full">
                 <StatCard
                   label="Appointments"
                   value={appointments.length.toString()}
