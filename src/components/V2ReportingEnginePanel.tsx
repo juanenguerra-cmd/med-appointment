@@ -11,6 +11,11 @@ import {
 
 const formatDateTime = () => new Date().toLocaleString();
 
+const getTodayKey = () => {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+};
+
 const formatTime = (value?: string) => {
   const raw = String(value || "").trim();
   if (!raw) return "—";
@@ -22,8 +27,46 @@ const formatTime = (value?: string) => {
   return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
 };
 
+const getResidentStatus = (resident?: Resident) => {
+  const status = String(resident?.status || "Active").trim();
+  if (/discharged|inactive/i.test(status)) return "Discharged";
+  return "Active";
+};
+
+const filterAppointments = (
+  appointments: Appointment[],
+  residents: Resident[],
+  filters: {
+    startDate: string;
+    endDate: string;
+    unit: string;
+    residentStatus: string;
+    specialty: string;
+    transport: string;
+  },
+) => {
+  const residentMap = new Map(residents.map((r) => [String(r.name || "").toLowerCase(), r]));
+
+  return appointments.filter((appointment) => {
+    const date = String(appointment.date || "");
+    const resident = residentMap.get(String(appointment.residentName || "").toLowerCase());
+    const residentStatus = getResidentStatus(resident);
+    const unit = appointment.unit || resident?.unit || "";
+    const transport = appointment.transportCompanyOther || appointment.transportCompany || "Unassigned";
+
+    if (filters.startDate && date < filters.startDate) return false;
+    if (filters.endDate && date > filters.endDate) return false;
+    if (filters.unit !== "All" && unit !== filters.unit) return false;
+    if (filters.residentStatus !== "All" && residentStatus !== filters.residentStatus) return false;
+    if (filters.specialty !== "All" && appointment.type !== filters.specialty) return false;
+    if (filters.transport !== "All" && transport !== filters.transport) return false;
+
+    return true;
+  });
+};
+
 // NOTE: uses dynamic imports to keep the main app bundle lighter.
-const exportPDF = async (appointments: Appointment[], residents: Resident[]) => {
+const exportPDF = async (appointments: Appointment[], residents: Resident[], filterLabel: string) => {
   const [{ jsPDF }, autoTableModule] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -68,6 +111,16 @@ const exportPDF = async (appointments: Appointment[], residents: Resident[]) => 
 
   autoTable(doc, {
     startY: 30,
+    head: [["Applied Filters", filterLabel]],
+    body: [],
+    theme: "grid",
+    headStyles: { fillColor: [245, 248, 255], textColor: [11, 42, 111], fontStyle: "bold" },
+    styles: { fontSize: 8, cellPadding: 2 },
+    margin: { left: 10, right: 10 },
+  });
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 5,
     head: [["Metric", "Count", "Metric", "Count", "Metric", "Count"]],
     body: [
       ["Total", summary.total, "Past", summary.past, "Future", summary.future],
@@ -154,52 +207,131 @@ const exportPDF = async (appointments: Appointment[], residents: Resident[]) => 
 type Props = {
   appointments: Appointment[];
   residents: Resident[];
+  currentUserRole?: string | null;
 };
 
-export const V2ReportingEnginePanel = ({ appointments, residents }: Props) => {
-  const summary = buildSummary(appointments);
-  const specialty = buildSpecialtyReport(appointments);
-  const transport = buildTransportReport(appointments);
-  const history = buildResidentHistory(appointments, residents);
+export const V2ReportingEnginePanel = ({ appointments, residents, currentUserRole }: Props) => {
+  const isAdmin = String(currentUserRole || "").toLowerCase() === "admin";
+  const uniqueUnits = React.useMemo(() => Array.from(new Set(appointments.map((a) => a.unit).filter(Boolean))).sort(), [appointments]);
+  const uniqueSpecialties = React.useMemo(() => Array.from(new Set(appointments.map((a) => a.type).filter(Boolean))).sort(), [appointments]);
+  const uniqueTransports = React.useMemo(() => Array.from(new Set(appointments.map((a) => a.transportCompanyOther || a.transportCompany || "Unassigned"))).sort(), [appointments]);
+
+  const [filters, setFilters] = React.useState({
+    startDate: "",
+    endDate: "",
+    unit: "All",
+    residentStatus: "All",
+    specialty: "All",
+    transport: "All",
+  });
+
+  const filteredAppointments = React.useMemo(() => filterAppointments(appointments, residents, filters), [appointments, residents, filters]);
+  const summary = buildSummary(filteredAppointments);
+  const specialty = buildSpecialtyReport(filteredAppointments);
+  const transport = buildTransportReport(filteredAppointments);
+  const history = buildResidentHistory(filteredAppointments, residents);
+  const filterLabel = `Date: ${filters.startDate || "All"} to ${filters.endDate || "All"} | Unit: ${filters.unit} | Resident Status: ${filters.residentStatus} | Specialty: ${filters.specialty} | Transport: ${filters.transport}`;
+
+  const resetFilters = () => setFilters({ startDate: "", endDate: "", unit: "All", residentStatus: "All", specialty: "All", transport: "All" });
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <button
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-blue-700"
-          onClick={() => downloadCsv("appointments.csv", buildAppointmentDetailRows(appointments))}
-        >
-          Export CSV
-        </button>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h3 className="text-lg font-black text-slate-900">V2 Reporting Engine</h3>
+            <p className="text-xs font-semibold text-slate-500">
+              {isAdmin ? "Admin view: all report slices and exported audit summaries." : "Staff view: operational report tools for appointment coordination."}
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+            {isAdmin ? "Admin Dashboard" : "Staff Dashboard"}
+          </span>
+        </div>
 
-        <button
-          className="rounded-xl bg-green-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-green-700"
-          onClick={() => exportPDF(appointments, residents)}
-        >
-          Export Survey-Ready PDF
-        </button>
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <FormControl label="From">
+            <input type="date" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} className="report-input" />
+          </FormControl>
+          <FormControl label="To">
+            <input type="date" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} className="report-input" />
+          </FormControl>
+          <FormControl label="Unit">
+            <select value={filters.unit} onChange={(e) => setFilters({ ...filters, unit: e.target.value })} className="report-input">
+              <option value="All">All Units</option>
+              {uniqueUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+            </select>
+          </FormControl>
+          <FormControl label="Resident Status">
+            <select value={filters.residentStatus} onChange={(e) => setFilters({ ...filters, residentStatus: e.target.value })} className="report-input">
+              <option value="All">All</option>
+              <option value="Active">Active</option>
+              <option value="Discharged">Discharged</option>
+            </select>
+          </FormControl>
+          <FormControl label="Specialty">
+            <select value={filters.specialty} onChange={(e) => setFilters({ ...filters, specialty: e.target.value })} className="report-input">
+              <option value="All">All Specialties</option>
+              {uniqueSpecialties.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </FormControl>
+          <FormControl label="Transport">
+            <select value={filters.transport} onChange={(e) => setFilters({ ...filters, transport: e.target.value })} className="report-input">
+              <option value="All">All Transport</option>
+              {uniqueTransports.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </FormControl>
+        </div>
 
-        <div className="ml-auto text-xs font-semibold text-slate-500">
-          Includes summary, specialty use, transportation use, line listing, and resident history.
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-blue-700"
+            onClick={() => downloadCsv("appointments_filtered.csv", buildAppointmentDetailRows(filteredAppointments))}
+          >
+            Export Filtered CSV
+          </button>
+
+          <button
+            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-green-700"
+            onClick={() => exportPDF(filteredAppointments, residents, filterLabel)}
+          >
+            Export Filtered Survey-Ready PDF
+          </button>
+
+          <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 hover:bg-slate-50" onClick={resetFilters}>
+            Reset Filters
+          </button>
+
+          <div className="ml-auto text-xs font-semibold text-slate-500">
+            Showing {filteredAppointments.length} of {appointments.length} appointments
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat label="Total" value={summary.total} />
+        <Stat label="Filtered Total" value={summary.total} />
         <Stat label="Past" value={summary.past} />
         <Stat label="Future" value={summary.future} />
         <Stat label="Today" value={summary.today} />
       </div>
 
+      {isAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Stat label="Missing Transport Phone" value={summary.missingTransportPhone} />
+          <Stat label="Escort Required" value={summary.escortRequired} />
+          <Stat label="Cancelled / Deferred" value={summary.cancelled} />
+        </div>
+      )}
+
       <Section title="Specialty Utilization">
         {specialty.map((s: any) => (
-          <Row key={s.label} label={s.label} value={s.total} />
+          <Row key={s.label} label={s.label} value={`${s.total} total • ${s.completed} completed • ${s.scheduled} scheduled`} />
         ))}
       </Section>
 
       <Section title="Transportation Utilization">
         {transport.map((t: any) => (
-          <Row key={t.label} label={t.label} value={t.total} />
+          <Row key={t.label} label={t.label} value={`${t.total} total • ${t.escortRequired} escort • ${t.missingPhone} missing phone`} />
         ))}
       </Section>
 
@@ -216,27 +348,52 @@ export const V2ReportingEnginePanel = ({ appointments, residents }: Props) => {
           </div>
         ))}
       </Section>
+
+      <style>{`
+        .report-input {
+          width: 100%;
+          border-radius: 0.9rem;
+          border: 1px solid #d6deeb;
+          background: white;
+          padding: 0.65rem 0.75rem;
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #334155;
+          outline: none;
+        }
+        .report-input:focus {
+          box-shadow: 0 0 0 3px rgba(11, 42, 111, 0.10);
+          border-color: #0b2a6f;
+        }
+      `}</style>
     </div>
   );
 };
 
+const FormControl = ({ label, children }: any) => (
+  <label className="block">
+    <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</span>
+    {children}
+  </label>
+);
+
 const Stat = ({ label, value }: any) => (
-  <div className="p-4 bg-white rounded-xl shadow">
-    <div className="text-xs text-gray-500">{label}</div>
-    <div className="text-xl font-bold">{value}</div>
+  <div className="p-4 bg-white rounded-xl shadow border border-slate-100">
+    <div className="text-xs font-black uppercase tracking-wider text-gray-500">{label}</div>
+    <div className="text-2xl font-black text-[#0b2a6f]">{value}</div>
   </div>
 );
 
 const Section = ({ title, children }: any) => (
-  <div className="bg-white rounded-xl p-4 shadow">
-    <h3 className="font-bold mb-2">{title}</h3>
-    {children}
+  <div className="bg-white rounded-xl p-4 shadow border border-slate-100">
+    <h3 className="font-black text-slate-800 mb-2">{title}</h3>
+    <div className="space-y-1">{children}</div>
   </div>
 );
 
 const Row = ({ label, value }: any) => (
-  <div className="flex justify-between text-sm border-b py-1">
-    <span>{label}</span>
-    <span>{value}</span>
+  <div className="flex justify-between gap-4 text-sm border-b py-2 last:border-b-0">
+    <span className="font-bold text-slate-700">{label}</span>
+    <span className="text-right text-slate-500 font-semibold">{value}</span>
   </div>
 );
