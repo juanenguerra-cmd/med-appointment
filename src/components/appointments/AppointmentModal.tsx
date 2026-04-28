@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, MapPin, Database, User, Calendar } from "lucide-react";
+import { X, MapPin, Database } from "lucide-react";
 import { Button } from "../Button";
 import type { Appointment, Resident, TransportationCompany } from "../../types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "../../constants/consultReasons";
@@ -23,6 +23,7 @@ type AppointmentModalProps = {
   handleResidentInputChange: (value: string) => void;
   handleSelectResident: (resident: Resident) => void;
   handleSaveAppointment: () => void;
+  deleteAppointment: (id: string) => void;
   onClose: () => void;
   transportCompanies: TransportationCompany[];
   FormField: (props: { label: string; info?: string; children: React.ReactNode }) => JSX.Element;
@@ -45,6 +46,7 @@ export function AppointmentModal({
   handleResidentInputChange,
   handleSelectResident,
   handleSaveAppointment,
+  deleteAppointment,
   onClose,
   transportCompanies,
   FormField,
@@ -830,206 +832,6 @@ export function AppointmentModal({
               </div>
             )}
 
-            {isResidentDetailOpen && selectedResident && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setIsResidentDetailOpen(false)}
-                  className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-                />
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: 18 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96, y: 18 }}
-                  className="relative w-full max-w-4xl bg-[#f8fbff] rounded-3xl shadow-2xl overflow-hidden border border-[#d6deeb] max-h-[90vh] flex flex-col"
-                >
-                  <div className="transport-gradient text-white p-5 shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-white border border-white/30 backdrop-blur-md">
-                        <User size={32} />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black tracking-tight">
-                          {selectedResident.name}
-                        </h3>
-                        <p className="text-xs opacity-85 mt-0.5">
-                          Resident ID:{" "}
-                          <span className="font-mono">{selectedResident.mrn}</span>{" "}
-                          • Room {selectedResident.roomNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setIsResidentDetailOpen(false)}
-                      className="p-2 hover:bg-white/15 rounded-full"
-                      aria-label="Close modal"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-
-                  <div className="p-6 overflow-y-auto page-scrollbar flex-1 space-y-8">
-                    {/* Basic Info Grid */}
-                    <section>
-                      <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                        <User size={16} /> Demographics & Identity
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <DetailItem label="Sex" value={selectedResident.sex} />
-                        <DetailItem label="Age" value={selectedResident.age} />
-                        <DetailItem
-                          label="Admission Date"
-                          value={selectedResident.admissionDate}
-                        />
-                        <DetailItem
-                          label="Primary Doctor"
-                          value={selectedResident.doctor}
-                        />
-                        <DetailItem
-                          label="Location"
-                          value={`${selectedResident.floor} • ${selectedResident.unit}`}
-                        />
-                        <DetailItem
-                          label="Room Number"
-                          value={selectedResident.roomNumber}
-                        />
-                      </div>
-                    </section>
-
-                    {/* Clinical Summary */}
-                    <section className="bg-white border border-[#d6deeb] rounded-3xl p-6 shadow-sm">
-                      <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                        <Activity size={16} /> Clinical Profile
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
-                            Primary Diagnosis
-                          </p>
-                          <p className="text-sm font-bold text-slate-800 bg-brand-light/20 p-3 rounded-xl border border-brand/5">
-                            {selectedResident.diagnosis}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
-                            Allergies
-                          </p>
-                          <p
-                            className={`text-sm font-bold p-3 rounded-xl border ${selectedResident.allergies.toLowerCase() === "no known allergies" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}
-                          >
-                            {selectedResident.allergies}
-                          </p>
-                        </div>
-                        {selectedResident.notes && (
-                          <div>
-                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">
-                              Medical Brief / Notes
-                            </p>
-                            <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 whitespace-pre-wrap">
-                              {selectedResident.notes}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </section>
-
-                    {/* Appointment History */}
-                    <section>
-                      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-center gap-2 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                          <Calendar size={16} /> Appointment & Visit History
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("all")}>Print All</Button>
-                          <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("history")}>Print History</Button>
-                          <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("future")}>Print Future</Button>
-                        </div>
-                      </div>
-
-                      {residentAppointments.length > 0 ? (
-                        <div className="overflow-x-auto rounded-2xl border border-[#d6deeb] bg-white shadow-sm">
-                          <table className="w-full text-left text-sm">
-                            <thead className="bg-[#f8fbff] text-[10px] font-black uppercase tracking-wider text-slate-500">
-                              <tr>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Date / Time</th>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Visit Category</th>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Provider / Clinic</th>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Location</th>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Status</th>
-                                <th className="border-b border-[#d6deeb] px-4 py-3">Notes</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#eef2f7]">
-                              {residentAppointments
-                                .sort(
-                                  (a, b) =>
-                                    new Date(b.date).getTime() -
-                                    new Date(a.date).getTime(),
-                                )
-                                .map((apt) => (
-                                  <tr key={apt.id} className="hover:bg-brand-light/20 transition-colors">
-                                    <td className="px-4 py-3 align-top">
-                                      <p className="font-black text-slate-800">{formatFullDate(apt.date)}</p>
-                                      <p className="text-xs font-bold text-brand">{formatTimeAMPM(apt.time)}</p>
-                                    </td>
-                                    <td className="px-4 py-3 align-top">
-                                      <p className="font-black text-slate-800">{apt.type || "—"}</p>
-                                      {(apt.reasonConsultation || apt.consultReason || apt.description) && (
-                                        <p className="mt-1 text-xs font-semibold text-slate-500 line-clamp-2">
-                                          {apt.reasonConsultation || apt.consultReason || apt.description}
-                                        </p>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3 align-top">
-                                      <p className="font-bold text-slate-700">{apt.providerName || "—"}</p>
-                                    </td>
-                                    <td className="px-4 py-3 align-top">
-                                      <p className="text-xs font-semibold text-slate-500 line-clamp-2">{apt.location || "—"}</p>
-                                    </td>
-                                    <td className="px-4 py-3 align-top">
-                                      <span
-                                        className={`inline-flex rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wider ${
-                                          apt.status === "Completed"
-                                            ? "bg-green-100 text-green-700"
-                                            : apt.status === "Cancelled" || apt.status === "Discontinued" || apt.status === "Deferred"
-                                              ? "bg-red-100 text-red-700"
-                                              : "bg-brand-light text-brand"
-                                        }`}
-                                      >
-                                        {apt.status || "Scheduled"}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 align-top text-xs font-semibold text-slate-500 max-w-[260px]">
-                                      <p className="line-clamp-3">{apt.notes || "—"}</p>
-                                    </td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                          <p className="text-slate-400 font-bold text-sm">
-                            No appointment records found for this resident.
-                          </p>
-                        </div>
-                      )}
-                    </section>
-                  </div>
-
-                  <div className="p-5 border-t border-[#d6deeb] bg-[rgba(11,42,111,.03)] shrink-0 flex justify-end">
-                    <Button
-                      variant="secondary"
-                      onClick={() => setIsResidentDetailOpen(false)}
-                    >
-                      Close Detailed View
-                    </Button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
           </AnimatePresence>
   );
 }
