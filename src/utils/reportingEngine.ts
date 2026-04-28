@@ -1,9 +1,10 @@
 import { Appointment, Resident } from "../types";
 
-export const getToday = () => {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+export const getLocalDateKey = (date = new Date()) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
+
+export const getToday = () => getLocalDateKey();
 
 export const isPast = (date?: string) => Boolean(date && date < getToday());
 export const isFuture = (date?: string) => Boolean(date && date > getToday());
