@@ -1,10 +1,11 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, MapPin, Database } from "lucide-react";
+import { X, Database } from "lucide-react";
 import { Button } from "../Button";
 import type { Appointment, Resident, TransportationCompany } from "../../types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "../../constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "../../constants/medicalSpecialties";
+import { AppointmentLocationSection } from "./modal-sections/AppointmentLocationSection";
 import { AppointmentOriginSection } from "./modal-sections/AppointmentOriginSection";
 
 type AppointmentModalProps = {
@@ -109,55 +110,11 @@ export function AppointmentModal({
                 FormField={FormField}
               />
 
-              {/* Location Details Section */}
-              <section className="bg-white border border-[#d6deeb] rounded-3xl p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                  <MapPin size={16} /> Location Details
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField label="Staff/Doctor Name">
-                    <input
-                      type="text"
-                      value={newAppt.providerName || ""}
-                      onChange={(e) =>
-                        setNewAppt({
-                          ...newAppt,
-                          providerName: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
-                      placeholder="e.g., Dr. Smith"
-                    />
-                  </FormField>
-
-                  <FormField label="Location Name / Address">
-                    <input
-                      type="text"
-                      value={newAppt.location || ""}
-                      onChange={(e) =>
-                        setNewAppt({ ...newAppt, location: e.target.value })
-                      }
-                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
-                      placeholder="Clinic / Hospital / Address"
-                    />
-                  </FormField>
-
-                  <FormField label="Contact Number">
-                    <input
-                      type="text"
-                      value={newAppt.contactNumber || ""}
-                      onChange={(e) =>
-                        setNewAppt({
-                          ...newAppt,
-                          contactNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-soft-bg/30"
-                      placeholder="(###) ###-####"
-                    />
-                  </FormField>
-                </div>
-              </section>
+              <AppointmentLocationSection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                FormField={FormField}
+              />
 
               {/* Dates & Status Section */}
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -260,7 +217,9 @@ export function AppointmentModal({
                   <FormField label="Appt. Type (Specialty)">
                     <div className="space-y-2">
                       <select
-                        value={showOtherSpecialtyInput ? "Other" : newAppt.type || ""}
+                        value={
+                          showOtherSpecialtyInput ? "Other" : newAppt.type || ""
+                        }
                         onChange={(e) => {
                           if (e.target.value === "Other") {
                             setShowOtherSpecialtyInput(true);
