@@ -805,6 +805,142 @@ if (!isLoaded) {
       )
     : [];
 
+  const printResidentAppointmentSummary = (
+    type: "all" | "history" | "future",
+  ) => {
+    if (!selectedResident) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const escapePrintHtml = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const source = residentAppointments
+      .filter((apt) => {
+        if (type === "history") return String(apt.date || "") < today;
+        if (type === "future") return String(apt.date || "") >= today;
+        return true;
+      })
+      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+
+    const title =
+      type === "history"
+        ? "Historical Appointment Summary"
+        : type === "future"
+          ? "Future Appointment Summary"
+          : "All Appointment Summary";
+
+    const scheduled = source.filter((a) => a.status === "Scheduled").length;
+    const completed = source.filter((a) => a.status === "Completed").length;
+    const cancelled = source.filter((a) =>
+      ["Cancelled", "Deferred", "Discontinued"].includes(String(a.status)),
+    ).length;
+    const historical = source.filter((a) => String(a.date || "") < today).length;
+    const future = source.filter((a) => String(a.date || "") >= today).length;
+
+    const rows = source
+      .map(
+        (apt) => `
+          <tr>
+            <td>${escapePrintHtml(formatFullDate(apt.date))}</td>
+            <td>${escapePrintHtml(formatTimeAMPM(apt.time))}</td>
+            <td>${escapePrintHtml(apt.type || "—")}</td>
+            <td>${escapePrintHtml(apt.providerName || "—")}</td>
+            <td>${escapePrintHtml(apt.location || "—")}</td>
+            <td>${escapePrintHtml(apt.status || "Scheduled")}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escapePrintHtml(title)}</title>
+  <style>
+    @page { size: letter landscape; margin: 0.35in; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; background: #ffffff; }
+    .header { border-bottom: 3px solid #0b2a6f; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; gap: 24px; }
+    h1 { color: #0b2a6f; font-size: 19px; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .02em; }
+    .subtitle { color: #475569; font-size: 11px; font-weight: 800; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; font-size: 11px; line-height: 1.35; margin: 12px 0; padding: 10px; background: #f8fbff; border: 1px solid #d6deeb; border-radius: 10px; }
+    .meta strong { color: #0b2a6f; }
+    h2 { color: #0b2a6f; font-size: 13px; margin: 14px 0 8px; text-transform: uppercase; letter-spacing: .08em; }
+    table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 7px; text-align: left; vertical-align: top; }
+    th { background: #0b2a6f; color: #ffffff; font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .summary { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+    .summary-card { border: 1px solid #d6deeb; background: #f8fbff; border-radius: 10px; padding: 8px; }
+    .summary-card span { display: block; color: #64748b; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .summary-card strong { color: #0b2a6f; font-size: 18px; }
+    .footer { margin-top: 16px; border-top: 1px solid #cbd5e1; padding-top: 6px; text-align: center; font-size: 8px; color: #64748b; font-weight: 800; }
+    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Resident Appointment Summary Report</h1>
+      <div class="subtitle">${escapePrintHtml(title)}</div>
+    </div>
+    <div class="subtitle">Generated: ${escapePrintHtml(new Date().toLocaleString())}</div>
+  </div>
+
+  <div class="meta">
+    <div><strong>Resident:</strong> ${escapePrintHtml(selectedResident.name)}</div>
+    <div><strong>MRN:</strong> ${escapePrintHtml(selectedResident.mrn || "—")}</div>
+    <div><strong>Room:</strong> ${escapePrintHtml(selectedResident.roomNumber || "—")}</div>
+    <div><strong>Unit:</strong> ${escapePrintHtml(selectedResident.unit || selectedResident.floor || "—")}</div>
+    <div><strong>Primary Doctor:</strong> ${escapePrintHtml(selectedResident.doctor || "—")}</div>
+    <div><strong>Report Type:</strong> ${escapePrintHtml(title)}</div>
+  </div>
+
+  <h2>Appointment & Visit History</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Visit Category</th>
+        <th>Provider / Clinic</th>
+        <th>Location</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || `<tr><td colspan="6" style="text-align:center; color:#64748b; font-weight:700;">No appointments found.</td></tr>`}
+    </tbody>
+  </table>
+
+  <h2>Summary</h2>
+  <div class="summary">
+    <div class="summary-card"><span>Total</span><strong>${source.length}</strong></div>
+    <div class="summary-card"><span>Historical</span><strong>${historical}</strong></div>
+    <div class="summary-card"><span>Future</span><strong>${future}</strong></div>
+    <div class="summary-card"><span>Scheduled</span><strong>${scheduled}</strong></div>
+    <div class="summary-card"><span>Completed</span><strong>${completed}</strong></div>
+    <div class="summary-card"><span>Cancelled / Deferred</span><strong>${cancelled}</strong></div>
+  </div>
+
+  <div class="footer">CONFIDENTIAL MEDICAL RECORD / APPOINTMENT SUMMARY</div>
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
       <iframe ref={printIframeRef} style={{ display: "none" }} title="Print iframe" />
@@ -2558,8 +2694,15 @@ if (!isLoaded) {
 
                 {/* Appointment History */}
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
-                    <Calendar size={16} /> Appointment & Visit History
+                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-2 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
+                      <Calendar size={16} /> Appointment & Visit History
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("all")}>Print All</Button>
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("history")}>Print History</Button>
+                      <Button size="sm" variant="secondary" onClick={() => printResidentAppointmentSummary("future")}>Print Future</Button>
+                    </div>
                   </div>
 
                   {residentAppointments.length > 0 ? (
@@ -2569,8 +2712,8 @@ if (!isLoaded) {
                           <tr>
                             <th className="border-b border-[#d6deeb] px-4 py-3">Date / Time</th>
                             <th className="border-b border-[#d6deeb] px-4 py-3">Visit Category</th>
-                            <th className="border-b border-[#d6deeb] px-4 py-3">Provider / Location</th>
-                            <th className="border-b border-[#d6deeb] px-4 py-3">Transport</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Provider / Clinic</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Location</th>
                             <th className="border-b border-[#d6deeb] px-4 py-3">Status</th>
                             <th className="border-b border-[#d6deeb] px-4 py-3">Notes</th>
                           </tr>
@@ -2598,15 +2741,9 @@ if (!isLoaded) {
                                 </td>
                                 <td className="px-4 py-3 align-top">
                                   <p className="font-bold text-slate-700">{apt.providerName || "—"}</p>
-                                  <p className="text-xs font-semibold text-slate-500 line-clamp-2">{apt.location || "—"}</p>
                                 </td>
                                 <td className="px-4 py-3 align-top">
-                                  <p className="font-bold text-slate-700">
-                                    {apt.transportCompanyOther || apt.transportCompany || "—"}
-                                  </p>
-                                  {apt.transportCompanyPhone && (
-                                    <p className="text-xs font-semibold text-slate-500">{apt.transportCompanyPhone}</p>
-                                  )}
+                                  <p className="text-xs font-semibold text-slate-500 line-clamp-2">{apt.location || "—"}</p>
                                 </td>
                                 <td className="px-4 py-3 align-top">
                                   <span
