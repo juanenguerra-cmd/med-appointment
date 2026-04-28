@@ -5,17 +5,36 @@ import {
   buildSpecialtyReport,
   buildTransportReport,
   buildResidentHistory,
+  buildAppointmentDetailRows,
+  downloadCsv,
 } from "../utils/reportingEngine";
+
+// NOTE: uses dynamic import for jsPDF to avoid bundle bloat
+const exportPDF = async (appointments: Appointment[], residents: Resident[]) => {
+  const { jsPDF } = await import("jspdf");
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Appointment Report", 10, 10);
+
+  let y = 20;
+
+  appointments.slice(0, 25).forEach((a) => {
+    doc.setFontSize(8);
+    doc.text(`${a.residentName} | ${a.date} ${a.time} | ${a.type}`, 10, y);
+    y += 5;
+  });
+
+  doc.save("appointment-report.pdf");
+};
 
 type Props = {
   appointments: Appointment[];
   residents: Resident[];
 };
 
-export const V2ReportingEnginePanel = ({
-  appointments,
-  residents,
-}: Props) => {
+export const V2ReportingEnginePanel = ({ appointments, residents }: Props) => {
   const summary = buildSummary(appointments);
   const specialty = buildSpecialtyReport(appointments);
   const transport = buildTransportReport(appointments);
@@ -23,6 +42,23 @@ export const V2ReportingEnginePanel = ({
 
   return (
     <div className="space-y-6">
+
+      {/* ACTIONS */}
+      <div className="flex gap-3">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded-xl"
+          onClick={() => downloadCsv("appointments.csv", buildAppointmentDetailRows(appointments))}
+        >
+          Export CSV
+        </button>
+
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded-xl"
+          onClick={() => exportPDF(appointments, residents)}
+        >
+          Export PDF
+        </button>
+      </div>
 
       {/* SUMMARY */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -34,14 +70,14 @@ export const V2ReportingEnginePanel = ({
 
       {/* SPECIALTY */}
       <Section title="Specialty Utilization">
-        {specialty.map((s) => (
+        {specialty.map((s: any) => (
           <Row key={s.label} label={s.label} value={s.total} />
         ))}
       </Section>
 
       {/* TRANSPORT */}
       <Section title="Transportation Utilization">
-        {transport.map((t) => (
+        {transport.map((t: any) => (
           <Row key={t.label} label={t.label} value={t.total} />
         ))}
       </Section>
@@ -49,15 +85,12 @@ export const V2ReportingEnginePanel = ({
       {/* RESIDENT HISTORY */}
       <Section title="Resident Appointment History">
         {history.map((r: any) => (
-          <div
-            key={r.name}
-            className="flex justify-between text-sm border-b py-1"
-          >
+          <div key={r.name} className="flex justify-between text-sm border-b py-1">
             <div>
               <strong>{r.name}</strong> ({r.room})
             </div>
             <div>
-              {r.total} visits ({r.past} past / {r.future} upcoming)
+              {r.total} visits ({r.past} / {r.future})
             </div>
           </div>
         ))}
