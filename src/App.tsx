@@ -126,6 +126,27 @@ const TAB_META: Record<
 
 const safeLower = (value: unknown) => String(value ?? "").toLocaleLowerCase();
 
+const getLocalDateKey = (date = new Date()) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+
+const parseDateKeyAsLocalDate = (dateStr?: string) => {
+  const raw = String(dateStr || "").trim();
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  return new Date(Number(y), Number(m) - 1, Number(d));
+};
+
+const getAppointmentSortTime = (apt: Partial<Appointment>) => {
+  const date = parseDateKeyAsLocalDate(apt.date);
+  if (!date) return Number.MAX_SAFE_INTEGER;
+  const rawTime = String(apt.time || "00:00");
+  const [hours = "0", minutes = "0"] = rawTime.split(":");
+  date.setHours(Number(hours) || 0, Number(minutes) || 0, 0, 0);
+  return date.getTime();
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -244,7 +265,7 @@ export default function App() {
 
   const [appointmentsFilter, setAppointmentsFilter] = useState({
     dateRange: "next7days",
-    month: new Date().toISOString().slice(0, 7),
+    month: getLocalDateKey().slice(0, 7),
     status: "All",
   });
 
@@ -571,8 +592,8 @@ export default function App() {
 
     setReportFilters((prev) => ({
       ...prev,
-      startDate: start.toISOString().split("T")[0],
-      endDate: end.toISOString().split("T")[0],
+      startDate: getLocalDateKey(start),
+      endDate: getLocalDateKey(end),
     }));
   };
 if (!isLoaded) {
@@ -770,13 +791,11 @@ if (!isLoaded) {
     return true;
   });
 
+  const todayKey = getLocalDateKey();
+
   const upcomingAppointments = appointments
-    .filter((a) => a.status === "Scheduled")
-    .sort(
-      (a, b) =>
-        new Date(`${a.date}T${a.time}`).getTime() -
-        new Date(`${b.date}T${b.time}`).getTime(),
-    );
+    .filter((a) => a.status === "Scheduled" && String(a.date || "") >= todayKey)
+    .sort((a, b) => getAppointmentSortTime(a) - getAppointmentSortTime(b));
 
   const completedAppointments = appointments.filter(
     (a) => a.status === "Completed",
@@ -810,7 +829,7 @@ if (!isLoaded) {
   ) => {
     if (!selectedResident) return;
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateKey();
     const escapePrintHtml = (value: unknown) =>
       String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -1286,8 +1305,8 @@ if (!isLoaded) {
                     <WideAppointmentTable
                       appointments={filteredTabAppointments.sort(
                         (a, b) =>
-                          new Date(`${a.date}T${a.time}`).getTime() -
-                          new Date(`${b.date}T${b.time}`).getTime(),
+                          getAppointmentSortTime(a) -
+                          getAppointmentSortTime(b),
                       )}
                       residents={residents}
                       currentFacility={currentFacility}
@@ -1423,13 +1442,9 @@ if (!isLoaded) {
                           className="flex-1 gap-2 shadow-lg hover:shadow-brand/20"
                           onClick={() => {
                             const filtered = appointments.filter((apt) => {
-                              const date = new Date(apt.date);
-                              const start = reportFilters.startDate
-                                ? new Date(reportFilters.startDate)
-                                : null;
-                              const end = reportFilters.endDate
-                                ? new Date(reportFilters.endDate)
-                                : null;
+                              const date = String(apt.date || "");
+                              const start = reportFilters.startDate || null;
+                              const end = reportFilters.endDate || null;
                               if (start && date < start) return false;
                               if (end && date > end) return false;
                               return true;
@@ -1458,13 +1473,9 @@ if (!isLoaded) {
                           className="w-full gap-3 justify-center border-brand/20 hover:bg-brand-light"
                           onClick={() => {
                             const filtered = appointments.filter((apt) => {
-                              const date = new Date(apt.date);
-                              const start = reportFilters.startDate
-                                ? new Date(reportFilters.startDate)
-                                : null;
-                              const end = reportFilters.endDate
-                                ? new Date(reportFilters.endDate)
-                                : null;
+                              const date = String(apt.date || "");
+                              const start = reportFilters.startDate || null;
+                              const end = reportFilters.endDate || null;
                               if (start && date < start) return false;
                               if (end && date > end) return false;
                               return true;
@@ -1538,13 +1549,9 @@ if (!isLoaded) {
                         <WideAppointmentTable
                           appointments={appointments
                             .filter((apt) => {
-                              const date = new Date(apt.date);
-                              const start = reportFilters.startDate
-                                ? new Date(reportFilters.startDate)
-                                : null;
-                              const end = reportFilters.endDate
-                                ? new Date(reportFilters.endDate)
-                                : null;
+                              const date = String(apt.date || "");
+                              const start = reportFilters.startDate || null;
+                              const end = reportFilters.endDate || null;
                               if (start && date < start) return false;
                               if (end && date > end) return false;
                               return true;
@@ -3820,8 +3827,8 @@ function FormField({
 
 function formatFullDate(iso: string) {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  const d = parseDateKeyAsLocalDate(iso);
+  if (!d || Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
@@ -3855,8 +3862,8 @@ export function formatTimeAMPM(timeStr?: string) {
 
 function formatShortDate(iso: string) {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  const d = parseDateKeyAsLocalDate(iso);
+  if (!d || Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
