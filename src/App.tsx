@@ -22,7 +22,6 @@ import {
   Clock,
   MapPin,
   ChevronRight,
-  Bell,
   Search,
   Menu,
   X,
@@ -1039,7 +1038,7 @@ if (!isLoaded) {
               transition={{ duration: 0.18 }}
               className="space-y-6"
             >
-              <div className="w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
                   label="Appointments"
                   value={appointments.length.toString()}
@@ -1076,55 +1075,14 @@ if (!isLoaded) {
                 />
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="xl:col-span-2 min-h-[500px]">
+              <div className="w-full">
+                <div className="min-h-[620px]">
                   <AppointmentCalendar 
                     appointments={appointments}
                     residents={residents}
                     getDoctorNameDisplay={getDoctorNameDisplay}
                     onAppointmentClick={handleOpenEdit}
                   />
-                </div>
-
-                <div className="space-y-6">
-                  <Card title="Quick Actions" subtitle="Common tracker tasks">
-                    <div className="grid gap-3">
-                      <Button
-                        className="w-full justify-start gap-3"
-                        onClick={handleOpenAdd}
-                      >
-                        <Plus size={18} /> Add Appointment
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => goToTab("census")}
-                      >
-                        <Users size={18} /> Manage Census
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="w-full justify-start gap-3"
-                        onClick={() => goToTab("reports")}
-                      >
-                        <FileText size={18} /> Build Reports
-                      </Button>
-                    </div>
-                  </Card>
-
-                  <div className="transport-gradient rounded-2xl p-6 text-white shadow-[0_10px_30px_rgba(11,42,111,.12)]">
-                    <h4 className="font-black text-lg mb-2 flex items-center gap-2">
-                      <Bell size={20} /> Daily Health Tip
-                    </h4>
-                    <p className="text-sm opacity-90 leading-relaxed">
-                      Keep appointment details updated with provider, date,
-                      time, location, and follow-up notes so records stay
-                      survey-ready and easy to review.
-                    </p>
-                    <button className="mt-4 text-xs font-black bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors">
-                      View All Tips
-                    </button>
-                  </div>
                 </div>
               </div>
             </motion.section>
