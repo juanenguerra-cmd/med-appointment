@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock,
   MapPin,
+  Printer,
   Stethoscope,
 } from 'lucide-react';
 import {
@@ -68,6 +69,25 @@ function IntelligenceCard({
     </div>
   );
 }
+
+const formatTime = (value?: string) => {
+  const raw = String(value || '').trim();
+  if (!raw) return 'TBD';
+  if (/\b(AM|PM)\b/i.test(raw)) return raw;
+  const match = raw.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return raw;
+  const date = new Date(`1970-01-01T${match[1].padStart(2, '0')}:${match[2]}:00`);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+const escapeHtml = (value: unknown) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 export function AppointmentCalendar({
   appointments,
@@ -138,6 +158,101 @@ export function AppointmentCalendar({
     return format(currentDate, 'MMMM yyyy');
   };
 
+  const getPrintDays = (mode: 'week' | 'month') => {
+    if (mode === 'week') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      return Array.from({ length: 7 }).map((_, i) => addDays(start, i));
+    }
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    return eachDayOfInterval({
+      start: startOfWeek(monthStart, { weekStartsOn: 0 }),
+      end: endOfWeek(monthEnd, { weekStartsOn: 0 }),
+    });
+  };
+
+  const handlePrintCalendar = (mode: 'week' | 'month') => {
+    const printDays = getPrintDays(mode);
+    const title = mode === 'week'
+      ? `Weekly Appointment Calendar: ${format(printDays[0], 'MMM d')} - ${format(printDays[6], 'MMM d, yyyy')}`
+      : `Monthly Appointment Calendar: ${format(currentDate, 'MMMM yyyy')}`;
+
+    const dayColumns = printDays.map((day) => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const dayAppts = appointmentsByDay.get(dateStr) || [];
+      const rows = dayAppts.length
+        ? dayAppts.map((apt) => {
+            const ready = isTransportReady(apt);
+            return `<div class="visit ${ready ? 'ready' : 'not-ready'}">
+              <div class="visit-time">${escapeHtml(formatTime(apt.time))}</div>
+              <div class="visit-name">${escapeHtml(apt.residentName)}</div>
+              <div>${escapeHtml(apt.type || apt.description || 'Visit')}</div>
+              <div>${escapeHtml(getDoctorNameDisplay(apt))}</div>
+              <div>${escapeHtml([apt.transportCompanyOther || apt.transportCompany, apt.transportCompanyPhone].filter(Boolean).join(' / '))}</div>
+            </div>`;
+          }).join('')
+        : '<div class="empty">No appointments</div>';
+
+      return `<div class="day-cell">
+        <div class="day-head">
+          <span>${escapeHtml(format(day, 'EEE'))}</span>
+          <strong>${escapeHtml(format(day, 'MMM d'))}</strong>
+          <em>${dayAppts.length}</em>
+        </div>
+        <div class="day-body">${rows}</div>
+      </div>`;
+    }).join('');
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+
+    win.document.open();
+    win.document.write(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${escapeHtml(title)}</title>
+<style>
+@page { size: landscape; margin: 0.35in; }
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; background: #fff; }
+.header { border-bottom: 3px solid #0b2a6f; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; gap: 20px; }
+.header h1 { margin: 0; font-size: 18px; color: #0b2a6f; }
+.header p { margin: 4px 0 0; font-size: 11px; color: #475569; font-weight: 700; }
+.summary { font-size: 11px; text-align: right; color: #475569; font-weight: 700; }
+.calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.day-cell { border: 1px solid #cbd5e1; border-radius: 10px; min-height: ${mode === 'week' ? '6.4in' : '1.42in'}; overflow: hidden; break-inside: avoid; background: #fff; }
+.day-head { background: #f1f5f9; border-bottom: 1px solid #cbd5e1; padding: 5px 6px; display: flex; align-items: center; gap: 5px; font-size: 10px; }
+.day-head span { color: #64748b; font-weight: 900; text-transform: uppercase; }
+.day-head strong { color: #0b2a6f; font-size: 11px; }
+.day-head em { margin-left: auto; background: #0b2a6f; color: #fff; border-radius: 999px; min-width: 18px; text-align: center; font-style: normal; padding: 2px 4px; font-size: 9px; font-weight: 900; }
+.day-body { padding: 5px; display: grid; gap: 4px; }
+.visit { border: 1px solid #dbe3ef; border-left: 4px solid #0b2a6f; border-radius: 8px; padding: 4px 5px; font-size: ${mode === 'week' ? '9px' : '7px'}; line-height: 1.18; background: #fff; }
+.visit.not-ready { border-left-color: #d97706; background: #fffbeb; }
+.visit.ready { border-left-color: #059669; }
+.visit-time { font-weight: 900; color: #0b2a6f; margin-bottom: 1px; }
+.visit-name { font-weight: 900; color: #111827; }
+.empty { color: #94a3b8; font-style: italic; font-size: 9px; padding: 6px; }
+.footer { position: fixed; bottom: 0.08in; left: 0.35in; right: 0.35in; display: flex; justify-content: space-between; color: #64748b; font-size: 8px; border-top: 1px solid #cbd5e1; padding-top: 4px; }
+@media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>${escapeHtml(title)}</h1>
+      <p>Generated: ${escapeHtml(new Date().toLocaleString())}</p>
+    </div>
+    <div class="summary">Total Appointments: ${appointments.length}<br/>Printed View: ${mode.toUpperCase()}</div>
+  </div>
+  <div class="calendar">${dayColumns}</div>
+  <div class="footer"><span>CONFIDENTIAL MEDICAL RECORD / APPOINTMENT COORDINATION</span><span>Calendar print layout</span></div>
+</body>
+</html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 300);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -161,7 +276,7 @@ export function AppointmentCalendar({
                 className="text-left rounded-xl bg-white border border-red-100 p-3 hover:border-red-300 transition-colors"
               >
                 <p className="text-sm font-black text-slate-800">{apt.residentName}</p>
-                <p className="text-xs text-slate-500 font-semibold mt-1">{apt.date || 'No date'} • {apt.time || 'TBD'} • {apt.type || 'Visit'}</p>
+                <p className="text-xs text-slate-500 font-semibold mt-1">{apt.date || 'No date'} • {formatTime(apt.time)} • {apt.type || 'Visit'}</p>
                 <p className="text-[10px] text-red-700 font-black uppercase tracking-wider mt-2">
                   {isMissedAppointment(apt) ? 'Missed' : 'Overdue'}
                 </p>
@@ -183,7 +298,7 @@ export function AppointmentCalendar({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex bg-white rounded-xl border border-[#d6deeb] p-1 shadow-sm">
               <button
                 type="button"
@@ -210,6 +325,15 @@ export function AppointmentCalendar({
               </button>
               <button type="button" onClick={goToNext} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
                 <ChevronRight size={18} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 bg-white rounded-xl border border-[#d6deeb] p-1 shadow-sm">
+              <button type="button" onClick={() => handlePrintCalendar('week')} className="inline-flex items-center gap-1 px-3 py-1.5 hover:bg-slate-100 rounded-lg transition-colors text-xs font-bold text-slate-600">
+                <Printer size={14} /> Print Week
+              </button>
+              <button type="button" onClick={() => handlePrintCalendar('month')} className="inline-flex items-center gap-1 px-3 py-1.5 hover:bg-slate-100 rounded-lg transition-colors text-xs font-bold text-slate-600">
+                <Printer size={14} /> Print Month
               </button>
             </div>
           </div>
@@ -264,7 +388,7 @@ export function AppointmentCalendar({
                             >
                               <div className="flex items-center gap-1.5 mb-1.5 text-brand">
                                 <Clock size={12} className="opacity-70" />
-                                <span className="text-[10px] font-black">{apt.time || 'TBD'}</span>
+                                <span className="text-[10px] font-black">{formatTime(apt.time)}</span>
                               </div>
 
                               <div className="font-bold text-slate-800 text-xs mb-0.5 line-clamp-1 group-hover:text-brand transition-colors">
