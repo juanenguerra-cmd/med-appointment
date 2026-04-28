@@ -2561,110 +2561,81 @@ if (!isLoaded) {
                   <div className="flex items-center gap-2 mb-4 text-[#0b2a6f] font-black text-xs uppercase tracking-wider">
                     <Calendar size={16} /> Appointment & Visit History
                   </div>
-                  <div className="space-y-3">
-                    {residentAppointments.length > 0 ? (
-                      residentAppointments
-                        .sort(
-                          (a, b) =>
-                            new Date(b.date).getTime() -
-                            new Date(a.date).getTime(),
-                        )
-                        .map((apt) => (
-                          <div
-                            key={apt.id}
-                            className="bg-white border border-[#d6deeb] rounded-2xl p-4 flex items-center justify-between hover:border-brand/30 transition-all group"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={`p-3 rounded-xl ${apt.status === "Completed" ? "bg-green-100 text-green-600" : "bg-brand-light text-brand"}`}
-                              >
-                                <Clock size={18} />
-                              </div>
-                              <div>
-                                <p className="font-black text-slate-800">
-                                  {apt.type}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                  {formatFullDate(apt.date)} at {formatTimeAMPM(apt.time)}
-                                </p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                                  {apt.providerName} • {apt.location}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                           <div className="flex items-center gap-2 justify-end">
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Visit Form");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Visit Form"
->
-  <FileText size={10} /> Visit Form
-</button>
 
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Checklist");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Checklist"
->
-  <ClipboardCheck size={10} /> Checklist
-</button>
-
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Medical Clearance");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title="Medical Clearance"
->
-  <ShieldCheck size={10} /> Medical Clearance
-</button>
-
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleGenerateForm(apt, "Consult");
-  }}
-  className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-light hover:bg-brand/20 text-brand transition-colors text-[9px] font-bold uppercase tracking-wider"
-  title={getConsultFormLabel(apt)}
->
-  <FileText size={10} /> {getConsultFormLabel(apt)}
-</button>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                                    apt.status === "Completed"
-                                      ? "bg-green-100 text-green-600"
-                                      : apt.status === "Cancelled"
-                                        ? "bg-red-100 text-red-600"
-                                        : "bg-brand-light text-brand"
-                                  }`}
-                                >
-                                  {apt.status}
-                                </span>
-                              </div>
-                              {apt.notes && (
-                                <p className="text-[10px] text-slate-400 mt-1 italic truncate max-w-[150px]">
-                                  "{apt.notes}"
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                    ) : (
-                      <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                        <p className="text-slate-400 font-bold text-sm">
-                          No appointment records found for this resident.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  {residentAppointments.length > 0 ? (
+                    <div className="overflow-x-auto rounded-2xl border border-[#d6deeb] bg-white shadow-sm">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-[#f8fbff] text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <tr>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Date / Time</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Visit Category</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Provider / Location</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Transport</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Status</th>
+                            <th className="border-b border-[#d6deeb] px-4 py-3">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#eef2f7]">
+                          {residentAppointments
+                            .sort(
+                              (a, b) =>
+                                new Date(b.date).getTime() -
+                                new Date(a.date).getTime(),
+                            )
+                            .map((apt) => (
+                              <tr key={apt.id} className="hover:bg-brand-light/20 transition-colors">
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-black text-slate-800">{formatFullDate(apt.date)}</p>
+                                  <p className="text-xs font-bold text-brand">{formatTimeAMPM(apt.time)}</p>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-black text-slate-800">{apt.type || "—"}</p>
+                                  {(apt.reasonConsultation || apt.consultReason || apt.description) && (
+                                    <p className="mt-1 text-xs font-semibold text-slate-500 line-clamp-2">
+                                      {apt.reasonConsultation || apt.consultReason || apt.description}
+                                    </p>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-bold text-slate-700">{apt.providerName || "—"}</p>
+                                  <p className="text-xs font-semibold text-slate-500 line-clamp-2">{apt.location || "—"}</p>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <p className="font-bold text-slate-700">
+                                    {apt.transportCompanyOther || apt.transportCompany || "—"}
+                                  </p>
+                                  {apt.transportCompanyPhone && (
+                                    <p className="text-xs font-semibold text-slate-500">{apt.transportCompanyPhone}</p>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <span
+                                    className={`inline-flex rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wider ${
+                                      apt.status === "Completed"
+                                        ? "bg-green-100 text-green-700"
+                                        : apt.status === "Cancelled" || apt.status === "Discontinued" || apt.status === "Deferred"
+                                          ? "bg-red-100 text-red-700"
+                                          : "bg-brand-light text-brand"
+                                    }`}
+                                  >
+                                    {apt.status || "Scheduled"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 align-top text-xs font-semibold text-slate-500 max-w-[260px]">
+                                  <p className="line-clamp-3">{apt.notes || "—"}</p>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold text-sm">
+                        No appointment records found for this resident.
+                      </p>
+                    </div>
+                  )}
                 </section>
               </div>
 
