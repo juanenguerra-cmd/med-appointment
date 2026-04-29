@@ -42,21 +42,28 @@ type AppointmentModalProps = {
   }) => JSX.Element;
 };
 
-export function AppointmentModal(props: AppointmentModalProps) {
-  const {
-    isOpen,
-    onClose,
-    newAppt,
-    setNewAppt,
-    FormField,
-    transportCompanies,
-    editingId,
-    handleSaveAppointment,
-    deleteAppointment,
-    modalStatusPrompt,
-    setModalStatusPrompt,
-  } = props;
-
+export function AppointmentModal({
+  isOpen,
+  editingId,
+  newAppt,
+  setNewAppt,
+  showOtherSpecialtyInput,
+  setShowOtherSpecialtyInput,
+  modalStatusPrompt,
+  setModalStatusPrompt,
+  residentSearchTerm,
+  setResidentSearchTerm,
+  showResidentSuggestions,
+  setShowResidentSuggestions,
+  filteredResidents,
+  handleResidentInputChange,
+  handleSelectResident,
+  handleSaveAppointment,
+  deleteAppointment,
+  onClose,
+  transportCompanies,
+  FormField,
+}: AppointmentModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -95,15 +102,41 @@ export function AppointmentModal(props: AppointmentModalProps) {
             </div>
 
             <div className="p-6 overflow-y-auto page-scrollbar space-y-8 flex-1">
-              <AppointmentOriginSection {...props} />
-              <AppointmentLocationSection {...props} />
-              <AppointmentDateStatusSection {...props} />
+              <AppointmentOriginSection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                residentSearchTerm={residentSearchTerm}
+                setResidentSearchTerm={setResidentSearchTerm}
+                showResidentSuggestions={showResidentSuggestions}
+                setShowResidentSuggestions={setShowResidentSuggestions}
+                filteredResidents={filteredResidents}
+                handleResidentInputChange={handleResidentInputChange}
+                handleSelectResident={handleSelectResident}
+                FormField={FormField}
+              />
+              <AppointmentLocationSection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                FormField={FormField}
+              />
+              <AppointmentDateStatusSection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                setModalStatusPrompt={setModalStatusPrompt}
+                FormField={FormField}
+              />
               <AppointmentTimingSection
                 newAppt={newAppt}
                 setNewAppt={setNewAppt}
                 FormField={FormField}
               />
-              <AppointmentSpecialtySection {...props} />
+              <AppointmentSpecialtySection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                showOtherSpecialtyInput={showOtherSpecialtyInput}
+                setShowOtherSpecialtyInput={setShowOtherSpecialtyInput}
+                FormField={FormField}
+              />
               <AppointmentClinicalDetailsSection
                 newAppt={newAppt}
                 setNewAppt={setNewAppt}
