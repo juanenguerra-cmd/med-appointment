@@ -3,10 +3,11 @@ import { CheckSquare, ClipboardPaste, Save } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { PatientCensusUnitList } from "../components/PatientCensusUnitList";
-import type { Resident } from "../types";
+import type { Appointment, Resident } from "../types";
 
 type CensusPageProps = {
   residents: Resident[];
+  appointments: Appointment[];
   censusPasteText: string;
   setCensusPasteText: (value: string) => void;
   parsedResidentsPreview: Omit<Resident, "id">[];
@@ -25,6 +26,7 @@ type CensusPageProps = {
 
 export function CensusPage({
   residents,
+  appointments,
   censusPasteText,
   setCensusPasteText,
   parsedResidentsPreview,
@@ -210,6 +212,7 @@ export function CensusPage({
         <div className="xl:col-span-7">
           <PatientCensusUnitList
             residents={residents}
+            appointments={appointments}
             searchQuery={censusSearchQuery}
             onSearchChange={setCensusSearchQuery}
             onViewDetails={(resident) => {
