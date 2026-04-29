@@ -21,6 +21,30 @@ export function AppointmentClinicalDetailsSection({ newAppt, setNewAppt, FormFie
           <input type="text" value={newAppt.height || ""} onChange={(e)=>setNewAppt({...newAppt,height:e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb]" />
         </FormField>
       </div>
+
+      <div className="mt-5 pt-5 border-t border-[#d6deeb] flex flex-wrap gap-x-6 gap-y-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.ambulating} onChange={(e)=>setNewAppt({...newAppt,ambulating:e.target.checked})} /> Ambulating
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.wheelchair} onChange={(e)=>setNewAppt({...newAppt,wheelchair:e.target.checked})} /> Wheelchair
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.withLift} onChange={(e)=>setNewAppt({...newAppt,withLift:e.target.checked})} /> With lift
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.recliner} onChange={(e)=>setNewAppt({...newAppt,recliner:e.target.checked})} /> Recliner
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={newAppt.escort === "Yes"} onChange={(e)=>setNewAppt({...newAppt,escort:e.target.checked?"Yes":"No"})} /> Escort
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.oxygen} onChange={(e)=>setNewAppt({...newAppt,oxygen:e.target.checked})} /> Oxygen
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!newAppt.bariatric} onChange={(e)=>setNewAppt({...newAppt,bariatric:e.target.checked})} /> Bariatric
+        </label>
+      </div>
     </section>
   );
 }
