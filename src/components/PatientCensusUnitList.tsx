@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { Search, Eye, Users, UserCheck, UserX, X } from "lucide-react";
-import { Resident } from "../types";
+import { Search, Eye, Users, UserCheck, UserX, X, Printer } from "lucide-react";
+import type { Appointment, Resident } from "../types";
 import { Button } from "./Button";
 import { getResidentStatusGroup, ResidentStatusFilter } from "../utils/residentStatus";
 
 type PatientCensusUnitListProps = {
   residents: Resident[];
+  appointments?: Appointment[];
   searchQuery: unknown;
   onSearchChange: (value: string) => void;
   onViewDetails: (resident: Resident) => void;
@@ -20,8 +21,53 @@ const statusPillClass = (status: "Active" | "Discharged") =>
     ? "border-amber-200 bg-amber-50 text-amber-800"
     : "border-emerald-200 bg-emerald-50 text-emerald-700";
 
+const formatDate = (value: unknown) => {
+  const text = safeText(value).trim();
+  if (!text) return "—";
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return text;
+  const [, y, m, d] = match;
+  return `${m}/${d}/${y}`;
+};
+
+const formatTime = (value: unknown) => {
+  const text = safeText(value).trim();
+  if (!text) return "—";
+  const [rawHour, rawMinute = "00"] = text.split(":");
+  const hour = Number(rawHour);
+  if (Number.isNaN(hour)) return text;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${rawMinute.padStart(2, "0")} ${suffix}`;
+};
+
+const escapeHtml = (value: unknown) =>
+  safeText(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+function getResidentAppointments(resident: Resident, appointments: Appointment[]) {
+  const residentName = safeLower(resident.name);
+  const firstName = safeLower(resident.firstName);
+  const lastName = safeLower(resident.lastName);
+
+  return appointments
+    .filter((appointment) => {
+      const apptResident = safeLower(appointment.residentName);
+      if (!apptResident) return false;
+      if (apptResident === residentName) return true;
+      if (firstName && lastName && apptResident.includes(firstName) && apptResident.includes(lastName)) return true;
+      return false;
+    })
+    .sort((a, b) => `${safeText(b.date)} ${safeText(b.time)}`.localeCompare(`${safeText(a.date)} ${safeText(a.time)}`));
+}
+
 export function PatientCensusUnitList({
   residents,
+  appointments = [],
   searchQuery,
   onSearchChange,
   onViewDetails,
@@ -31,6 +77,11 @@ export function PatientCensusUnitList({
   const [detailResident, setDetailResident] = useState<Resident | null>(null);
   const q = safeLower(searchQuery);
   const safeResidents = Array.isArray(residents) ? residents : [];
+
+  const detailAppointments = detailResident ? getResidentAppointments(detailResident, appointments) : [];
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const historicalAppointments = detailAppointments.filter((appointment) => safeText(appointment.date) && safeText(appointment.date) < todayKey);
+  const futureAppointments = detailAppointments.filter((appointment) => !safeText(appointment.date) || safeText(appointment.date) >= todayKey);
 
   const statusCounts = useMemo(() => {
     const active = safeResidents.filter((resident) => getResidentStatusGroup(resident) === "Active").length;
@@ -84,6 +135,77 @@ export function PatientCensusUnitList({
   const handleViewResident = (resident: Resident) => {
     setDetailResident(resident);
     onViewDetails(resident);
+  };
+
+  const printResidentSummary = (mode: "all" | "history" | "future") => {
+    if (!detailResident) return;
+    const source = mode === "history" ? historicalAppointments : mode === "future" ? futureAppointments : detailAppointments;
+    const title = mode === "history" ? "Historical Appointment Summary" : mode === "future" ? "Future Appointment Summary" : "All Appointment Summary";
+    const rows = source
+      .map(
+        (appointment) => `
+          <tr>
+            <td>${escapeHtml(formatDate(appointment.date))}</td>
+            <td>${escapeHtml(formatTime(appointment.time))}</td>
+            <td>${escapeHtml(appointment.type || "—")}</td>
+            <td>${escapeHtml(appointment.providerName || "—")}</td>
+            <td>${escapeHtml(appointment.location || "—")}</td>
+            <td>${escapeHtml(appointment.status || "—")}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { size: letter landscape; margin: 0.35in; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111827; }
+    .header { border-bottom: 3px solid #0b2a6f; padding-bottom: 10px; margin-bottom: 12px; display:flex; justify-content:space-between; gap:24px; }
+    h1 { color: #0b2a6f; font-size: 19px; margin: 0 0 4px; text-transform: uppercase; }
+    .subtitle { color: #475569; font-size: 11px; font-weight: 800; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; font-size: 11px; margin: 12px 0; padding: 10px; background: #f8fbff; border: 1px solid #d6deeb; border-radius: 10px; }
+    .meta strong { color: #0b2a6f; }
+    table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 7px; text-align: left; vertical-align: top; }
+    th { background: #0b2a6f; color: #ffffff; font-size: 9.5px; text-transform: uppercase; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .footer { margin-top: 16px; border-top: 1px solid #cbd5e1; padding-top: 6px; text-align: center; font-size: 8px; color: #64748b; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Resident Appointment Summary Report</h1>
+      <div class="subtitle">${escapeHtml(title)}</div>
+    </div>
+    <div class="subtitle">Generated: ${escapeHtml(new Date().toLocaleString())}</div>
+  </div>
+  <div class="meta">
+    <div><strong>Resident:</strong> ${escapeHtml(detailResident.name)}</div>
+    <div><strong>MRN:</strong> ${escapeHtml(detailResident.mrn || "—")}</div>
+    <div><strong>Room:</strong> ${escapeHtml(detailResident.roomNumber || "—")}</div>
+    <div><strong>Unit:</strong> ${escapeHtml(detailResident.unit || detailResident.floor || "—")}</div>
+    <div><strong>Primary Doctor:</strong> ${escapeHtml(detailResident.doctor || "—")}</div>
+    <div><strong>Total Records:</strong> ${source.length}</div>
+  </div>
+  <table>
+    <thead><tr><th>Date</th><th>Time</th><th>Specialty</th><th>Provider / Clinic</th><th>Location</th><th>Status</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="6" style="text-align:center;color:#64748b;font-weight:700;">No appointments found.</td></tr>`}</tbody>
+  </table>
+  <div class="footer">CONFIDENTIAL MEDICAL RECORD / APPOINTMENT SUMMARY</div>
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (
@@ -179,52 +301,17 @@ export function PatientCensusUnitList({
                                 {safeText(resident?.sex) || "—"}{resident?.age ? ` • Age ${safeText(resident.age)}` : ""}
                               </p>
                             </td>
-
-                            <td className="px-5 py-4">
-                              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black ${statusPillClass(status)}`}>
-                                {status}
-                              </span>
-                            </td>
-
+                            <td className="px-5 py-4"><span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black ${statusPillClass(status)}`}>{status}</span></td>
                             <td className="px-5 py-4 text-xs font-mono text-slate-500">{safeText(resident?.mrn) || "—"}</td>
-
-                            <td className="px-5 py-4">
-                              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
-                                {safeText(resident?.roomNumber) || "—"}
-                              </span>
-                            </td>
-
+                            <td className="px-5 py-4"><span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">{safeText(resident?.roomNumber) || "—"}</span></td>
                             <td className="px-5 py-4 text-xs text-slate-500 italic">{safeText(resident?.doctor) || "—"}</td>
-
                             <td className="px-5 py-4 relative z-20 pointer-events-auto">
                               <div className="flex items-center justify-end gap-2 pointer-events-auto">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="secondary"
-                                  className="gap-1 pointer-events-auto"
-                                  onClick={(event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    handleViewResident(resident);
-                                  }}
-                                >
+                                <Button type="button" size="sm" variant="secondary" className="gap-1 pointer-events-auto" onClick={(event) => { event.preventDefault(); event.stopPropagation(); handleViewResident(resident); }}>
                                   <Eye size={14} /> View
                                 </Button>
-
                                 {onDeleteResident && safeText(resident?.id) && status === "Active" && (
-                                  <button
-                                    type="button"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      const confirmed = window.confirm(`Mark ${safeText(resident?.name) || "this resident"} inactive/discharged?`);
-                                      if (!confirmed) return;
-                                      onDeleteResident(safeText(resident.id));
-                                    }}
-                                    className="h-8 px-3 inline-flex items-center justify-center rounded-lg text-xs font-black text-amber-700 hover:bg-amber-50 transition-colors pointer-events-auto"
-                                    aria-label="Mark resident inactive"
-                                  >
+                                  <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); const confirmed = window.confirm(`Mark ${safeText(resident?.name) || "this resident"} inactive/discharged?`); if (!confirmed) return; onDeleteResident(safeText(resident.id)); }} className="h-8 px-3 inline-flex items-center justify-center rounded-lg text-xs font-black text-amber-700 hover:bg-amber-50 transition-colors pointer-events-auto" aria-label="Mark resident inactive">
                                     Mark inactive
                                   </button>
                                 )}
@@ -244,43 +331,69 @@ export function PatientCensusUnitList({
 
       {detailResident && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-[#d6deeb] overflow-hidden">
-            <div className="transport-gradient text-white p-5 flex items-start justify-between gap-4">
+          <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl border border-[#d6deeb] overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="transport-gradient text-white p-5 flex items-start justify-between gap-4 shrink-0">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Resident Details</p>
                 <h3 className="text-xl font-black mt-1">{safeText(detailResident.name) || "Resident"}</h3>
                 <p className="text-xs opacity-85 mt-1">Room {safeText(detailResident.roomNumber) || "—"} • {safeText(detailResident.unit || detailResident.floor) || "Unassigned"}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setDetailResident(null)}
-                className="p-2 rounded-full hover:bg-white/15 transition-colors"
-                aria-label="Close resident details"
-              >
+              <button type="button" onClick={() => setDetailResident(null)} className="p-2 rounded-full hover:bg-white/15 transition-colors" aria-label="Close resident details">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <DetailItem label="Status" value={getResidentStatusGroup(detailResident)} />
-              <DetailItem label="MRN" value={safeText(detailResident.mrn) || "—"} />
-              <DetailItem label="Name" value={safeText(detailResident.name) || "—"} />
-              <DetailItem label="Sex / Age" value={`${safeText(detailResident.sex) || "—"}${detailResident.age ? ` • Age ${safeText(detailResident.age)}` : ""}`} />
-              <DetailItem label="Unit / Floor" value={safeText(detailResident.unit || detailResident.floor) || "—"} />
-              <DetailItem label="Room" value={safeText(detailResident.roomNumber) || "—"} />
-              <DetailItem label="Physician" value={safeText(detailResident.doctor) || "—"} />
-              <DetailItem label="Admission Date" value={safeText(detailResident.admissionDate) || "—"} />
-              <DetailItem label="Allergies" value={safeText(detailResident.allergies) || "—"} />
-              <DetailItem label="Diagnosis" value={safeText(detailResident.diagnosis) || "—"} />
-              <div className="md:col-span-2">
-                <DetailItem label="Notes" value={safeText(detailResident.notes) || "—"} />
+            <div className="p-6 overflow-y-auto page-scrollbar space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <DetailItem label="Status" value={getResidentStatusGroup(detailResident)} />
+                <DetailItem label="MRN" value={safeText(detailResident.mrn) || "—"} />
+                <DetailItem label="Sex / Age" value={`${safeText(detailResident.sex) || "—"}${detailResident.age ? ` • Age ${safeText(detailResident.age)}` : ""}`} />
+                <DetailItem label="Unit / Floor" value={safeText(detailResident.unit || detailResident.floor) || "—"} />
+                <DetailItem label="Room" value={safeText(detailResident.roomNumber) || "—"} />
+                <DetailItem label="Physician" value={safeText(detailResident.doctor) || "—"} />
+                <DetailItem label="Admission Date" value={safeText(detailResident.admissionDate) || "—"} />
+                <DetailItem label="Allergies" value={safeText(detailResident.allergies) || "—"} />
+                <DetailItem label="Diagnosis" value={safeText(detailResident.diagnosis) || "—"} />
+              </div>
+
+              <div className="rounded-3xl border border-[#d6deeb] overflow-hidden">
+                <div className="bg-[#f8fbff] border-b border-[#d6deeb] p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h4 className="font-black text-[#0b2a6f]">Appointment History</h4>
+                    <p className="text-xs text-slate-500 mt-1">{detailAppointments.length} total • {historicalAppointments.length} historical • {futureAppointments.length} future/unscheduled</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="secondary" className="gap-1" onClick={() => printResidentSummary("all")}><Printer size={14} /> Print All</Button>
+                    <Button type="button" size="sm" variant="secondary" className="gap-1" onClick={() => printResidentSummary("history")}><Printer size={14} /> Historical</Button>
+                    <Button type="button" size="sm" variant="secondary" className="gap-1" onClick={() => printResidentSummary("future")}><Printer size={14} /> Future</Button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-white text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                      <tr><th className="px-4 py-3 border-b">Date</th><th className="px-4 py-3 border-b">Time</th><th className="px-4 py-3 border-b">Specialty</th><th className="px-4 py-3 border-b">Provider</th><th className="px-4 py-3 border-b">Location</th><th className="px-4 py-3 border-b">Status</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#eef2f7]">
+                      {detailAppointments.length > 0 ? detailAppointments.map((appointment) => (
+                        <tr key={appointment.id} className="hover:bg-brand-light/20">
+                          <td className="px-4 py-3 font-bold text-slate-700">{formatDate(appointment.date)}</td>
+                          <td className="px-4 py-3 text-slate-500">{formatTime(appointment.time)}</td>
+                          <td className="px-4 py-3 font-bold text-slate-700">{safeText(appointment.type) || "—"}</td>
+                          <td className="px-4 py-3 text-slate-500">{safeText(appointment.providerName) || "—"}</td>
+                          <td className="px-4 py-3 text-slate-500">{safeText(appointment.location) || "—"}</td>
+                          <td className="px-4 py-3"><span className="rounded-full bg-slate-100 px-2.5 py-1 font-black text-slate-600">{safeText(appointment.status) || "—"}</span></td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan={6} className="px-4 py-6 text-center font-bold text-slate-400">No appointments found for this resident.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div className="p-5 bg-slate-50 border-t border-[#d6deeb] flex justify-end">
-              <Button type="button" variant="secondary" onClick={() => setDetailResident(null)}>
-                Close
-              </Button>
+            <div className="p-5 bg-slate-50 border-t border-[#d6deeb] flex justify-end shrink-0">
+              <Button type="button" variant="secondary" onClick={() => setDetailResident(null)}>Close</Button>
             </div>
           </div>
         </div>
