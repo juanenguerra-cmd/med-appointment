@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Plus, Trash2, User, FileText, Calendar, Printer, BarChart3 } from "lucide-react";
+import { Home, Plus, Trash2, User, FileText, Calendar, Printer, BarChart3, Users, Link2 } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -36,25 +36,33 @@ export function AdminGuideTools({
       {/* USER GUIDE - VISIBLE TO ALL */}
       <Card
         icon={<FileText size={22} />}
-        title="Guide & Help (V2 Features)"
-        subtitle="Quick guide on using reporting, calendar, and resident summary tools."
+        title="Guide & Help (Current Workflow)"
+        subtitle="Quick guide on census reconciliation, scheduling review, reporting, and resident appointment history."
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 text-xs font-semibold text-slate-600">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 text-xs font-semibold text-slate-600">
           <div>
-            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><BarChart3 size={14}/> Reporting</p>
-            <p>Use filters (date, unit, status, specialty) then export CSV or PDF for QAPI and survey review.</p>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Users size={14}/> Smart Census</p>
+            <p>Paste the current Resident Listing Report into Patient Census, preview the parsed list, then save. Residents missing from the new census are marked Discharged instead of being deleted.</p>
           </div>
           <div>
-            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Calendar size={14}/> Calendar</p>
-            <p>Week and Month views available. Use Print buttons for structured printable calendar layouts.</p>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Link2 size={14}/> Resident Identity</p>
+            <p>When creating appointments, select the resident from the search list when available. New appointments store resident identity details so history is more reliable than name matching alone.</p>
           </div>
           <div>
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Printer size={14}/> Resident Summary</p>
-            <p>Open a resident → print All, History, or Future appointment summary (clean clinical output).</p>
+            <p>Open Census → View to review resident details, appointment history, and Print All, Historical, or Future appointment summaries.</p>
           </div>
           <div>
-            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><FileText size={14}/> Reports</p>
-            <p>PDF output is survey-ready with summary metrics and detailed appointment listings.</p>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Calendar size={14}/> Scheduling Review</p>
+            <p>If an exact appointment date is not available, save the request as Pending Scheduling Review. The coordinator can later complete the date, time, pickup, and transport details.</p>
+          </div>
+          <div>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><BarChart3 size={14}/> Reporting</p>
+            <p>Use filters for date, unit, status, specialty, or transportation company, then export CSV or PDF for QAPI, leadership review, or survey preparation.</p>
+          </div>
+          <div>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><FileText size={14}/> PDF Outputs</p>
+            <p>Checklist, consult, medical clearance, calendar, transport, and summary PDFs use saved appointment and resident details for cleaner operational packets.</p>
           </div>
         </div>
       </Card>
