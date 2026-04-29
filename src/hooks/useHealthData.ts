@@ -71,23 +71,67 @@ const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
       return;
     }
 
-    seen.set(key, {
-      ...existing,
-      ...resident,
-      id: (existing as any).id || (resident as any).id,
-      facilityId: (existing as any).facilityId || (resident as any).facilityId,
-      notes: (existing as any).notes || (resident as any).notes,
-      lastVisit: (existing as any).lastVisit || (resident as any).lastVisit,
-    });
+    setPreferredResident(seen, key, existing, resident);
   });
 
   return Array.from(seen.values());
+};
+
+const setPreferredResident = <T extends Partial<Resident>>(seen: Map<string, T>, key: string, existing: T, resident: T) => {
+  const existingStatus = normalizeResidentStatus((existing as any).status);
+  const incomingStatus = normalizeResidentStatus((resident as any).status);
+
+  // Preserve discharged state when duplicate resident records exist during refresh/reconcile.
+  const preferredStatus = existingStatus === 'Discharged' || incomingStatus === 'Discharged' ? 'Discharged' : 'Active';
+
+  seen.set(key, {
+    ...existing,
+    ...resident,
+    id: (existing as any).id || (resident as any).id,
+    facilityId: (existing as any).facilityId || (resident as any).facilityId,
+    notes: (existing as any).notes || (resident as any).notes,
+    lastVisit: (existing as any).lastVisit || (resident as any).lastVisit,
+    status: preferredStatus,
+    dischargedAt: (existing as any).dischargedAt || (resident as any).dischargedAt,
+    lastSeenCensusAt: (resident as any).lastSeenCensusAt || (existing as any).lastSeenCensusAt,
+    dischargeBatchId: (existing as any).dischargeBatchId || (resident as any).dischargeBatchId,
+  });
 };
 
 const normalizeResidentStatus = (status: unknown): 'Active' | 'Discharged' => {
   const text = safeString(status).trim().toLowerCase();
   if (text === 'discharged' || text === 'inactive') return 'Discharged';
   return 'Active';
+};
+
+const buildDemographicResidentPatch = (existing: Resident, next: Resident) => {
+  const patch: Partial<Resident> = {};
+  const fields: Array<keyof Resident> = [
+    'name',
+    'mrn',
+    'lastName',
+    'firstName',
+    'age',
+    'floor',
+    'unit',
+    'roomNumber',
+    'sex',
+    'admissionDate',
+    'allergies',
+    'doctor',
+    'diagnosis',
+    'notes',
+    'lastVisit',
+    'lastSeenCensusAt',
+  ];
+
+  fields.forEach((field) => {
+    if (!recordsEqual((existing as any)[field], (next as any)[field])) {
+      (patch as any)[field] = (next as any)[field];
+    }
+  });
+
+  return patch;
 };
 
 export function useHealthData() {
@@ -108,7 +152,8 @@ export function useHealthData() {
 
   const reportSaveError = (message: string, error: unknown) => {
     console.error(message, error);
-    alert(message);
+    const detail = error instanceof Error ? error.message : safeString(error);
+    alert(detail ? `${message}\n\n${detail}` : message);
   };
 
   useEffect(() => {
@@ -469,8 +514,6 @@ export function useHealthData() {
     const current = residents.find((resident) => resident.id === id);
     if (!current) return;
 
-    // v1.1 safety: residents are no longer hard-deleted from the client workflow.
-    // They are soft discharged so historical and future appointments remain retrievable.
     await updateResident(id, {
       status: 'Discharged',
       dischargedAt: (current as any).dischargedAt || new Date().toISOString(),
@@ -540,16 +583,36 @@ export function useHealthData() {
         });
       }
 
-      const residentsToPatch = [
-        ...reconciliation.updated,
-        ...reconciliation.reactivated,
-        ...reconciliation.discharged,
-      ];
+      for (const res of reconciliation.discharged) {
+        await apiFetch(`/api/residents/${res.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'Discharged',
+            dischargedAt: (res as any).dischargedAt || new Date().toISOString(),
+            lastSeenCensusAt: (res as any).lastSeenCensusAt || new Date().toISOString(),
+            dischargeBatchId: (res as any).dischargeBatchId || reconciliation.summary.batchId,
+          }),
+        });
+      }
 
-      for (const res of residentsToPatch) {
+      for (const res of reconciliation.reactivated) {
+        await apiFetch(`/api/residents/${res.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'Active',
+            dischargedAt: '',
+            dischargeBatchId: '',
+            lastSeenCensusAt: (res as any).lastSeenCensusAt || new Date().toISOString(),
+          }),
+        });
+      }
+
+      for (const res of reconciliation.updated) {
         const existing = currentResidents.find((resident) => resident.id === res.id);
         if (!existing) continue;
-        const changes = pickChangedFields(existing as any, res as any);
+        const changes = buildDemographicResidentPatch(existing, res);
         if (Object.keys(changes).length === 0) continue;
 
         await apiFetch(`/api/residents/${res.id}`, {
@@ -578,10 +641,9 @@ export function useHealthData() {
         },
       }));
 
-      if (reconciliation.summary.discharged > 0) {
-        console.info('Smart census discharge summary', reconciliation.summary);
-      }
+      console.info('Smart census reconciliation summary', reconciliation.summary);
     } catch (error) {
+      console.error('Smart census reconciliation failed', error, reconciliation.summary);
       setResidents(previousResidents);
       reportSaveError('Smart census reconciliation was not fully saved. Previous resident list was restored.', error);
     }
