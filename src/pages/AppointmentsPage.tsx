@@ -105,8 +105,7 @@ export function AppointmentsPage({
               </div>
             </div>
             <Button size="sm" variant="secondary" onClick={showSchedulingQueue}>
-              View Queue
-              {schedulingQueueCount > 0 ? ` (${schedulingQueueCount})` : ""}
+              View Queue{schedulingQueueCount > 0 ? ` (${schedulingQueueCount})` : ""}
             </Button>
           </div>
         </div>
