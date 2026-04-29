@@ -153,6 +153,8 @@ export default function App() {
 
   const [newAppt, setNewAppt] = useState<Partial<Appointment>>({
     status: "Scheduled",
+    residentId: "",
+    residentMrn: "",
     residentName: "",
     origin: "",
     unit: "",
@@ -633,6 +635,8 @@ if (!isLoaded) {
     setEditingId(null);
     setNewAppt({
       status: "Scheduled",
+      residentId: "",
+      residentMrn: "",
       residentName: "",
       origin: "",
       unit: "",
@@ -714,6 +718,8 @@ if (!isLoaded) {
 
       return {
         ...prev,
+        residentId: resident.id,
+        residentMrn: resident.mrn,
         residentName: resident.name,
         roomNumber: resident.roomNumber,
         unit: finalUnit,
@@ -732,7 +738,12 @@ if (!isLoaded) {
 
   const handleResidentInputChange = (val: string) => {
     setResidentSearchTerm(val);
-    setNewAppt({ ...newAppt, residentName: val });
+    setNewAppt({
+      ...newAppt,
+      residentId: "",
+      residentMrn: "",
+      residentName: val,
+    });
     setShowResidentSuggestions(true);
   };
 
@@ -808,16 +819,27 @@ if (!isLoaded) {
   };
 
   const residentAppointments = selectedResident
-    ? appointments.filter(
-        (a) =>
-          a.residentName === selectedResident.name ||
-          (a.residentName
-            .toLowerCase()
-            .includes(selectedResident.lastName.toLowerCase()) &&
-            a.residentName
-              .toLowerCase()
-              .includes(selectedResident.firstName.toLowerCase())),
-      )
+    ? appointments.filter((a) => {
+        const appointmentResidentId = String((a as any).residentId || "").trim();
+        const appointmentResidentMrn = safeLower((a as any).residentMrn);
+        const appointmentNotes = safeLower(a.notes);
+        const appointmentName = safeLower(a.residentName);
+        const selectedResidentId = String(selectedResident.id || "").trim();
+        const selectedResidentMrn = safeLower(selectedResident.mrn);
+        const selectedFirstName = safeLower(selectedResident.firstName);
+        const selectedLastName = safeLower(selectedResident.lastName);
+
+        if (appointmentResidentId && selectedResidentId && appointmentResidentId === selectedResidentId) return true;
+        if (appointmentResidentMrn && selectedResidentMrn && appointmentResidentMrn === selectedResidentMrn) return true;
+        if (selectedResidentMrn && appointmentNotes.includes(selectedResidentMrn)) return true;
+        if (appointmentName === safeLower(selectedResident.name)) return true;
+        return Boolean(
+          selectedFirstName &&
+          selectedLastName &&
+          appointmentName.includes(selectedLastName) &&
+          appointmentName.includes(selectedFirstName),
+        );
+      })
     : [];
 
   const printResidentAppointmentSummary = (
@@ -1244,6 +1266,7 @@ if (!isLoaded) {
           {activeTab === "census" && (
             <CensusPage
               residents={residents}
+              appointments={appointments}
               censusPasteText={censusPasteText}
               setCensusPasteText={setCensusPasteText}
               parsedResidentsPreview={parsedResidentsPreview}
