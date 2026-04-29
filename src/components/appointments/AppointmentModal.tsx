@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";
 import type { Appointment, Resident, TransportationCompany } from "../../types";
+import { validateAppointmentDraft } from "./modal-sections/appointmentValidation";
 import { AppointmentOriginSection } from "./modal-sections/AppointmentOriginSection";
 import { AppointmentLocationSection } from "./modal-sections/AppointmentLocationSection";
 import { AppointmentDateStatusSection } from "./modal-sections/AppointmentDateStatusSection";
@@ -64,6 +65,8 @@ export function AppointmentModal({
   transportCompanies,
   FormField,
 }: AppointmentModalProps) {
+  const validation = validateAppointmentDraft(newAppt);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -102,6 +105,14 @@ export function AppointmentModal({
             </div>
 
             <div className="p-6 overflow-y-auto page-scrollbar space-y-8 flex-1">
+              {!validation.isValid && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                  {validation.errors.map((err, idx) => (
+                    <div key={idx}>• {err}</div>
+                  ))}
+                </div>
+              )}
+
               <AppointmentOriginSection
                 newAppt={newAppt}
                 setNewAppt={setNewAppt}
@@ -160,6 +171,7 @@ export function AppointmentModal({
               deleteAppointment={deleteAppointment}
               handleSaveAppointment={handleSaveAppointment}
               onClose={onClose}
+              isSaveDisabled={!validation.isValid}
             />
           </motion.div>
 
