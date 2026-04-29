@@ -80,8 +80,6 @@ const dedupeResidents = <T extends Partial<Resident>>(residentList: T[]) => {
 const setPreferredResident = <T extends Partial<Resident>>(seen: Map<string, T>, key: string, existing: T, resident: T) => {
   const existingStatus = normalizeResidentStatus((existing as any).status);
   const incomingStatus = normalizeResidentStatus((resident as any).status);
-
-  // Preserve discharged state when duplicate resident records exist during refresh/reconcile.
   const preferredStatus = existingStatus === 'Discharged' || incomingStatus === 'Discharged' ? 'Discharged' : 'Active';
 
   seen.set(key, {
@@ -122,7 +120,6 @@ const buildDemographicResidentPatch = (existing: Resident, next: Resident) => {
     'diagnosis',
     'notes',
     'lastVisit',
-    'lastSeenCensusAt',
   ];
 
   fields.forEach((field) => {
