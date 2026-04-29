@@ -1205,6 +1205,7 @@ if (!isLoaded) {
             <AppointmentsPage
               appointmentsFilter={appointmentsFilter}
               setAppointmentsFilter={setAppointmentsFilter}
+              appointments={appointments}
               filteredTabAppointments={filteredTabAppointments}
               residents={residents}
               currentFacility={currentFacility}
