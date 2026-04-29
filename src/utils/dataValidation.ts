@@ -18,6 +18,10 @@ const VALID_APPOINTMENT_STATUSES: AppointmentStatus[] = [
   'Cancelled',
   'Pending',
   'Hospitalized',
+  'Discontinued',
+  'Deferred',
+  'Rescheduled',
+  'Pending Scheduling Review' as AppointmentStatus,
 ];
 
 export const safeString = (value: unknown, fallback = ''): string => {
@@ -34,6 +38,21 @@ export const safeBoolean = (value: unknown): boolean => {
 
 export const isIsoDate = (value: unknown): boolean => /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
 
+const normalizeDateLike = (value: unknown): string => {
+  const text = safeString(value).trim();
+  if (!text || text === '—') return '';
+  if (isIsoDate(text)) return text;
+
+  const slashDate = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  if (slashDate) {
+    const [, month, day, rawYear] = slashDate;
+    const year = rawYear.length === 2 ? `20${rawYear}` : rawYear;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  return '';
+};
+
 const required = (issues: ValidationIssue[], field: string, value: unknown, label: string) => {
   if (!safeString(value).trim() || safeString(value).trim() === '—') {
     issues.push({ field, message: `${label} is required.`, severity: 'error' });
@@ -48,10 +67,10 @@ const warnInvalidDate = (issues: ValidationIssue[], field: string, value: unknow
 };
 
 export function normalizeAppointment(input: Partial<Appointment> | any): Appointment {
-  const rawStatus = safeString(input?.status, 'Scheduled').trim() || 'Scheduled';
+  const rawStatus = safeString(input?.status, input?.date ? 'Scheduled' : 'Pending Scheduling Review').trim() || (input?.date ? 'Scheduled' : 'Pending Scheduling Review');
   const status = VALID_APPOINTMENT_STATUSES.includes(rawStatus as AppointmentStatus)
     ? (rawStatus as AppointmentStatus)
-    : 'Scheduled';
+    : (input?.date ? 'Scheduled' : 'Pending Scheduling Review' as AppointmentStatus);
 
   return {
     ...input,
@@ -64,10 +83,10 @@ export function normalizeAppointment(input: Partial<Appointment> | any): Appoint
     providerName: safeString(input?.providerName),
     location: safeString(input?.location),
     contactNumber: safeString(input?.contactNumber),
-    schedulingDate: safeString(input?.schedulingDate),
-    referralDate: safeString(input?.referralDate),
+    schedulingDate: normalizeDateLike(input?.schedulingDate),
+    referralDate: normalizeDateLike(input?.referralDate),
     status,
-    date: safeString(input?.date),
+    date: normalizeDateLike(input?.date),
     time: safeString(input?.time),
     pickUpTime: safeString(input?.pickUpTime),
     type: safeString(input?.type),
@@ -102,8 +121,6 @@ export function validateAppointment(input: Partial<Appointment> | any): Validati
   const issues: ValidationIssue[] = [];
 
   required(issues, 'residentName', value.residentName, 'Resident name');
-  required(issues, 'date', value.date, 'Appointment date');
-  required(issues, 'time', value.time, 'Appointment time');
   required(issues, 'type', value.type, 'Specialty');
   warnInvalidDate(issues, 'date', value.date, 'Appointment date');
   warnInvalidDate(issues, 'schedulingDate', value.schedulingDate, 'Transport scheduling date');
@@ -130,7 +147,7 @@ export function normalizeResident(input: Partial<Resident> | any): Resident {
     unit: safeString(input?.unit),
     roomNumber: safeString(input?.roomNumber),
     sex: safeString(input?.sex),
-    admissionDate: safeString(input?.admissionDate),
+    admissionDate: normalizeDateLike(input?.admissionDate),
     allergies: safeString(input?.allergies),
     doctor: safeString(input?.doctor),
     diagnosis: safeString(input?.diagnosis),
