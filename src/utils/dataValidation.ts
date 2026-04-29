@@ -53,6 +53,12 @@ const normalizeDateLike = (value: unknown): string => {
   return '';
 };
 
+const normalizeResidentStatus = (status: unknown): 'Active' | 'Discharged' => {
+  const text = safeString(status).trim().toLowerCase();
+  if (text === 'discharged' || text === 'inactive') return 'Discharged';
+  return 'Active';
+};
+
 const required = (issues: ValidationIssue[], field: string, value: unknown, label: string) => {
   if (!safeString(value).trim() || safeString(value).trim() === '—') {
     issues.push({ field, message: `${label} is required.`, severity: 'error' });
@@ -153,6 +159,10 @@ export function normalizeResident(input: Partial<Resident> | any): Resident {
     diagnosis: safeString(input?.diagnosis),
     lastVisit: safeString(input?.lastVisit),
     notes: safeString(input?.notes),
+    status: normalizeResidentStatus(input?.status),
+    dischargedAt: safeString(input?.dischargedAt),
+    lastSeenCensusAt: safeString(input?.lastSeenCensusAt),
+    dischargeBatchId: safeString(input?.dischargeBatchId),
   };
 }
 
