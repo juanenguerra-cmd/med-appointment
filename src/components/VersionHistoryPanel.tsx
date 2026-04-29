@@ -20,6 +20,40 @@ interface VersionHistoryPanelProps {
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: "2.2.0",
+    releaseDate: "2026-04-29",
+    title: "Smart Census Persistence and Resident Identity Linking",
+    summary:
+      "This version strengthens the census replacement workflow so discharged residents remain retained after refresh, reduces unnecessary census save requests, and adds stable resident identity fields to appointment records for more reliable resident appointment history.",
+    capabilities: [
+      "Smart census reconciliation now supports durable soft discharge using resident status, discharged date, last census seen date, and discharge batch tracking.",
+      "Census replacement distinguishes created, updated, reactivated, discharged, and unchanged residents instead of treating every import as a full overwrite.",
+      "Normal unchanged active residents are no longer patched only because the census was re-imported, reducing unnecessary network activity and avoiding failed save loops.",
+      "Patient Census active count now reflects active residents only, while Discharged and All views remain available for review.",
+      "Appointment records now support stable resident identity fields: residentId and residentMrn.",
+      "New appointments selected from the resident list can carry resident identity information so appointment history does not rely only on name matching.",
+      "Resident appointment history now matches by residentId first, residentMrn second, MRN in notes third, then name/room fallback for older records.",
+      "D1 appointments table now includes residentId and residentMrn columns for ongoing identity-safe appointment history.",
+    ],
+    processFlow: [
+      "Staff pastes the current Resident Listing Report into Patient Census and reviews the preview before saving.",
+      "The system compares the incoming census to the existing resident registry.",
+      "Residents still present remain active; new residents are added; residents missing from the new census are marked as Discharged instead of being deleted.",
+      "If a previously discharged resident appears again in a later census, the resident can be reactivated through the reconciliation workflow.",
+      "Staff creates a new appointment by selecting the resident from the resident search/dropdown when available.",
+      "The appointment stores the resident name plus stable resident identity details to support reliable history lookup.",
+      "When staff opens Census → View, the appointment history prioritizes resident identity fields before falling back to name-based matching for older records.",
+    ],
+    userImpact: [
+      "Discharged residents remain visible under the Discharged census view after refresh instead of returning to the Active count.",
+      "Active census counts are more accurate for daily operations and staffing review.",
+      "Census imports are more reliable because the app avoids unnecessary PATCH requests for unchanged residents.",
+      "Resident appointment history is more dependable for newly created appointments because it uses resident identity instead of only matching by text name.",
+      "Older appointment records still remain searchable through MRN-in-notes and name/room fallback logic.",
+      "The workflow is safer for survey review because resident history is retained instead of being hard deleted.",
+    ],
+  },
+  {
     version: "2.1.0",
     releaseDate: "2026-04-29",
     title: "Appointment Modal Refactor and Scheduling Review Workflow",
@@ -185,7 +219,7 @@ export function VersionHistoryPanel({ currentUserRole }: VersionHistoryPanelProp
 
       <div className="mt-4 space-y-3">
         {visibleVersionHistory.map((entry) => (
-          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.1.0"}>
+          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.2.0"}>
             <summary className="cursor-pointer text-sm font-black text-slate-800">
               v{entry.version} — {entry.title}
             </summary>
