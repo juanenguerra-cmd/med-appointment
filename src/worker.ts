@@ -143,6 +143,8 @@ const RESIDENT_UPDATE_FIELDS = new Set([
 ]);
 
 const APPOINTMENT_UPDATE_FIELDS = new Set([
+  'residentId',
+  'residentMrn',
   'origin',
   'residentName',
   'unit',
@@ -455,16 +457,16 @@ app.post('/appointments', async (c) => {
 
   await c.env.DB.prepare(`
     INSERT INTO appointments (
-      id, origin, residentName, unit, roomNumber, providerName, location, 
+      id, residentId, residentMrn, origin, residentName, unit, roomNumber, providerName, location, 
       contactNumber, schedulingDate, referralDate, status, date, 
       time, pickUpTime, type, description, serviceInHouse, reasonSendOut, 
       transportType, transportCompany, transportCompanyId, transportCompanyPhone, transportCompanyOther, payerForRide, roundTrip, escort, escortPhone, oxygen, notes, facilityId,
       weight, height, nurseCompleting, reasonConsultation, transportTypeOther, payerForRideOther, escortDetails, consultReason,
       ambulating, wheelchair, withLift, recliner, bariatric
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    toNull(apt.id), toNull(apt.origin), toNull(apt.residentName), toNull(apt.unit), toNull(apt.roomNumber), toNull(apt.providerName),
+    toNull(apt.id), toNull(apt.residentId), toNull(apt.residentMrn), toNull(apt.origin), toNull(apt.residentName), toNull(apt.unit), toNull(apt.roomNumber), toNull(apt.providerName),
     toNull(apt.location), toNull(apt.contactNumber), toNull(apt.schedulingDate), toNull(apt.referralDate),
     toNull(apt.status || 'Pending Scheduling Review'), toNull(apt.date), toNull(apt.time), toNull(apt.pickUpTime), toNull(apt.type), toNull(apt.description),
     toNull(apt.serviceInHouse), toNull(apt.reasonSendOut), toNull(apt.transportType), toNull(apt.transportCompany),
