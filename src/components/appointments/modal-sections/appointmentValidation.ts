@@ -16,10 +16,6 @@ export function validateAppointmentDraft(
     errors.push("Resident name is required.");
   }
 
-  if (!hasValue(appointment.date)) {
-    errors.push("Appointment date is required.");
-  }
-
   if (!hasValue(appointment.type)) {
     errors.push("Appointment specialty is required.");
   }
