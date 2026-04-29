@@ -20,6 +20,37 @@ interface VersionHistoryPanelProps {
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: "2.1.0",
+    releaseDate: "2026-04-29",
+    title: "Appointment Modal Refactor and Scheduling Review Workflow",
+    summary:
+      "This version refactors the New Appointment Request modal into modular sections, adds safer validation, and supports request intake when an exact appointment date is not yet available by routing those requests to Scheduling Coordinator review.",
+    capabilities: [
+      "Appointment modal split into focused section components for origin, location, date/status, timing, specialty, clinical details, transport, notes, status prompt, and footer.",
+      "Appointment modal now uses explicit typed props instead of broad prop spreading for safer maintenance.",
+      "Validation layer added so required request details are checked before saving.",
+      "Appointment date is no longer required at initial request intake.",
+      "Requests without an appointment date can be tracked as Pending Scheduling Review for scheduling coordinator follow-up.",
+      "Transport and clinical sections restored with consistent input, select, checkbox, spacing, and focus styling.",
+      "Status workflow supports Pending Scheduling Review, Scheduled, Completed, Cancelled, Rescheduled, Discontinued, and Deferred.",
+    ],
+    processFlow: [
+      "Staff opens New Appointment Request and enters the resident and specialty/appointment type.",
+      "If the exact appointment date is not available, staff may save the request without entering a date.",
+      "The request is placed under Pending Scheduling Review for coordinator review and follow-up.",
+      "Scheduling coordinator reviews pending requests and adds the confirmed appointment date, time, pickup time, transport details, and status.",
+      "Once a confirmed date is entered, the request can be managed as a scheduled appointment.",
+      "If an appointment is cancelled, rescheduled, deferred, or discontinued, staff document the reason through the status reason prompt.",
+    ],
+    userImpact: [
+      "Allows nursing staff to submit appointment requests without using placeholder or inaccurate appointment dates.",
+      "Creates a clearer handoff workflow between nursing staff and the scheduling coordinator.",
+      "Reduces incomplete scheduling workarounds and improves queue visibility for requests needing follow-up.",
+      "Makes the appointment modal easier to maintain and safer to enhance in future updates.",
+      "Improves consistency and readability of the appointment request form.",
+    ],
+  },
+  {
     version: "2.0.0",
     releaseDate: "2026-04-27",
     title: "V2 Reporting, Calendar Print, and Resident Summary Release",
@@ -154,7 +185,7 @@ export function VersionHistoryPanel({ currentUserRole }: VersionHistoryPanelProp
 
       <div className="mt-4 space-y-3">
         {visibleVersionHistory.map((entry) => (
-          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.0.0"}>
+          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.1.0"}>
             <summary className="cursor-pointer text-sm font-black text-slate-800">
               v{entry.version} — {entry.title}
             </summary>

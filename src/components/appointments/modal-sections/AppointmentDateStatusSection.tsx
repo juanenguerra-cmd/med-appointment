@@ -68,9 +68,13 @@ export function AppointmentDateStatusSection({
           }}
           className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
         >
+          <option value="Pending Scheduling Review">
+            Pending Scheduling Review
+          </option>
           <option value="Scheduled">Scheduled</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
+          <option value="Rescheduled">Rescheduled</option>
           <option value="Discontinued">Discontinued</option>
           <option value="Deferred">Deferred</option>
         </select>

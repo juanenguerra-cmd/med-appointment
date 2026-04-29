@@ -65,6 +65,23 @@ export function AppointmentModal({
   transportCompanies,
   FormField,
 }: AppointmentModalProps) {
+  React.useEffect(() => {
+    setNewAppt((prev) => {
+      if (!prev.date) {
+        if (prev.status !== "Pending Scheduling Review") {
+          return { ...prev, status: "Pending Scheduling Review" as any };
+        }
+        return prev;
+      }
+
+      if (prev.date && prev.status === "Pending Scheduling Review") {
+        return { ...prev, status: "Scheduled" as any };
+      }
+
+      return prev;
+    });
+  }, [newAppt.date, setNewAppt]);
+
   const validation = validateAppointmentDraft(newAppt);
 
   return (
