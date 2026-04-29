@@ -58,9 +58,6 @@ export function AppointmentsPage({
   EmptyState,
   WideAppointmentTable,
 }: AppointmentsPageProps) {
-
-  const schedulingQueueCount = filteredTabAppointments.filter(
-
   const schedulingQueueCount = appointments.filter(
     (appointment) => appointment.status === SCHEDULING_QUEUE_STATUS,
   ).length;
@@ -99,25 +96,17 @@ export function AppointmentsPage({
                 <ClipboardList size={18} />
               </div>
               <div>
-<<<<<<< HEAD
-                <p className="font-black text-amber-950">Scheduling Coordinator Review Queue</p>
-=======
                 <p className="font-black text-amber-950">
                   Scheduling Coordinator Review Queue
                 </p>
->>>>>>> f3c0e2d (Workflow: use global appointment list for scheduling queue count)
                 <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-800">
                   Use this queue for new appointment requests submitted without a confirmed appointment date. Open the request, add the final date/time, then update or save so it becomes scheduled.
                 </p>
               </div>
             </div>
             <Button size="sm" variant="secondary" onClick={showSchedulingQueue}>
-<<<<<<< HEAD
               View Queue
               {schedulingQueueCount > 0 ? ` (${schedulingQueueCount})` : ""}
-=======
-              View Queue{schedulingQueueCount > 0 ? ` (${schedulingQueueCount})` : ""}
->>>>>>> f3c0e2d (Workflow: use global appointment list for scheduling queue count)
             </Button>
           </div>
         </div>
