@@ -28,7 +28,17 @@ type ValidationResult = {
   issues: ValidationIssue[];
 };
 
-const VALID_APPOINTMENT_STATUSES = new Set(['Scheduled', 'Completed', 'Cancelled', 'Pending', 'Hospitalized', 'Discontinued', 'Deferred']);
+const VALID_APPOINTMENT_STATUSES = new Set([
+  'Scheduled',
+  'Completed',
+  'Cancelled',
+  'Pending',
+  'Hospitalized',
+  'Discontinued',
+  'Deferred',
+  'Rescheduled',
+  'Pending Scheduling Review',
+]);
 
 function validateRequired(issues: ValidationIssue[], field: string, value: unknown, label: string) {
   if (isBlank(value)) {
@@ -83,17 +93,11 @@ function validateAppointmentPayload(payload: any, mode: 'create' | 'patch'): Val
     validateRequired(issues, 'id', payload?.id, 'Appointment ID');
     validateRequired(issues, 'facilityId', payload?.facilityId, 'Facility ID');
     validateRequired(issues, 'residentName', payload?.residentName, 'Resident name');
-    validateRequired(issues, 'date', payload?.date, 'Appointment date');
-    validateRequired(issues, 'time', payload?.time, 'Appointment time');
     validateRequired(issues, 'type', payload?.type, 'Specialty');
   }
 
   if ('residentName' in (payload || {})) validateRequired(issues, 'residentName', payload?.residentName, 'Resident name');
-  if ('date' in (payload || {})) {
-    validateRequired(issues, 'date', payload?.date, 'Appointment date');
-    validateOptionalIsoDate(issues, 'date', payload?.date, 'Appointment date');
-  }
-  if ('time' in (payload || {})) validateRequired(issues, 'time', payload?.time, 'Appointment time');
+  if ('date' in (payload || {})) validateOptionalIsoDate(issues, 'date', payload?.date, 'Appointment date');
   if ('type' in (payload || {})) validateRequired(issues, 'type', payload?.type, 'Specialty');
   if ('schedulingDate' in (payload || {})) validateOptionalIsoDate(issues, 'schedulingDate', payload?.schedulingDate, 'Transport scheduling date');
   if ('referralDate' in (payload || {})) validateOptionalIsoDate(issues, 'referralDate', payload?.referralDate, 'Referral date');
@@ -461,7 +465,7 @@ app.post('/appointments', async (c) => {
   `).bind(
     toNull(apt.id), toNull(apt.origin), toNull(apt.residentName), toNull(apt.unit), toNull(apt.roomNumber), toNull(apt.providerName),
     toNull(apt.location), toNull(apt.contactNumber), toNull(apt.schedulingDate), toNull(apt.referralDate),
-    toNull(apt.status), toNull(apt.date), toNull(apt.time), toNull(apt.pickUpTime), toNull(apt.type), toNull(apt.description),
+    toNull(apt.status || 'Pending Scheduling Review'), toNull(apt.date), toNull(apt.time), toNull(apt.pickUpTime), toNull(apt.type), toNull(apt.description),
     toNull(apt.serviceInHouse), toNull(apt.reasonSendOut), toNull(apt.transportType), toNull(apt.transportCompany),
     toNull(apt.transportCompanyId), toNull(apt.transportCompanyPhone), toNull(apt.transportCompanyOther),
     toNull(apt.payerForRide), toNull(apt.roundTrip), toNull(apt.escort), toNull(apt.escortPhone), toNull(apt.oxygen), toNull(apt.notes), toNull(apt.facilityId),
