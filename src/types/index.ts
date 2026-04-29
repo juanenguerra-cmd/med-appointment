@@ -1,4 +1,4 @@
-export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Hospitalized';
+export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Hospitalized' | 'Discontinued' | 'Deferred' | 'Rescheduled' | 'Pending Scheduling Review';
 
 export interface Doctor {
   id: string;
@@ -29,6 +29,9 @@ export interface TransportationCompany {
 export interface Appointment {
   id: string;
   facilityId: string;
+  // Stable resident identity link. New appointments should populate these when a census resident is selected.
+  residentId?: string;
+  residentMrn?: string;
   // Origin & Patient Info
   origin: string;
   residentName: string;
