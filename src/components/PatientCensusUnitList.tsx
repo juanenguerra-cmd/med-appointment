@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Search, Eye, Users, UserCheck, UserX } from "lucide-react";
+import { Search, Eye, Users, UserCheck, UserX, X } from "lucide-react";
 import { Resident } from "../types";
 import { Button } from "./Button";
 import { getResidentStatusGroup, ResidentStatusFilter } from "../utils/residentStatus";
@@ -28,6 +28,7 @@ export function PatientCensusUnitList({
   onDeleteResident,
 }: PatientCensusUnitListProps) {
   const [statusFilter, setStatusFilter] = useState<ResidentStatusFilter>("Active");
+  const [detailResident, setDetailResident] = useState<Resident | null>(null);
   const q = safeLower(searchQuery);
   const safeResidents = Array.isArray(residents) ? residents : [];
 
@@ -79,6 +80,11 @@ export function PatientCensusUnitList({
         ? "bg-[#0b2a6f] text-white shadow-sm"
         : "border border-[#d6deeb] bg-white text-slate-600 hover:bg-slate-50"
     }`;
+
+  const handleViewResident = (resident: Resident) => {
+    setDetailResident(resident);
+    onViewDetails(resident);
+  };
 
   return (
     <div className="transport-card overflow-hidden">
@@ -200,7 +206,7 @@ export function PatientCensusUnitList({
                                   onClick={(event) => {
                                     event.preventDefault();
                                     event.stopPropagation();
-                                    onViewDetails(resident);
+                                    handleViewResident(resident);
                                   }}
                                 >
                                   <Eye size={14} /> View
@@ -235,6 +241,59 @@ export function PatientCensusUnitList({
           })}
         </div>
       )}
+
+      {detailResident && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-[#d6deeb] overflow-hidden">
+            <div className="transport-gradient text-white p-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Resident Details</p>
+                <h3 className="text-xl font-black mt-1">{safeText(detailResident.name) || "Resident"}</h3>
+                <p className="text-xs opacity-85 mt-1">Room {safeText(detailResident.roomNumber) || "—"} • {safeText(detailResident.unit || detailResident.floor) || "Unassigned"}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailResident(null)}
+                className="p-2 rounded-full hover:bg-white/15 transition-colors"
+                aria-label="Close resident details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <DetailItem label="Status" value={getResidentStatusGroup(detailResident)} />
+              <DetailItem label="MRN" value={safeText(detailResident.mrn) || "—"} />
+              <DetailItem label="Name" value={safeText(detailResident.name) || "—"} />
+              <DetailItem label="Sex / Age" value={`${safeText(detailResident.sex) || "—"}${detailResident.age ? ` • Age ${safeText(detailResident.age)}` : ""}`} />
+              <DetailItem label="Unit / Floor" value={safeText(detailResident.unit || detailResident.floor) || "—"} />
+              <DetailItem label="Room" value={safeText(detailResident.roomNumber) || "—"} />
+              <DetailItem label="Physician" value={safeText(detailResident.doctor) || "—"} />
+              <DetailItem label="Admission Date" value={safeText(detailResident.admissionDate) || "—"} />
+              <DetailItem label="Allergies" value={safeText(detailResident.allergies) || "—"} />
+              <DetailItem label="Diagnosis" value={safeText(detailResident.diagnosis) || "—"} />
+              <div className="md:col-span-2">
+                <DetailItem label="Notes" value={safeText(detailResident.notes) || "—"} />
+              </div>
+            </div>
+
+            <div className="p-5 bg-slate-50 border-t border-[#d6deeb] flex justify-end">
+              <Button type="button" variant="secondary" onClick={() => setDetailResident(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[#d6deeb] bg-[#f8fbff] p-4">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 font-bold text-slate-700 break-words">{value}</p>
     </div>
   );
 }
