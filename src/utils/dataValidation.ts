@@ -59,6 +59,12 @@ const normalizeResidentStatus = (status: unknown): 'Active' | 'Discharged' => {
   return 'Active';
 };
 
+const extractMrnFromAppointmentNotes = (notes: unknown): string => {
+  const text = safeString(notes);
+  const match = text.match(/\bMRN\s*:\s*([^|\n\r]+)/i);
+  return match ? match[1].trim() : '';
+};
+
 const required = (issues: ValidationIssue[], field: string, value: unknown, label: string) => {
   if (!safeString(value).trim() || safeString(value).trim() === '—') {
     issues.push({ field, message: `${label} is required.`, severity: 'error' });
@@ -82,6 +88,8 @@ export function normalizeAppointment(input: Partial<Appointment> | any): Appoint
     ...input,
     id: safeString(input?.id),
     facilityId: safeString(input?.facilityId),
+    residentId: safeString(input?.residentId),
+    residentMrn: safeString(input?.residentMrn) || extractMrnFromAppointmentNotes(input?.notes),
     origin: safeString(input?.origin),
     residentName: safeString(input?.residentName),
     unit: safeString(input?.unit),
