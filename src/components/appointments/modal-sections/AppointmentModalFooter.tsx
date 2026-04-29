@@ -6,6 +6,7 @@ type AppointmentModalFooterProps = {
   deleteAppointment: (id: string) => void;
   handleSaveAppointment: () => void;
   onClose: () => void;
+  isSaveDisabled?: boolean;
 };
 
 export function AppointmentModalFooter({
@@ -13,6 +14,7 @@ export function AppointmentModalFooter({
   deleteAppointment,
   handleSaveAppointment,
   onClose,
+  isSaveDisabled,
 }: AppointmentModalFooterProps) {
   return (
     <div className="p-6 border-t border-[#d6deeb] bg-white flex items-center justify-between shrink-0">
@@ -37,7 +39,7 @@ export function AppointmentModalFooter({
         <Button variant="secondary" className="mr-3" onClick={() => onClose()}>
           Cancel
         </Button>
-        <Button onClick={handleSaveAppointment}>
+        <Button onClick={handleSaveAppointment} disabled={isSaveDisabled}>
           {editingId ? "Update Appointment Record" : "Save Appointment Record"}
         </Button>
       </div>
