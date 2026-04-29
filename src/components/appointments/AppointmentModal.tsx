@@ -5,6 +5,7 @@ import { Button } from "../Button";
 import type { Appointment, Resident, TransportationCompany } from "../../types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "../../constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "../../constants/medicalSpecialties";
+import { AppointmentDateStatusSection } from "./modal-sections/AppointmentDateStatusSection";
 import { AppointmentLocationSection } from "./modal-sections/AppointmentLocationSection";
 import { AppointmentOriginSection } from "./modal-sections/AppointmentOriginSection";
 
@@ -116,64 +117,12 @@ export function AppointmentModal({
                 FormField={FormField}
               />
 
-              {/* Dates & Status Section */}
-              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <FormField label="Transport Scheduling">
-                  <input
-                    type="date"
-                    value={newAppt.schedulingDate || ""}
-                    onChange={(e) =>
-                      setNewAppt({
-                        ...newAppt,
-                        schedulingDate: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
-                  />
-                </FormField>
-
-                <FormField label="Date of Referral">
-                  <input
-                    type="date"
-                    value={newAppt.referralDate || ""}
-                    onChange={(e) =>
-                      setNewAppt({ ...newAppt, referralDate: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white"
-                  />
-                </FormField>
-
-                <FormField label="Status">
-                  <select
-                    value={newAppt.status || "Scheduled"}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setNewAppt({
-                        ...newAppt,
-                        status: val as any,
-                      });
-
-                      if (
-                        [
-                          "Cancelled",
-                          "Rescheduled",
-                          "Deferred",
-                          "Discontinued",
-                        ].includes(val)
-                      ) {
-                        setModalStatusPrompt({ status: val, reason: "" });
-                      }
-                    }}
-                    className="w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white appearance-none"
-                  >
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Discontinued">Discontinued</option>
-                    <option value="Deferred">Deferred</option>
-                  </select>
-                </FormField>
-              </section>
+              <AppointmentDateStatusSection
+                newAppt={newAppt}
+                setNewAppt={setNewAppt}
+                setModalStatusPrompt={setModalStatusPrompt}
+                FormField={FormField}
+              />
 
               {/* Detailed Timing Section */}
               <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
