@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Database, Plus } from "lucide-react";
+import { Database, Plus, ClipboardList } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import type { Appointment, Facility, Resident } from "../types";
@@ -39,6 +39,8 @@ type AppointmentsPageProps = {
   }) => JSX.Element;
 };
 
+const SCHEDULING_QUEUE_STATUS = "Pending Scheduling Review";
+
 export function AppointmentsPage({
   appointmentsFilter,
   setAppointmentsFilter,
@@ -54,6 +56,18 @@ export function AppointmentsPage({
   EmptyState,
   WideAppointmentTable,
 }: AppointmentsPageProps) {
+  const schedulingQueueCount = filteredTabAppointments.filter(
+    (appointment) => appointment.status === SCHEDULING_QUEUE_STATUS,
+  ).length;
+
+  const showSchedulingQueue = () => {
+    setAppointmentsFilter((prev) => ({
+      ...prev,
+      dateRange: "all",
+      status: SCHEDULING_QUEUE_STATUS,
+    }));
+  };
+
   return (
     <motion.section
       key="appointments"
@@ -73,7 +87,27 @@ export function AppointmentsPage({
         }
         className="overflow-hidden"
       >
-        <div className="flex flex-wrap items-center gap-4 px-4 py-3 bg-slate-50 border-y border-slate-100">
+        <div className="mx-4 mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-amber-100 p-2 text-amber-700">
+                <ClipboardList size={18} />
+              </div>
+              <div>
+                <p className="font-black text-amber-950">Scheduling Coordinator Review Queue</p>
+                <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-800">
+                  Use this queue for new appointment requests submitted without a confirmed appointment date. Open the request, add the final date/time, then update or save so it becomes scheduled.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="secondary" onClick={showSchedulingQueue}>
+              View Queue
+              {schedulingQueueCount > 0 ? ` (${schedulingQueueCount})` : ""}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 px-4 py-3 bg-slate-50 border-y border-slate-100 mt-4">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-500 uppercase">
               Date Range
@@ -125,11 +159,13 @@ export function AppointmentsPage({
               }
             >
               <option value="All">All Statuses</option>
+              <option value={SCHEDULING_QUEUE_STATUS}>Pending Scheduling Review</option>
               <option value="Scheduled">Scheduled</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
               <option value="Discontinued">Discontinued</option>
               <option value="Deferred">Deferred</option>
+              <option value="Rescheduled">Rescheduled</option>
             </select>
           </div>
         </div>
