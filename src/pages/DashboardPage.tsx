@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { Calendar, Users, ShieldCheck, Activity } from "lucide-react";
 import { AppointmentCalendar } from "../components/AppointmentCalendar";
 import type { Appointment, Resident } from "../types";
+import { getResidentStatusGroup } from "../utils/residentStatus";
 
 type DashboardPageProps = {
   appointments: Appointment[];
@@ -35,6 +36,10 @@ export function DashboardPage({
   onAppointmentClick,
   StatCard,
 }: DashboardPageProps) {
+  const activeResidentCount = residents.filter(
+    (resident) => getResidentStatusGroup(resident) === "Active",
+  ).length;
+
   return (
     <motion.section
       key="dashboard"
@@ -55,7 +60,7 @@ export function DashboardPage({
 
         <StatCard
           label="Patient Census"
-          value={residents.length.toString()}
+          value={activeResidentCount.toString()}
           hint="Active Registry"
           icon={<Users />}
           onClick={onNavigateCensus}
