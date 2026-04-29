@@ -190,17 +190,33 @@ export function PatientCensusUnitList({
 
                             <td className="px-5 py-4 text-xs text-slate-500 italic">{safeText(resident?.doctor) || "—"}</td>
 
-                            <td className="px-5 py-4">
-                              <div className="flex items-center justify-end gap-2">
-                                <Button size="sm" variant="secondary" className="gap-1" onClick={() => onViewDetails(resident)}>
+                            <td className="px-5 py-4 relative z-20 pointer-events-auto">
+                              <div className="flex items-center justify-end gap-2 pointer-events-auto">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="secondary"
+                                  className="gap-1 pointer-events-auto"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    onViewDetails(resident);
+                                  }}
+                                >
                                   <Eye size={14} /> View
                                 </Button>
 
                                 {onDeleteResident && safeText(resident?.id) && status === "Active" && (
                                   <button
                                     type="button"
-                                    onClick={() => onDeleteResident(safeText(resident.id))}
-                                    className="h-8 px-3 inline-flex items-center justify-center rounded-lg text-xs font-black text-amber-700 hover:bg-amber-50 transition-colors"
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      const confirmed = window.confirm(`Mark ${safeText(resident?.name) || "this resident"} inactive/discharged?`);
+                                      if (!confirmed) return;
+                                      onDeleteResident(safeText(resident.id));
+                                    }}
+                                    className="h-8 px-3 inline-flex items-center justify-center rounded-lg text-xs font-black text-amber-700 hover:bg-amber-50 transition-colors pointer-events-auto"
                                     aria-label="Mark resident inactive"
                                   >
                                     Mark inactive
