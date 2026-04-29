@@ -139,6 +139,7 @@ const RESIDENT_UPDATE_FIELDS = new Set([
   'status',
   'dischargedAt',
   'lastSeenCensusAt',
+  'dischargeBatchId',
 ]);
 
 const APPOINTMENT_UPDATE_FIELDS = new Set([
