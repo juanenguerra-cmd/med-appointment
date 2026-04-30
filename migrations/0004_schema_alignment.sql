@@ -45,11 +45,9 @@ CREATE TABLE IF NOT EXISTS transportation_companies (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add missing resident fields expected by the current Worker and census reconciliation logic.
+-- Add missing resident field expected by the current facility-scoped Worker routes.
+-- Resident status/discharge fields are intentionally handled by 0003_resident_status_soft_delete.sql.
 ALTER TABLE residents ADD COLUMN facilityId TEXT;
-ALTER TABLE residents ADD COLUMN dischargedAt TEXT;
-ALTER TABLE residents ADD COLUMN lastSeenCensusAt TEXT;
-ALTER TABLE residents ADD COLUMN dischargeBatchId TEXT;
 
 -- Add missing appointment fields expected by the current Worker, appointment modal, report builder, and PDF outputs.
 ALTER TABLE appointments ADD COLUMN facilityId TEXT;
