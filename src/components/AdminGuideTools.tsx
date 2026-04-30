@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Plus, Trash2, User, FileText, Calendar, Printer, BarChart3, Users, Link2 } from "lucide-react";
+import { Home, Plus, Trash2, User, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -50,7 +50,7 @@ export function AdminGuideTools({
           </div>
           <div>
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Printer size={14}/> Resident Summary</p>
-            <p>Open Census → View to review resident details, appointment history, and Print All, Historical, or Future appointment summaries.</p>
+            <p>Open Census → View to review resident details, appointment history, and Print All, Historical, or Future appointment summaries. The View button now opens one resident-detail modal only.</p>
           </div>
           <div>
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Calendar size={14}/> Scheduling Review</p>
@@ -63,6 +63,10 @@ export function AdminGuideTools({
           <div>
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><FileText size={14}/> PDF Outputs</p>
             <p>Checklist, consult, medical clearance, calendar, transport, and summary PDFs use saved appointment and resident details for cleaner operational packets.</p>
+          </div>
+          <div>
+            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Database size={14}/> Database Alignment</p>
+            <p>Admins should apply the D1 schema alignment migration after deployment so facilities, user access, transportation directory, resident facility links, and newer appointment fields match the current app.</p>
           </div>
         </div>
       </Card>
