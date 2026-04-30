@@ -38,8 +38,6 @@ export function CensusPage({
   setCensusSearchQuery,
   handleParseCensus,
   handleSaveCensus,
-  setSelectedResident,
-  setIsResidentDetailOpen,
   deleteResident,
 }: CensusPageProps) {
   return (
@@ -215,9 +213,9 @@ export function CensusPage({
             appointments={appointments}
             searchQuery={censusSearchQuery}
             onSearchChange={setCensusSearchQuery}
-            onViewDetails={(resident) => {
-              setSelectedResident(resident);
-              setIsResidentDetailOpen(true);
+            onViewDetails={() => {
+              // Resident detail display is owned by PatientCensusUnitList.
+              // Keeping this callback as a no-op prevents duplicate parent/child modals.
             }}
             onDeleteResident={deleteResident}
           />
