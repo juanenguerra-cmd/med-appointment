@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { CurrentReleaseNote } from "../components/CurrentReleaseNote";
 import { VersionHistoryPanel } from "../components/VersionHistoryPanel";
 import { AdminGuideTools } from "../components/AdminGuideTools";
 import type { Facility } from "../types";
@@ -37,6 +38,7 @@ export function HelpPage({
       transition={{ duration: 0.22 }}
       className="space-y-6"
     >
+      <CurrentReleaseNote />
       <VersionHistoryPanel currentUserRole={currentUserRole} />
 
       <AdminGuideTools
