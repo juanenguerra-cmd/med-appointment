@@ -20,6 +20,9 @@ type CensusPageProps = {
   handleParseCensus: () => void;
   handleSaveCensus: () => void;
   deleteResident: (residentId: string) => void;
+  // Legacy no-op props kept temporarily so App.tsx can be cleaned in a later focused split.
+  setSelectedResident?: (resident: Resident) => void;
+  setIsResidentDetailOpen?: (open: boolean) => void;
 };
 
 export function CensusPage({
