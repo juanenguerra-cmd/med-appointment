@@ -1,19 +1,19 @@
 import { CheckCircle2, Database, History, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added a typed frontend census reconciliation service for /api/census/reconcile.",
-  "The service standardizes backend census reconciliation requests and response summaries for future Patient Census workflow integration.",
-  "Preserved the existing Patient Census save workflow while the backend endpoint and service wrapper are validated.",
-  "Updated package metadata and visible release notes to identify v2.5.1 as the current census integration baseline.",
+  "Switched Patient Census replacement to backend-first reconciliation using /api/census/reconcile.",
+  "Kept a frontend fallback path so census replacement can still complete if the backend endpoint is temporarily unavailable.",
+  "Backend reconciliation now updates the local resident list from the database response after the server-side save completes.",
+  "Updated package metadata and visible release notes to identify v2.5.2 as the current census save baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.1 UI and Worker build remain stable.",
-  "No D1 migration is required for this service integration patch.",
+  "Run npm run build to confirm the v2.5.2 UI and Worker build remain stable.",
+  "No D1 migration is required for this census workflow switch.",
   "Deploy the Worker so /api/census/reconcile remains available.",
-  "Use the new censusReconcileService wrapper for the next narrow patch that switches replaceResidents() to backend reconciliation.",
-  "Keep the existing Patient Census workflow active until the full UI switch is build-tested locally.",
+  "Paste a small test census and confirm Patient Census saves through backend reconciliation.",
+  "Review the browser console for Backend census reconciliation summary after import validation.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.1 — Census Reconciliation Service Integration
+            v2.5.2 — Patient Census Backend Reconciliation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds the frontend service layer for the backend census reconciliation endpoint while keeping the active Patient Census workflow stable during validation.
+            This release switches the Patient Census replacement workflow to backend-first reconciliation while preserving a frontend fallback for operational safety.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> Census API</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Service Ready</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> Backend Save</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Fallback</span>
         </div>
       </div>
 
