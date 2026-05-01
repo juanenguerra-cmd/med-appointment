@@ -1,5 +1,5 @@
 name = "med-appointment"
-main = "src/worker.ts"
+main = "src/worker_v25.ts"
 compatibility_date = "2026-04-24"
 
 [[d1_databases]]
