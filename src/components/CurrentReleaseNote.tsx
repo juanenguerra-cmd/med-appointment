@@ -1,20 +1,20 @@
 import { CheckCircle2, History, ShieldCheck, Users } from "lucide-react";
 
 const releaseItems = [
-  "Polished the Help / Info admin management layout for cleaner facility and user cards.",
-  "Changed Facility Management and User Access Management into a responsive two-column admin grid on wide screens.",
-  "Improved quick-action bars, current facility badge, role badge, and mobile button widths.",
-  "Reduced visual crowding while keeping New Facility, New User, Set, Edit, Delete, and Edit User actions available.",
-  "Updated package metadata and visible release notes to identify v2.5.6 as the current admin layout polish baseline.",
+  "Added an Admin Management Snapshot section on the Help / Info page.",
+  "Added quick count tiles for total facilities, current facility status, admin users, and staff users.",
+  "Added New Facility and New User actions directly to the snapshot card for faster admin setup.",
+  "Kept the polished facility and user management cards from v2.5.6.",
+  "Updated package metadata and visible release notes to identify v2.5.7 as the current admin summary counts baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.6 UI remains stable.",
-  "No D1 migration is required for this layout polish patch.",
+  "Run npm run build to confirm the v2.5.7 UI remains stable.",
+  "No D1 migration is required for this admin summary patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Confirm Facility Management and User Access Management are cleaner and easier to scan.",
-  "Confirm New Facility and New User remain visible in the header and quick-action areas.",
+  "Confirm the Admin Management Snapshot shows facilities, current facility status, admin users, and staff users.",
+  "Confirm New Facility and New User actions remain available from the snapshot and management cards.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.6 — Admin Management Layout Polish
+            v2.5.7 — Admin Management Summary Counts
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release improves the Help / Info admin management layout so facility and user controls are easier to scan and use.
+            This release adds quick admin summary counts so facility and user setup status is easier to review from Help / Info.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Layout</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Snapshot</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> UI Polish</span>
         </div>
       </div>
