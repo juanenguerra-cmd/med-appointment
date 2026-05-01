@@ -19,8 +19,6 @@ type CensusPageProps = {
   setCensusSearchQuery: (value: string) => void;
   handleParseCensus: () => void;
   handleSaveCensus: () => void;
-  setSelectedResident: (resident: Resident) => void;
-  setIsResidentDetailOpen: (open: boolean) => void;
   deleteResident: (residentId: string) => void;
 };
 
@@ -215,7 +213,6 @@ export function CensusPage({
             onSearchChange={setCensusSearchQuery}
             onViewDetails={() => {
               // Resident detail display is owned by PatientCensusUnitList.
-              // Keeping this callback as a no-op prevents duplicate parent/child modals.
             }}
             onDeleteResident={deleteResident}
           />
