@@ -52,54 +52,50 @@ export function AdminGuideTools({
         subtitle="Quick guide on census reconciliation, scheduling review, reporting, and resident appointment history."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 text-xs font-semibold text-slate-600">
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Users size={14}/> Smart Census</p>
             <p>Paste the current Resident Listing Report into Patient Census, preview the parsed list, then save. Residents missing from the new census are marked Discharged instead of being deleted.</p>
           </div>
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Link2 size={14}/> Resident Identity</p>
             <p>When creating appointments, select the resident from the search list when available. New appointments store resident identity details so history is more reliable than name matching alone.</p>
           </div>
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Printer size={14}/> Resident Summary</p>
-            <p>Open Census → View to review resident details, appointment history, and Print All, Historical, or Future appointment summaries. The View button now opens one resident-detail modal only.</p>
+            <p>Open Census → View to review resident details, appointment history, and Print All, Historical, or Future appointment summaries.</p>
           </div>
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Calendar size={14}/> Scheduling Review</p>
-            <p>If an exact appointment date is not available, save the request as Pending Scheduling Review. The coordinator can later complete the date, time, pickup, and transport details.</p>
+            <p>If an exact appointment date is not available, save the request as Pending Scheduling Review. The coordinator can complete details later.</p>
           </div>
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><BarChart3 size={14}/> Reporting</p>
-            <p>Use filters for date, unit, status, specialty, or transportation company, then export CSV or PDF for QAPI, leadership review, or survey preparation.</p>
+            <p>Use filters for date, unit, status, specialty, or transportation company, then export CSV or PDF for review.</p>
           </div>
-          <div>
-            <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><FileText size={14}/> PDF Outputs</p>
-            <p>Checklist, consult, medical clearance, calendar, transport, and summary PDFs use saved appointment and resident details for cleaner operational packets.</p>
-          </div>
-          <div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Database size={14}/> Database Alignment</p>
-            <p>Admins should keep migrations current so facilities, user access, transportation directory, resident facility links, and appointment fields match the current app.</p>
+            <p>Admins should keep migrations current so facility, user, resident, transportation, and appointment fields match the app.</p>
           </div>
         </div>
       </Card>
 
       {isAdmin ? (
-        <>
+        <div className="grid gap-6 xl:grid-cols-2">
           <Card
             title="Facility Management"
-            subtitle="Configure facility profile, active facility selection, and facility records."
+            subtitle="Configure facility profiles and active facility selection."
             actions={
               <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
                 New Facility
               </Button>
             }
           >
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Admin Quick Action</p>
-                <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or edit an existing facility below.</p>
+                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Facility Quick Action</p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or update an existing facility.</p>
               </div>
-              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
+              <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
                 New Facility
               </Button>
             </div>
@@ -111,44 +107,50 @@ export function AdminGuideTools({
                 </div>
               )}
 
-              {facilities.map((facility) => (
-                <div key={facility.id} className="flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-black text-slate-800">{facility.name}</p>
-                    {facility.id === currentFacilityId && (
-                      <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">Current Facility</p>
-                    )}
+              {facilities.map((facility) => {
+                const isCurrent = facility.id === currentFacilityId;
+                return (
+                  <div key={facility.id} className={`rounded-2xl border p-4 ${isCurrent ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-black text-slate-800">{facility.name}</p>
+                        <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Facility Profile</p>
+                        {isCurrent && (
+                          <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">Current Facility</p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 sm:flex">
+                        <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>Set</Button>
+                        <Button variant="secondary" onClick={() => { setEditingFac(facility); setIsFacModalOpen(true); }}>Edit</Button>
+                        <Button variant="danger" onClick={() => deleteFacility(facility.id)}>Delete</Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>Set</Button>
-                    <Button variant="secondary" onClick={() => { setEditingFac(facility); setIsFacModalOpen(true); }}>Edit</Button>
-                    <Button variant="danger" onClick={() => deleteFacility(facility.id)}>Delete</Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
 
           <Card
             title="User Access Management"
-            subtitle="Add users, edit user details, and manage user access workflow."
+            subtitle="Add users, edit user details, and manage access workflow."
             actions={
               <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
                 New User
               </Button>
             }
           >
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Admin Quick Action</p>
-                <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or edit an existing user below.</p>
+                <p className="text-xs font-black uppercase tracking-wider text-sky-900">User Quick Action</p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or update an existing user profile.</p>
               </div>
-              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
+              <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
                 New User
               </Button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {users.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
                   No users loaded. Use New User to add a user, or refresh after confirming admin access.
@@ -156,17 +158,19 @@ export function AdminGuideTools({
               )}
 
               {users.map((u: any) => (
-                <div key={u.id} className="flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{u.role || "Staff"}</p>
+                <div key={u.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
+                      <p className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">{u.role || "Staff"}</p>
+                    </div>
+                    <Button className="w-full sm:w-auto" onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit User</Button>
                   </div>
-                  <Button onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit</Button>
                 </div>
               ))}
             </div>
           </Card>
-        </>
+        </div>
       ) : (
         <Card
           title="Admin Management"
