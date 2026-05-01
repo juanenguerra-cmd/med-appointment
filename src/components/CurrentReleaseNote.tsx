@@ -1,20 +1,20 @@
-import { CheckCircle2, History, ShieldCheck, Users } from "lucide-react";
+import { CheckCircle2, History, Search, Users } from "lucide-react";
 
 const releaseItems = [
-  "Added an Admin Management Snapshot section on the Help / Info page.",
-  "Added quick count tiles for total facilities, current facility status, admin users, and staff users.",
-  "Added New Facility and New User actions directly to the snapshot card for faster admin setup.",
-  "Kept the polished facility and user management cards from v2.5.6.",
-  "Updated package metadata and visible release notes to identify v2.5.7 as the current admin summary counts baseline.",
+  "Added search filters to Facility Management and User Access Management on the Help / Info page.",
+  "Facility search now filters by facility name, address, or phone when available.",
+  "User search now filters by name, email, or role.",
+  "Added showing-count labels and empty search-result messages for easier admin review.",
+  "Updated package metadata and visible release notes to identify v2.5.8 as the current admin search baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.7 UI remains stable.",
-  "No D1 migration is required for this admin summary patch.",
+  "Run npm run build to confirm the v2.5.8 UI remains stable.",
+  "No D1 migration is required for this admin search patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Confirm the Admin Management Snapshot shows facilities, current facility status, admin users, and staff users.",
-  "Confirm New Facility and New User actions remain available from the snapshot and management cards.",
+  "Search facilities by name, address, or phone and confirm the count updates.",
+  "Search users by name, email, or role and confirm the count updates.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,15 +26,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.7 — Admin Management Summary Counts
+            v2.5.8 — Admin Management Search Filters
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds quick admin summary counts so facility and user setup status is easier to review from Help / Info.
+            This release adds admin search filters so facility and user lists are easier to navigate as records grow.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Snapshot</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> UI Polish</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Search</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Lists</span>
         </div>
       </div>
 
