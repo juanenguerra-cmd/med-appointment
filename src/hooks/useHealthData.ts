@@ -12,6 +12,7 @@ import {
 } from '../utils/dataValidation';
 import { createAuditEvent, appendLocalAuditEvent } from '../utils/auditLog';
 import { reconcileCensusResidents } from '../utils/censusReconciliation';
+import { reconcileCensusOnBackend } from '../services/censusReconcileService';
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -553,22 +554,17 @@ export function useHealthData() {
     }
   };
 
-  const replaceResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
-    if (!currentFacilityId) return;
-
-    const currentResidents = dedupeResidents([...residents]) as Resident[];
-    const validNewResidents = newResidents
-      .map((resident) => validateResident(resident))
-      .filter((result) => result.isValid)
-      .map((result) => result.value as Omit<Resident, 'id' | 'facilityId'>);
-
+  const replaceResidentsWithFrontendFallback = async (
+    currentResidents: Resident[],
+    validNewResidents: Omit<Resident, 'id' | 'facilityId'>[],
+    previousResidents: Resident[],
+  ) => {
     const reconciliation = reconcileCensusResidents({
       existingResidents: currentResidents,
       incomingResidents: validNewResidents,
-      facilityId: currentFacilityId,
+      facilityId: currentFacilityId || '',
     });
 
-    const previousResidents = residents;
     setResidents(dedupeResidents(reconciliation.residents) as Resident[]);
 
     try {
@@ -624,7 +620,7 @@ export function useHealthData() {
         entity: 'census',
         facilityId: currentFacilityId,
         actor: auditActor,
-        summary: 'Smart census reconciliation completed',
+        summary: 'Smart census reconciliation completed using frontend fallback',
         counts: {
           total: reconciliation.summary.totalIncoming,
           existing: reconciliation.summary.totalExisting,
@@ -638,11 +634,59 @@ export function useHealthData() {
         },
       }));
 
-      console.info('Smart census reconciliation summary', reconciliation.summary);
+      console.info('Frontend fallback census reconciliation summary', reconciliation.summary);
     } catch (error) {
-      console.error('Smart census reconciliation failed', error, reconciliation.summary);
+      console.error('Frontend fallback census reconciliation failed', error, reconciliation.summary);
       setResidents(previousResidents);
       reportSaveError('Smart census reconciliation was not fully saved. Previous resident list was restored.', error);
+    }
+  };
+
+  const replaceResidents = async (newResidents: Omit<Resident, 'id' | 'facilityId'>[]) => {
+    if (!currentFacilityId) return;
+
+    const currentResidents = dedupeResidents([...residents]) as Resident[];
+    const validNewResidents = newResidents
+      .map((resident) => validateResident(resident))
+      .filter((result) => result.isValid)
+      .map((result) => result.value as Omit<Resident, 'id' | 'facilityId'>);
+
+    if (validNewResidents.length === 0) return;
+
+    const previousResidents = residents;
+
+    try {
+      const response = await reconcileCensusOnBackend({
+        facilityId: currentFacilityId,
+        residents: validNewResidents,
+      });
+
+      const nextResidents = dedupeResidents((response.residents || []).map(normalizeResident)) as Resident[];
+      setResidents(nextResidents);
+
+      appendLocalAuditEvent(createAuditEvent({
+        action: 'replace',
+        entity: 'census',
+        facilityId: currentFacilityId,
+        actor: auditActor,
+        summary: 'Backend census reconciliation completed',
+        counts: {
+          total: response.summary.totalIncoming,
+          existing: response.summary.totalExisting,
+          activeAfterImport: response.summary.activeAfterImport,
+          dischargedAfterImport: response.summary.dischargedAfterImport,
+          created: response.summary.created,
+          updated: response.summary.updated,
+          reactivated: response.summary.reactivated,
+          discharged: response.summary.discharged,
+          unchanged: response.summary.unchanged,
+        },
+      }));
+
+      console.info('Backend census reconciliation summary', response.summary);
+    } catch (error) {
+      console.warn('Backend census reconciliation failed; using frontend fallback.', error);
+      await replaceResidentsWithFrontendFallback(currentResidents, validNewResidents, previousResidents);
     }
   };
 
