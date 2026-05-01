@@ -122,12 +122,22 @@ export function registerCensusReconcileRoute(app: any) {
     const existingResult = await c.env.DB.prepare('SELECT * FROM residents WHERE facilityId = ? ORDER BY name ASC').bind(facilityId).all();
     const existingResidents = (existingResult.results || []) as any[];
 
+    let skippedInvalid = 0;
+    let duplicateIncoming = 0;
     const incomingMap = new Map<string, any>();
     for (const resident of incomingRaw) {
       const prepared = prepareIncomingResident(resident, facilityId, now);
-      if (!prepared) continue;
+      if (!prepared) {
+        skippedInvalid += 1;
+        continue;
+      }
       const key = normalizeKey(prepared);
-      if (key && key !== 'name-room:|') incomingMap.set(key, prepared);
+      if (!key || key === 'name-room:|') {
+        skippedInvalid += 1;
+        continue;
+      }
+      if (incomingMap.has(key)) duplicateIncoming += 1;
+      incomingMap.set(key, prepared);
     }
 
     if (incomingMap.size === 0) return c.json({ success: false, error: 'No valid residents were parsed for reconciliation' }, 400);
@@ -140,7 +150,11 @@ export function registerCensusReconcileRoute(app: any) {
 
     const statements: D1PreparedStatement[] = [];
     const summary = {
+      mode: 'backend' as const,
       batchId,
+      rawIncoming: incomingRaw.length,
+      skippedInvalid,
+      duplicateIncoming,
       totalIncoming: incomingMap.size,
       totalExisting: existingResidents.length,
       created: 0,
@@ -148,6 +162,7 @@ export function registerCensusReconcileRoute(app: any) {
       reactivated: 0,
       discharged: 0,
       unchanged: 0,
+      statementsQueued: 0,
       activeAfterImport: 0,
       dischargedAfterImport: 0,
     };
@@ -198,6 +213,8 @@ export function registerCensusReconcileRoute(app: any) {
       const stmt = buildPatchStatement(c.env.DB, existing.id, patch);
       if (stmt) statements.push(stmt);
     });
+
+    summary.statementsQueued = statements.length;
 
     if (statements.length > 0) {
       await c.env.DB.batch(statements);
