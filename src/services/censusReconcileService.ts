@@ -1,7 +1,11 @@
 import type { Resident } from '../types';
 
 export type BackendCensusReconcileSummary = {
+  mode: 'backend';
   batchId: string;
+  rawIncoming: number;
+  skippedInvalid: number;
+  duplicateIncoming: number;
   totalIncoming: number;
   totalExisting: number;
   created: number;
@@ -9,6 +13,7 @@ export type BackendCensusReconcileSummary = {
   reactivated: number;
   discharged: number;
   unchanged: number;
+  statementsQueued: number;
   activeAfterImport: number;
   dischargedAfterImport: number;
 };
