@@ -21,6 +21,95 @@ const isBlank = (value: unknown): boolean => {
   return !text || text === '—';
 };
 
+const PASSWORD_HASH_SCHEME = 'pbkdf2-sha256';
+const PASSWORD_HASH_ITERATIONS = 100_000;
+const PASSWORD_HASH_PREFIX = `${PASSWORD_HASH_SCHEME}$${PASSWORD_HASH_ITERATIONS}$`;
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function derivePasswordHash(password: string, salt: Uint8Array): Promise<Uint8Array> {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-256',
+      salt,
+      iterations: PASSWORD_HASH_ITERATIONS,
+    },
+    keyMaterial,
+    256,
+  );
+
+  return new Uint8Array(bits);
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await derivePasswordHash(password, salt);
+  return `${PASSWORD_HASH_PREFIX}${bytesToBase64(salt)}$${bytesToBase64(hash)}`;
+}
+
+function isPasswordHash(value: unknown): boolean {
+  return safeString(value).startsWith(PASSWORD_HASH_PREFIX);
+}
+
+function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+async function verifyPassword(password: string, storedPassword: unknown): Promise<{ ok: boolean; needsUpgrade: boolean }> {
+  const stored = safeString(storedPassword);
+  if (!stored) return { ok: false, needsUpgrade: false };
+
+  if (!isPasswordHash(stored)) {
+    return { ok: stored === password, needsUpgrade: stored === password };
+  }
+
+  const parts = stored.split('$');
+  if (parts.length !== 4) return { ok: false, needsUpgrade: false };
+
+  const [, iterationsText, saltBase64, hashBase64] = parts;
+  if (Number(iterationsText) !== PASSWORD_HASH_ITERATIONS) {
+    return { ok: false, needsUpgrade: false };
+  }
+
+  try {
+    const salt = base64ToBytes(saltBase64);
+    const expectedHash = base64ToBytes(hashBase64);
+    const actualHash = await derivePasswordHash(password, salt);
+    return { ok: timingSafeEqual(actualHash, expectedHash), needsUpgrade: false };
+  } catch {
+    return { ok: false, needsUpgrade: false };
+  }
+}
+
 type ValidationIssue = { field: string; message: string; severity: 'warning' | 'error' };
 
 type ValidationResult = {
@@ -313,11 +402,17 @@ app.post('/login', async (c) => {
     return c.json({ success: false, needsPasswordSetup: true, userId: user.id }, 200);
   }
 
-  if (user.password !== password) {
+  const passwordCheck = await verifyPassword(safeString(password), user.password);
+  if (!passwordCheck.ok) {
     return c.json({ success: false, error: "Invalid password" }, 401);
   }
 
-  await c.env.DB.prepare("UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(user.id).run();
+  if (passwordCheck.needsUpgrade) {
+    const upgradedHash = await hashPassword(safeString(password));
+    await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(upgradedHash, user.id).run();
+  } else {
+    await c.env.DB.prepare("UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(user.id).run();
+  }
 
   const { password: _, ...safeUser } = user;
   return c.json({ success: true, user: safeUser });
@@ -325,7 +420,8 @@ app.post('/login', async (c) => {
 
 app.post('/setup-password', async (c) => {
   const { userId, password } = await c.req.json() as any;
-  await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(password, userId).run();
+  const passwordHash = await hashPassword(safeString(password));
+  await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(passwordHash, userId).run();
   
   const user = await c.env.DB.prepare("SELECT id, email, fullName, role, lastLogin FROM users WHERE id = ?").bind(userId).first();
   return c.json({ success: true, user });
@@ -333,10 +429,12 @@ app.post('/setup-password', async (c) => {
 
 app.post('/users', async (c) => {
   const user = await c.req.json() as any;
+  const passwordValue = user.password ? await hashPassword(safeString(user.password)) : null;
+
   await c.env.DB.prepare(`
     INSERT INTO users (id, email, fullName, role, password)
     VALUES (?, ?, ?, ?, ?)
-  `).bind(toNull(user.id), toNull(user.email), toNull(user.fullName), toNull(user.role), toNull(user.password)).run();
+  `).bind(toNull(user.id), toNull(user.email), toNull(user.fullName), toNull(user.role), passwordValue).run();
   
   const { password: _, ...safeUser } = user;
   return c.json({ success: true, user: safeUser }, 201);
@@ -352,9 +450,10 @@ app.put('/users/:id', async (c) => {
         UPDATE users SET email = ?, fullName = ?, role = ?, password = NULL WHERE id = ?
       `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), userId).run();
     } else {
+      const passwordHash = await hashPassword(safeString(user.password));
       await c.env.DB.prepare(`
         UPDATE users SET email = ?, fullName = ?, role = ?, password = ? WHERE id = ?
-      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), toNull(user.password), userId).run();
+      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), passwordHash, userId).run();
     }
   } else {
     await c.env.DB.prepare(`
