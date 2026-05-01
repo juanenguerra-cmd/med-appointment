@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Search, Users } from "lucide-react";
 
 const releaseItems = [
-  "Added clear-search controls to the Facility Management and User Access Management search boxes.",
-  "Search inputs now reserve space for the clear button so text does not overlap the control.",
-  "Admins can quickly reset filtered facility or user lists without manually deleting search text.",
-  "Kept the v2.5.8 search filters, showing-count labels, and empty search-result messages.",
-  "Updated package metadata and visible release notes to identify v2.5.9 as the current admin search control baseline.",
+  "Added sort controls to Facility Management and User Access Management on the Help / Info page.",
+  "Facility list can now be sorted by Current first, Name A-Z, or Name Z-A.",
+  "User list can now be sorted by Admins first, Name A-Z, Name Z-A, or Role A-Z.",
+  "Kept v2.5.9 search, clear-search, showing-count, and empty-result behavior.",
+  "Updated package metadata and visible release notes to identify v2.6.0 as the current admin list control baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.9 UI remains stable.",
-  "No D1 migration is required for this admin search-control patch.",
+  "Run npm run build to confirm the v2.6.0 UI remains stable.",
+  "No D1 migration is required for this admin sort-control patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Type into the facility search box and confirm the clear button resets the list.",
-  "Type into the user search box and confirm the clear button resets the list.",
+  "Sort facilities by current facility and name order.",
+  "Sort users by admin-first, name order, and role order.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.9 — Admin Search Clear Controls
+            v2.6.0 — Admin Management Sort Controls
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds clear buttons to admin search boxes so facility and user filters can be reset quickly.
+            This release adds sort controls to admin facility and user lists so management records are easier to organize.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Clear Search</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Sort + Search</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Lists</span>
         </div>
       </div>
