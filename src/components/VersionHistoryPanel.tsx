@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.6";
+const CURRENT_VERSION = "2.5.7";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.7",
+    releaseDate: "2026-04-30",
+    title: "Admin Management Summary Counts",
+    summary:
+      "This release adds quick admin summary counts so facility and user setup status is easier to review from Help / Info.",
+    capabilities: [
+      "Added an Admin Management Snapshot section on the Help / Info page.",
+      "Added count tiles for total facilities, current facility status, admin users, and staff users.",
+      "Added New Facility and New User actions directly to the snapshot card.",
+      "Kept the polished facility and user management cards from v2.5.6.",
+      "No D1 migration is required for this admin summary patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Confirm the Admin Management Snapshot shows facility and user setup counts.",
+    ],
+    userImpact: [
+      "Admins can quickly review setup status before managing records.",
+      "Facility and user creation actions are available from the snapshot card.",
+      "The Help / Info admin area provides better at-a-glance context.",
+    ],
+  },
   {
     version: "2.5.6",
     releaseDate: "2026-04-30",
@@ -23,11 +48,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Changed Facility Management and User Access Management into a responsive two-column admin grid on wide screens.",
       "Improved quick-action bars, current facility badge, role badge, and mobile button widths.",
       "Reduced visual crowding while preserving New Facility, New User, Set, Edit, Delete, and Edit User actions.",
-      "No D1 migration is required for this UI polish patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Confirm Facility Management and User Access Management are easier to scan and use.",
     ],
@@ -78,27 +100,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can add facilities from the Help / Info page again.",
       "Admins can add users from the Help / Info page again.",
       "The admin management area matches the intended workflow.",
-    ],
-  },
-  {
-    version: "2.5.3",
-    releaseDate: "2026-04-30",
-    title: "Census Reconciliation Observability",
-    summary:
-      "This release improves census import validation by expanding backend reconciliation summary counts and updating frontend service types.",
-    capabilities: [
-      "Backend reconciliation summary now includes rawIncoming, skippedInvalid, duplicateIncoming, statementsQueued, and mode.",
-      "Frontend census reconciliation service types now match the expanded backend summary fields.",
-      "No D1 migration is required for this observability patch.",
-    ],
-    processFlow: [
-      "Deploy the Worker so the expanded summary is live.",
-      "Paste a small test census and review the console summary after save.",
-    ],
-    userImpact: [
-      "Makes census import validation easier after each save.",
-      "Helps identify skipped invalid rows or duplicate incoming residents.",
-      "Improves confidence that backend reconciliation is processing the expected data.",
     ],
   },
 ];
