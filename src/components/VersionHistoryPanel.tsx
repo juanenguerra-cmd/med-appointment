@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.7";
+const CURRENT_VERSION = "2.5.8";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.8",
+    releaseDate: "2026-04-30",
+    title: "Admin Management Search Filters",
+    summary:
+      "This release adds admin search filters so facility and user lists are easier to navigate as records grow.",
+    capabilities: [
+      "Added search to Facility Management by facility name, address, or phone.",
+      "Added search to User Access Management by user name, email, or role.",
+      "Added showing-count labels for filtered facility and user lists.",
+      "Added empty search-result messages when no records match.",
+      "No D1 migration is required for this admin search patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Search facilities and users to confirm filtering works as expected.",
+    ],
+    userImpact: [
+      "Admins can find facility records faster.",
+      "Admins can find user records faster.",
+      "The Help / Info admin lists remain usable as records grow.",
+    ],
+  },
   {
     version: "2.5.7",
     releaseDate: "2026-04-30",
@@ -23,12 +48,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added an Admin Management Snapshot section on the Help / Info page.",
       "Added count tiles for total facilities, current facility status, admin users, and staff users.",
       "Added New Facility and New User actions directly to the snapshot card.",
-      "Kept the polished facility and user management cards from v2.5.6.",
-      "No D1 migration is required for this admin summary patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Confirm the Admin Management Snapshot shows facility and user setup counts.",
     ],
@@ -78,28 +99,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can find facility and user creation controls faster.",
       "Buttons remain visible even if the header action area is missed or compressed.",
       "The admin management workflow is clearer and easier to use.",
-    ],
-  },
-  {
-    version: "2.5.4",
-    releaseDate: "2026-04-30",
-    title: "Admin Help Actions Fix",
-    summary:
-      "This release restored the visible admin action buttons on the Help / Info page by using the correct Card actions prop.",
-    capabilities: [
-      "Restored New Facility action in Facility Management.",
-      "Restored New User action in User Access Management.",
-      "Kept facility Set, Edit, and Delete controls visible for admin users.",
-      "Kept user Edit controls visible for admin users.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Confirm New Facility and New User are visible in the management cards.",
-    ],
-    userImpact: [
-      "Admins can add facilities from the Help / Info page again.",
-      "Admins can add users from the Help / Info page again.",
-      "The admin management area matches the intended workflow.",
     ],
   },
 ];
