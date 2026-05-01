@@ -1,4 +1,5 @@
-import { Plus, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { useState } from "react";
+import { Plus, Search, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -21,11 +22,25 @@ const isAdminRole = (role: unknown) => {
   return normalized === "admin" || normalized === "administrator" || normalized === "super admin" || normalized === "superadmin";
 };
 
+const includesQuery = (value: unknown, query: string) => String(value || "").toLowerCase().includes(query);
+
 const SummaryTile = ({ label, value, hint }: { label: string; value: number | string; hint: string }) => (
   <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
     <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
     <p className="mt-1 text-2xl font-black text-slate-900">{value}</p>
     <p className="mt-1 text-[11px] font-semibold text-slate-500">{hint}</p>
+  </div>
+);
+
+const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) => (
+  <div className="relative">
+    <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+    <input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-xs font-semibold text-slate-700 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+    />
   </div>
 );
 
@@ -41,10 +56,31 @@ export function AdminGuideTools({
   setEditingUser,
   setIsUserModalOpen,
 }: AdminGuideToolsProps) {
+  const [facilitySearch, setFacilitySearch] = useState("");
+  const [userSearch, setUserSearch] = useState("");
   const isAdmin = isAdminRole(currentUserRole);
   const adminUsers = users.filter((user: any) => isAdminRole(user?.role)).length;
   const staffUsers = Math.max(users.length - adminUsers, 0);
   const currentFacility = facilities.find((facility) => facility.id === currentFacilityId);
+  const normalizedFacilitySearch = facilitySearch.trim().toLowerCase();
+  const normalizedUserSearch = userSearch.trim().toLowerCase();
+
+  const filteredFacilities = normalizedFacilitySearch
+    ? facilities.filter((facility) =>
+        includesQuery(facility.name, normalizedFacilitySearch) ||
+        includesQuery((facility as any).address, normalizedFacilitySearch) ||
+        includesQuery((facility as any).phone, normalizedFacilitySearch)
+      )
+    : facilities;
+
+  const filteredUsers = normalizedUserSearch
+    ? users.filter((user: any) =>
+        includesQuery(user.fullName, normalizedUserSearch) ||
+        includesQuery(user.name, normalizedUserSearch) ||
+        includesQuery(user.email, normalizedUserSearch) ||
+        includesQuery(user.role, normalizedUserSearch)
+      )
+    : users;
 
   const openNewFacility = () => {
     setEditingFac(null);
@@ -130,6 +166,13 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
+              <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                <SearchBox value={facilitySearch} onChange={setFacilitySearch} placeholder="Search facilities by name, address, or phone..." />
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Showing {filteredFacilities.length} of {facilities.length}
+                </p>
+              </div>
+
               <div className="space-y-3">
                 {facilities.length === 0 && (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
@@ -137,7 +180,13 @@ export function AdminGuideTools({
                   </div>
                 )}
 
-                {facilities.map((facility) => {
+                {facilities.length > 0 && filteredFacilities.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                    No facilities match your search.
+                  </div>
+                )}
+
+                {filteredFacilities.map((facility) => {
                   const isCurrent = facility.id === currentFacilityId;
                   return (
                     <div key={facility.id} className={`rounded-2xl border p-4 ${isCurrent ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
@@ -180,6 +229,13 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
+              <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                <SearchBox value={userSearch} onChange={setUserSearch} placeholder="Search users by name, email, or role..." />
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Showing {filteredUsers.length} of {users.length}
+                </p>
+              </div>
+
               <div className="space-y-3">
                 {users.length === 0 && (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
@@ -187,7 +243,13 @@ export function AdminGuideTools({
                   </div>
                 )}
 
-                {users.map((u: any) => (
+                {users.length > 0 && filteredUsers.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                    No users match your search.
+                  </div>
+                )}
+
+                {filteredUsers.map((u: any) => (
                   <div key={u.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
