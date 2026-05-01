@@ -15,9 +15,39 @@ interface VersionHistoryPanelProps {
   currentUserRole?: string | null;
 }
 
-const CURRENT_VERSION = "2.2.1";
+const CURRENT_VERSION = "2.2.2";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.2.2",
+    releaseDate: "2026-04-30",
+    title: "D1 Migration Cleanup and Current Baseline",
+    summary:
+      "This maintenance release cleans up overlapping D1 migration ownership while preserving the deployed schema alignment and Census View modal fix.",
+    capabilities: [
+      "Cleaned up the schema alignment migration so it no longer re-adds appointment resident identity fields already owned by 0004_appointment_resident_identity.sql.",
+      "Cleaned up the schema alignment migration so it no longer re-adds user password and last-login fields already owned by 0006_user_passwords.sql.",
+      "Cleaned up the schema alignment migration so it no longer re-adds transport-detail fields already owned by 0007_appointment_transport_details.sql.",
+      "Kept schema alignment coverage for facilities, user-facility access, transportation directory, resident facility link, remaining appointment transport/escort/consult fields, and operational indexes.",
+      "Preserved the Census View modal fix so PatientCensusUnitList remains the single resident-detail modal owner.",
+      "Updated the visible Current Release Note and Version History so v2.2.2 is the current maintenance baseline.",
+    ],
+    processFlow: [
+      "Admin pulls the latest main branch before the next build or deploy.",
+      "Admin runs npm run build to verify the UI and TypeScript build remain stable.",
+      "For a fresh D1 database, migrations run in order without the schema alignment file repeating columns owned by neighboring migrations.",
+      "For an already-deployed D1 database, admins avoid re-running previously applied migration names and continue from the recorded migration state.",
+      "Staff opens Patient Census and selects View on a resident row.",
+      "The resident detail modal opens once, showing demographics, appointment history, and resident summary print options.",
+    ],
+    userImpact: [
+      "Reduces duplicate-column migration failures on fresh or rebuilt environments.",
+      "Keeps D1 schema ownership clearer for future updates.",
+      "Maintains the corrected Census View behavior from v2.2.1.",
+      "Makes the current deployed baseline easier to identify in Help and Version History.",
+      "Creates a cleaner foundation before the next security or database pass.",
+    ],
+  },
   {
     version: "2.2.1",
     releaseDate: "2026-04-30",
