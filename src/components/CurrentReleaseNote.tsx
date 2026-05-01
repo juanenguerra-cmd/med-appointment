@@ -1,19 +1,19 @@
 import { CheckCircle2, Database, History, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Hardened password storage using PBKDF2-SHA256 hashes in the existing users.password field.",
-  "Added backward-compatible legacy password upgrade so existing plain-text passwords are converted to hashed storage after a successful login.",
-  "Updated password setup, new user creation, and user password reset/update flows so new passwords are stored as hashes instead of plain text.",
-  "Updated package metadata and visible release notes to identify v2.4.0 as the current security baseline.",
+  "Added a backend census reconciliation route at /api/census/reconcile.",
+  "The backend route calculates created, updated, reactivated, discharged, unchanged, and final active/discharged counts in one request.",
+  "Added a v2.5 Worker entrypoint that registers the census reconciliation route while preserving the existing Worker API.",
+  "Updated Wrangler to deploy the v2.5 Worker entrypoint and updated package metadata to v2.5.0.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.4.0 UI and Worker build remain stable.",
-  "No new D1 migration is required because the existing users.password column stores the new hash string.",
-  "Deploy the Worker so password hashing is active on login, setup, new user creation, and password update.",
-  "Have existing users log in once with their current password so legacy plain-text passwords are automatically upgraded to hashed storage.",
-  "Use this baseline as the starting point for the next security pass: session tokens, protected API middleware, and server-side facility authorization.",
+  "Run npm run build to confirm the v2.5.0 UI and Worker build remain stable.",
+  "Deploy the Worker so /api/census/reconcile is available.",
+  "No D1 migration is required for this backend endpoint.",
+  "Validate the endpoint with a small test census before switching the full Patient Census UI workflow to backend-only reconciliation.",
+  "Use this baseline for the next patch that replaces the frontend multi-request census save with the new backend endpoint.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.4.0 — Security Hardening: Password Hashing
+            v2.5.0 — Backend Census Reconciliation Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release hardens password storage while preserving existing login continuity through automatic legacy password upgrade after successful login.
+            This release adds the backend foundation for one-request census reconciliation while keeping the existing frontend workflow available during validation.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Security</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> No Migration</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> Census API</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safer Save</span>
         </div>
       </div>
 
