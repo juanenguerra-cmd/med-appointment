@@ -1,6 +1,12 @@
--- v2.2.1: D1 Schema Alignment
--- Purpose: align the D1 database shape with the current Worker API and frontend data model.
--- Run after the existing initial and resident soft-discharge migrations.
+-- v2.2.2: D1 Schema Alignment Cleanup
+-- Purpose: align the D1 database shape with the current Worker API while avoiding overlap
+-- with existing migrations:
+--   0003_resident_status_soft_delete.sql
+--   0004_appointment_resident_identity.sql
+--   0006_user_passwords.sql
+--   0007_appointment_transport_details.sql
+--
+-- Important: this migration intentionally DOES NOT add columns already owned by those files.
 
 -- Shared facility registry used to scope residents, appointments, users, and transportation directory records.
 CREATE TABLE IF NOT EXISTS facilities (
@@ -13,14 +19,14 @@ CREATE TABLE IF NOT EXISTS facilities (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Application users. Password hashing/session hardening should be handled in a separate security migration/workflow update.
+-- Application users.
+-- Password and lastLogin are intentionally added by 0006_user_passwords.sql.
+-- Password hashing/session hardening should be handled in a separate security migration/workflow update.
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   fullName TEXT,
   role TEXT DEFAULT 'staff',
-  password TEXT,
-  lastLogin DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -50,15 +56,12 @@ CREATE TABLE IF NOT EXISTS transportation_companies (
 ALTER TABLE residents ADD COLUMN facilityId TEXT;
 
 -- Add missing appointment fields expected by the current Worker, appointment modal, report builder, and PDF outputs.
+-- residentId/residentMrn are intentionally handled by 0004_appointment_resident_identity.sql.
+-- transportTypeOther/payerForRideOther/escortDetails are intentionally handled by 0007_appointment_transport_details.sql.
 ALTER TABLE appointments ADD COLUMN facilityId TEXT;
-ALTER TABLE appointments ADD COLUMN residentId TEXT;
-ALTER TABLE appointments ADD COLUMN residentMrn TEXT;
 ALTER TABLE appointments ADD COLUMN transportCompanyId TEXT;
 ALTER TABLE appointments ADD COLUMN transportCompanyPhone TEXT;
 ALTER TABLE appointments ADD COLUMN transportCompanyOther TEXT;
-ALTER TABLE appointments ADD COLUMN transportTypeOther TEXT;
-ALTER TABLE appointments ADD COLUMN payerForRideOther TEXT;
-ALTER TABLE appointments ADD COLUMN escortDetails TEXT;
 ALTER TABLE appointments ADD COLUMN escortPhone TEXT;
 ALTER TABLE appointments ADD COLUMN weight TEXT;
 ALTER TABLE appointments ADD COLUMN height TEXT;
