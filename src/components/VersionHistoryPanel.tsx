@@ -10,31 +10,53 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.3.0";
+const CURRENT_VERSION = "2.4.0";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.4.0",
+    releaseDate: "2026-04-30",
+    title: "Security Hardening: Password Hashing",
+    summary:
+      "This release hardens password storage while preserving login continuity through automatic legacy password upgrade after successful login.",
+    capabilities: [
+      "New passwords are stored as PBKDF2-SHA256 hashes in the existing users.password field.",
+      "Existing plain-text passwords still work once and are automatically upgraded to hashed storage after successful login.",
+      "Password setup, new user creation, and password update flows now store hashes instead of plain text.",
+      "No D1 migration is required because the existing password column stores the new hash string.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the Worker so password hashing is active.",
+      "Have existing users log in once so legacy passwords upgrade automatically.",
+    ],
+    userImpact: [
+      "Improves security by removing new plain-text password storage.",
+      "Preserves existing user access during the transition.",
+      "Creates a safer baseline for future session and authorization middleware.",
+    ],
+  },
   {
     version: "2.3.0",
     releaseDate: "2026-04-30",
     title: "Next-Phase Architecture Cleanup Baseline",
     summary:
-      "This release formalizes the next cleanup baseline by aligning package metadata, keeping Census View modal ownership clean, and preparing the app for the next security and modularization phase.",
+      "Aligned package metadata, kept Census View modal ownership clean, and prepared the app for security and modularization work.",
     capabilities: [
-      "Package metadata now identifies the app as med-appointment v2.3.0.",
+      "Package metadata identifies the app as med-appointment v2.3.0.",
       "Patient Census keeps resident detail display owned by PatientCensusUnitList.",
-      "Legacy parent modal props are retained as temporary no-ops so App.tsx can be split safely in a later pass.",
-      "No new D1 migration is required for this cleanup patch.",
+      "Legacy parent modal props are retained as temporary no-ops for build-safe App.tsx cleanup.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
-      "Open Help to confirm v2.3.0 is the current baseline.",
+      "Pull latest main branch.",
+      "Run npm run build.",
       "Open Patient Census and select View to confirm one resident-detail modal opens.",
     ],
     userImpact: [
-      "Version identity is clearer in the app and package metadata.",
-      "Census View remains stable without a risky App.tsx rewrite.",
-      "Creates a clean baseline for the next security and modularization work.",
+      "Version identity is clearer.",
+      "Census View remains stable.",
+      "Creates a clean baseline for future cleanup work.",
     ],
   },
   {
@@ -79,28 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Reduced save errors from missing D1 columns.",
       "Prevented duplicate resident-detail modals.",
       "Created a clearer deployed baseline.",
-    ],
-  },
-  {
-    version: "2.2.0",
-    releaseDate: "2026-04-29",
-    title: "Smart Census Persistence and Resident Identity Linking",
-    summary:
-      "Strengthened census replacement, retained discharged resident history, and added stable resident identity fields to appointment records.",
-    capabilities: [
-      "Created, updated, reactivated, discharged, and unchanged resident outcomes are tracked.",
-      "Appointments support resident identity matching.",
-      "Active, Discharged, and All census views are preserved.",
-    ],
-    processFlow: [
-      "Paste census data.",
-      "Review preview.",
-      "Save with smart reconciliation.",
-    ],
-    userImpact: [
-      "Discharged residents remain retained.",
-      "Appointment history matching is more dependable.",
-      "Census imports avoid unnecessary save activity.",
     ],
   },
 ];
