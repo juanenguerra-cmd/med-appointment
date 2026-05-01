@@ -21,6 +21,14 @@ const isAdminRole = (role: unknown) => {
   return normalized === "admin" || normalized === "administrator" || normalized === "super admin" || normalized === "superadmin";
 };
 
+const SummaryTile = ({ label, value, hint }: { label: string; value: number | string; hint: string }) => (
+  <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+    <p className="mt-1 text-2xl font-black text-slate-900">{value}</p>
+    <p className="mt-1 text-[11px] font-semibold text-slate-500">{hint}</p>
+  </div>
+);
+
 export function AdminGuideTools({
   currentUserRole,
   facilities,
@@ -34,6 +42,9 @@ export function AdminGuideTools({
   setIsUserModalOpen,
 }: AdminGuideToolsProps) {
   const isAdmin = isAdminRole(currentUserRole);
+  const adminUsers = users.filter((user: any) => isAdminRole(user?.role)).length;
+  const staffUsers = Math.max(users.length - adminUsers, 0);
+  const currentFacility = facilities.find((facility) => facility.id === currentFacilityId);
 
   const openNewFacility = () => {
     setEditingFac(null);
@@ -80,97 +91,117 @@ export function AdminGuideTools({
       </Card>
 
       {isAdmin ? (
-        <div className="grid gap-6 xl:grid-cols-2">
+        <>
           <Card
-            title="Facility Management"
-            subtitle="Configure facility profiles and active facility selection."
+            title="Admin Management Snapshot"
+            subtitle="Quick counts for facility and user setup."
             actions={
-              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                New Facility
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>New Facility</Button>
+                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>New User</Button>
+              </div>
             }
           >
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Facility Quick Action</p>
-                <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or update an existing facility.</p>
-              </div>
-              <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                New Facility
-              </Button>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <SummaryTile label="Facilities" value={facilities.length} hint="Facility profiles configured" />
+              <SummaryTile label="Current Facility" value={currentFacility ? "Set" : "Missing"} hint={currentFacility?.name || "Choose or add a facility"} />
+              <SummaryTile label="Admin Users" value={adminUsers} hint="Users with admin-level role" />
+              <SummaryTile label="Staff Users" value={staffUsers} hint="Non-admin users loaded" />
             </div>
+          </Card>
 
-            <div className="space-y-3">
-              {facilities.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
-                  No facilities found. Use New Facility to add the first facility.
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card
+              title="Facility Management"
+              subtitle="Configure facility profiles and active facility selection."
+              actions={
+                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
+                  New Facility
+                </Button>
+              }
+            >
+              <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-sky-900">Facility Quick Action</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or update an existing facility.</p>
                 </div>
-              )}
+                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
+                  New Facility
+                </Button>
+              </div>
 
-              {facilities.map((facility) => {
-                const isCurrent = facility.id === currentFacilityId;
-                return (
-                  <div key={facility.id} className={`rounded-2xl border p-4 ${isCurrent ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
+              <div className="space-y-3">
+                {facilities.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                    No facilities found. Use New Facility to add the first facility.
+                  </div>
+                )}
+
+                {facilities.map((facility) => {
+                  const isCurrent = facility.id === currentFacilityId;
+                  return (
+                    <div key={facility.id} className={`rounded-2xl border p-4 ${isCurrent ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="font-black text-slate-800">{facility.name}</p>
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Facility Profile</p>
+                          {isCurrent && (
+                            <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">Current Facility</p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 sm:flex">
+                          <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>Set</Button>
+                          <Button variant="secondary" onClick={() => { setEditingFac(facility); setIsFacModalOpen(true); }}>Edit</Button>
+                          <Button variant="danger" onClick={() => deleteFacility(facility.id)}>Delete</Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <Card
+              title="User Access Management"
+              subtitle="Add users, edit user details, and manage access workflow."
+              actions={
+                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
+                  New User
+                </Button>
+              }
+            >
+              <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-sky-900">User Quick Action</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or update an existing user profile.</p>
+                </div>
+                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
+                  New User
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {users.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                    No users loaded. Use New User to add a user, or refresh after confirming admin access.
+                  </div>
+                )}
+
+                {users.map((u: any) => (
+                  <div key={u.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="font-black text-slate-800">{facility.name}</p>
-                        <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Facility Profile</p>
-                        {isCurrent && (
-                          <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">Current Facility</p>
-                        )}
+                        <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
+                        <p className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">{u.role || "Staff"}</p>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 sm:flex">
-                        <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>Set</Button>
-                        <Button variant="secondary" onClick={() => { setEditingFac(facility); setIsFacModalOpen(true); }}>Edit</Button>
-                        <Button variant="danger" onClick={() => deleteFacility(facility.id)}>Delete</Button>
-                      </div>
+                      <Button className="w-full sm:w-auto" onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit User</Button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          <Card
-            title="User Access Management"
-            subtitle="Add users, edit user details, and manage access workflow."
-            actions={
-              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                New User
-              </Button>
-            }
-          >
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-wider text-sky-900">User Quick Action</p>
-                <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or update an existing user profile.</p>
+                ))}
               </div>
-              <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                New User
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              {users.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
-                  No users loaded. Use New User to add a user, or refresh after confirming admin access.
-                </div>
-              )}
-
-              {users.map((u: any) => (
-                <div key={u.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
-                      <p className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">{u.role || "Staff"}</p>
-                    </div>
-                    <Button className="w-full sm:w-auto" onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit User</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        </>
       ) : (
         <Card
           title="Admin Management"
