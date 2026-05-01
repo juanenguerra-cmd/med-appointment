@@ -10,31 +10,53 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.4.0";
+const CURRENT_VERSION = "2.5.0";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.0",
+    releaseDate: "2026-04-30",
+    title: "Backend Census Reconciliation Foundation",
+    summary:
+      "This release adds the backend foundation for one-request census reconciliation while keeping the existing frontend workflow available during validation.",
+    capabilities: [
+      "Added /api/census/reconcile for backend census reconciliation.",
+      "Backend route calculates created, updated, reactivated, discharged, unchanged, active-after-import, and discharged-after-import counts.",
+      "Added a v2.5 Worker entrypoint that registers the new route while preserving the existing Worker API.",
+      "No D1 migration is required for this backend endpoint.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the Worker so /api/census/reconcile is available.",
+      "Validate the endpoint with a small test census before switching the full Patient Census UI workflow to backend-only reconciliation.",
+    ],
+    userImpact: [
+      "Creates the backend foundation for safer census saves.",
+      "Reduces future risk of partial census save workflows.",
+      "Keeps the current frontend workflow stable while the new endpoint is validated.",
+    ],
+  },
   {
     version: "2.4.0",
     releaseDate: "2026-04-30",
     title: "Security Hardening: Password Hashing",
     summary:
-      "This release hardens password storage while preserving login continuity through automatic legacy password upgrade after successful login.",
+      "This release hardened password storage while preserving login continuity through automatic legacy password upgrade after successful login.",
     capabilities: [
       "New passwords are stored as PBKDF2-SHA256 hashes in the existing users.password field.",
       "Existing plain-text passwords still work once and are automatically upgraded to hashed storage after successful login.",
       "Password setup, new user creation, and password update flows now store hashes instead of plain text.",
-      "No D1 migration is required because the existing password column stores the new hash string.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the Worker so password hashing is active.",
       "Have existing users log in once so legacy passwords upgrade automatically.",
+      "Continue normal user management without Cloudflare Auth.",
     ],
     userImpact: [
-      "Improves security by removing new plain-text password storage.",
+      "Improves password storage security.",
       "Preserves existing user access during the transition.",
-      "Creates a safer baseline for future session and authorization middleware.",
+      "Creates a safer user-management baseline.",
     ],
   },
   {
@@ -79,28 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Fewer migration conflicts.",
       "Cleaner database maintenance baseline.",
       "Stable Census View workflow.",
-    ],
-  },
-  {
-    version: "2.2.1",
-    releaseDate: "2026-04-30",
-    title: "D1 Schema Alignment and Census View Modal Fix",
-    summary:
-      "Aligned D1 with the current Worker/API contract and fixed the Patient Census View workflow so resident details open from one owner.",
-    capabilities: [
-      "Added D1 coverage for current facility, transportation, resident, and appointment fields.",
-      "Corrected Census View modal ownership.",
-      "Updated help and release notes for post-deployment validation.",
-    ],
-    processFlow: [
-      "Apply D1 migrations.",
-      "Open Census View for a resident.",
-      "Create or edit appointments to verify column alignment.",
-    ],
-    userImpact: [
-      "Reduced save errors from missing D1 columns.",
-      "Prevented duplicate resident-detail modals.",
-      "Created a clearer deployed baseline.",
     ],
   },
 ];
