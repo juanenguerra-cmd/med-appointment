@@ -1,4 +1,4 @@
-import { Home, Plus, User, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { Plus, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -34,6 +34,16 @@ export function AdminGuideTools({
   setIsUserModalOpen,
 }: AdminGuideToolsProps) {
   const isAdmin = isAdminRole(currentUserRole);
+
+  const openNewFacility = () => {
+    setEditingFac(null);
+    setIsFacModalOpen(true);
+  };
+
+  const openNewUser = () => {
+    setEditingUser(null);
+    setIsUserModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -79,18 +89,21 @@ export function AdminGuideTools({
             title="Facility Management"
             subtitle="Configure facility profile, active facility selection, and facility records."
             actions={
-              <Button
-                variant="primary"
-                icon={<Plus size={16} />}
-                onClick={() => {
-                  setEditingFac(null);
-                  setIsFacModalOpen(true);
-                }}
-              >
+              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
                 New Facility
               </Button>
             }
           >
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Admin Quick Action</p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or edit an existing facility below.</p>
+              </div>
+              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
+                New Facility
+              </Button>
+            </div>
+
             <div className="space-y-3">
               {facilities.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
@@ -120,18 +133,21 @@ export function AdminGuideTools({
             title="User Access Management"
             subtitle="Add users, edit user details, and manage user access workflow."
             actions={
-              <Button
-                variant="primary"
-                icon={<Plus size={16} />}
-                onClick={() => {
-                  setEditingUser(null);
-                  setIsUserModalOpen(true);
-                }}
-              >
+              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
                 New User
               </Button>
             }
           >
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-sky-900">Admin Quick Action</p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or edit an existing user below.</p>
+              </div>
+              <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
+                New User
+              </Button>
+            </div>
+
             <div className="space-y-2">
               {users.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
