@@ -10,26 +10,47 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.2";
+const CURRENT_VERSION = "2.5.3";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.3",
+    releaseDate: "2026-04-30",
+    title: "Census Reconciliation Observability",
+    summary:
+      "This release improves census import validation by expanding backend reconciliation summary counts and updating frontend service types.",
+    capabilities: [
+      "Backend reconciliation summary now includes rawIncoming, skippedInvalid, duplicateIncoming, statementsQueued, and mode.",
+      "Frontend census reconciliation service types now match the expanded backend summary fields.",
+      "No D1 migration is required for this observability patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the Worker so the expanded summary is live.",
+      "Paste a small test census and review the console summary after save.",
+    ],
+    userImpact: [
+      "Makes census import validation easier after each save.",
+      "Helps identify skipped invalid rows or duplicate incoming residents.",
+      "Improves confidence that backend reconciliation is processing the expected data.",
+    ],
+  },
   {
     version: "2.5.2",
     releaseDate: "2026-04-30",
     title: "Patient Census Backend Reconciliation",
     summary:
-      "This release switches Patient Census replacement to backend-first reconciliation while keeping a frontend fallback for operational safety.",
+      "This release switched Patient Census replacement to backend-first reconciliation while keeping a frontend fallback for operational safety.",
     capabilities: [
-      "replaceResidents() now calls /api/census/reconcile through the typed censusReconcileService.",
+      "replaceResidents() calls /api/census/reconcile through the typed censusReconcileService.",
       "The local resident list updates from the database response after server-side reconciliation completes.",
       "A frontend fallback remains available if the backend endpoint is temporarily unavailable.",
-      "No D1 migration is required for this workflow switch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
-      "Deploy the app so the backend census endpoint and frontend switch are live.",
-      "Paste a small test census and confirm backend reconciliation completes successfully.",
+      "Deploy the app so backend census reconciliation is live.",
+      "Paste a small test census.",
+      "Confirm backend reconciliation completes successfully.",
     ],
     userImpact: [
       "Reduces partial-save risk during census replacement.",
@@ -57,28 +78,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Prepared the Patient Census workflow for safer one-request backend reconciliation.",
       "Kept the current census save behavior stable while integration was staged.",
       "Reduced risk before replacing the large frontend multi-request save loop.",
-    ],
-  },
-  {
-    version: "2.5.0",
-    releaseDate: "2026-04-30",
-    title: "Backend Census Reconciliation Foundation",
-    summary:
-      "This release added the backend foundation for one-request census reconciliation while keeping the existing frontend workflow available during validation.",
-    capabilities: [
-      "Added /api/census/reconcile for backend census reconciliation.",
-      "Backend route calculates created, updated, reactivated, discharged, unchanged, active-after-import, and discharged-after-import counts.",
-      "Added a v2.5 Worker entrypoint that registers the new route while preserving the existing Worker API.",
-    ],
-    processFlow: [
-      "Deploy the Worker so /api/census/reconcile is available.",
-      "Validate the endpoint with a small test census.",
-      "Keep the current frontend workflow available during validation.",
-    ],
-    userImpact: [
-      "Created the backend foundation for safer census saves.",
-      "Reduced future risk of partial census save workflows.",
-      "Kept the current frontend workflow stable while the new endpoint was validated.",
     ],
   },
   {
