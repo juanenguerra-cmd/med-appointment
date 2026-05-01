@@ -1,5 +1,4 @@
-import React from "react";
-import { Home, Plus, Trash2, User, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { Home, Plus, User, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -17,6 +16,11 @@ interface AdminGuideToolsProps {
   setIsUserModalOpen: (open: boolean) => void;
 }
 
+const isAdminRole = (role: unknown) => {
+  const normalized = String(role || "").trim().toLowerCase();
+  return normalized === "admin" || normalized === "administrator" || normalized === "super admin" || normalized === "superadmin";
+};
+
 export function AdminGuideTools({
   currentUserRole,
   facilities,
@@ -29,11 +33,10 @@ export function AdminGuideTools({
   setEditingUser,
   setIsUserModalOpen,
 }: AdminGuideToolsProps) {
-  const isAdmin = String(currentUserRole || "").trim().toLowerCase() === "admin";
+  const isAdmin = isAdminRole(currentUserRole);
 
   return (
     <div className="space-y-6">
-      {/* USER GUIDE - VISIBLE TO ALL */}
       <Card
         icon={<FileText size={22} />}
         title="Guide & Help (Current Workflow)"
@@ -66,13 +69,12 @@ export function AdminGuideTools({
           </div>
           <div>
             <p className="font-black text-slate-800 mb-1 flex items-center gap-2"><Database size={14}/> Database Alignment</p>
-            <p>Admins should apply the D1 schema alignment migration after deployment so facilities, user access, transportation directory, resident facility links, and newer appointment fields match the current app.</p>
+            <p>Admins should keep migrations current so facilities, user access, transportation directory, resident facility links, and appointment fields match the current app.</p>
           </div>
         </div>
       </Card>
 
-      {/* ADMIN ONLY SECTION */}
-      {isAdmin && (
+      {isAdmin ? (
         <>
           <Card
             icon={<Home size={22} />}
@@ -92,11 +94,23 @@ export function AdminGuideTools({
             }
           >
             <div className="space-y-3">
+              {facilities.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                  No facilities found. Use New Facility to add the first facility.
+                </div>
+              )}
+
               {facilities.map((facility) => (
-                <div key={facility.id} className="flex justify-between p-3 border rounded-xl">
-                  <span>{facility.name}</span>
+                <div key={facility.id} className="flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-black text-slate-800">{facility.name}</p>
+                    {facility.id === currentFacilityId && (
+                      <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">Current Facility</p>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Button variant="secondary" onClick={() => setCurrentFacilityId(facility.id)}>Set</Button>
+                    <Button variant="secondary" onClick={() => { setEditingFac(facility); setIsFacModalOpen(true); }}>Edit</Button>
                     <Button variant="danger" onClick={() => deleteFacility(facility.id)}>Delete</Button>
                   </div>
                 </div>
@@ -104,17 +118,52 @@ export function AdminGuideTools({
             </div>
           </Card>
 
-          <Card icon={<User size={22} />} title="User Access Logic">
+          <Card
+            icon={<User size={22} />}
+            title="User Access Management"
+            subtitle="Add users, edit user details, and manage user access workflow."
+            action={
+              <Button
+                variant="primary"
+                icon={<Plus size={16} />}
+                onClick={() => {
+                  setEditingUser(null);
+                  setIsUserModalOpen(true);
+                }}
+              >
+                New User
+              </Button>
+            }
+          >
             <div className="space-y-2">
+              {users.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                  No users loaded. Use New User to add a user, or refresh after confirming admin access.
+                </div>
+              )}
+
               {users.map((u: any) => (
-                <div key={u.id} className="flex justify-between p-3 border rounded-xl">
-                  <span>{u.name || u.email}</span>
+                <div key={u.id} className="flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{u.role || "Staff"}</p>
+                  </div>
                   <Button onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit</Button>
                 </div>
               ))}
             </div>
           </Card>
         </>
+      ) : (
+        <Card
+          icon={<User size={22} />}
+          title="Admin Management"
+          subtitle="Facility and user management actions are available for admin accounts only."
+        >
+          <p className="text-xs font-semibold text-slate-500">
+            Current role detected: <span className="font-black text-slate-700">{String(currentUserRole || "Not provided")}</span>
+          </p>
+        </Card>
       )}
     </div>
   );
