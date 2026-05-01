@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.3";
+const CURRENT_VERSION = "2.5.4";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.4",
+    releaseDate: "2026-04-30",
+    title: "Admin Help Actions Fix",
+    summary:
+      "This release restores the visible admin action buttons on the Help / Info page by using the correct Card actions prop.",
+    capabilities: [
+      "Restored New Facility action in Facility Management.",
+      "Restored New User action in User Access Management.",
+      "Kept facility Set, Edit, and Delete controls visible for admin users.",
+      "Kept user Edit controls visible for admin users.",
+      "No D1 migration is required for this UI fix.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Confirm New Facility and New User are visible in the management cards.",
+    ],
+    userImpact: [
+      "Admins can add facilities from the Help / Info page again.",
+      "Admins can add users from the Help / Info page again.",
+      "The admin management area now matches the intended workflow.",
+    ],
+  },
   {
     version: "2.5.3",
     releaseDate: "2026-04-30",
@@ -78,28 +103,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Prepared the Patient Census workflow for safer one-request backend reconciliation.",
       "Kept the current census save behavior stable while integration was staged.",
       "Reduced risk before replacing the large frontend multi-request save loop.",
-    ],
-  },
-  {
-    version: "2.4.0",
-    releaseDate: "2026-04-30",
-    title: "Security Hardening: Password Hashing",
-    summary:
-      "This release hardened password storage while preserving login continuity through automatic legacy password upgrade after successful login.",
-    capabilities: [
-      "New passwords are stored as PBKDF2-SHA256 hashes in the existing users.password field.",
-      "Existing plain-text passwords still work once and are automatically upgraded to hashed storage after successful login.",
-      "Password setup, new user creation, and password update flows now store hashes instead of plain text.",
-    ],
-    processFlow: [
-      "Deploy the Worker so password hashing is active.",
-      "Have existing users log in once so legacy passwords upgrade automatically.",
-      "Continue normal user management without Cloudflare Auth.",
-    ],
-    userImpact: [
-      "Improved password storage security.",
-      "Preserved existing user access during the transition.",
-      "Created a safer user-management baseline.",
     ],
   },
 ];
