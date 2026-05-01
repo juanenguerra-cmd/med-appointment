@@ -1,7 +1,4 @@
-import React from "react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Download, History, Workflow, FileText, CheckCircle2 } from "lucide-react";
+import { History, CheckCircle2 } from "lucide-react";
 
 interface VersionEntry {
   version: string;
@@ -18,7 +15,39 @@ interface VersionHistoryPanelProps {
   currentUserRole?: string | null;
 }
 
+const CURRENT_VERSION = "2.2.1";
+
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.2.1",
+    releaseDate: "2026-04-30",
+    title: "D1 Schema Alignment and Census View Modal Fix",
+    summary:
+      "This maintenance release locks the deployed D1 schema to the current Worker/API contract and fixes the Patient Census View workflow so resident details open from one modal owner only.",
+    capabilities: [
+      "Added D1 schema alignment for facilities, user access, transportation directory, resident facility scoping, and newer appointment fields used by the current app.",
+      "Aligned appointment storage with current transport, escort, consult, resident identity, wheelchair/lift/recliner, and bariatric fields.",
+      "Added supporting indexes for facility-scoped residents, resident status, appointment date/status, resident identity lookup, transportation directory, and user-facility access.",
+      "Corrected the Census View workflow so PatientCensusUnitList owns the resident detail modal and the parent Census page no longer opens a duplicate modal.",
+      "Added a visible Current Release Note on the Help page and updated the admin guide with the post-deployment database migration workflow.",
+      "Updated .gitignore to exclude local Wrangler/Miniflare D1 runtime state files from normal Git status output.",
+    ],
+    processFlow: [
+      "Admin deploys the updated application build.",
+      "Admin applies the D1 migration set locally and remotely so the database includes all fields expected by the Worker API.",
+      "Staff opens Patient Census and selects View on a resident row.",
+      "The resident detail modal opens once, showing demographics, appointment history, and resident summary print options.",
+      "Staff creates or edits appointments using transport, escort, consult, and resident identity fields without D1 column mismatch errors.",
+      "Admin reviews Help → Current Release Note for deployment validation steps and the current baseline version.",
+    ],
+    userImpact: [
+      "Reduces database save errors caused by missing D1 columns after code updates.",
+      "Improves Census View reliability by preventing duplicate or overlapping resident detail modal behavior.",
+      "Makes the deployed baseline clearer for staff and admins through an updated release note and version history.",
+      "Keeps local Wrangler development database files out of Git tracking so repository status stays clean.",
+      "Creates a safer v2.2.1 baseline before the next feature or security pass.",
+    ],
+  },
   {
     version: "2.2.0",
     releaseDate: "2026-04-29",
@@ -181,7 +210,7 @@ const VERSION_HISTORY: VersionEntry[] = [
   },
   {
     version: "0.1.4",
-    releaseDate: "Latest",
+    releaseDate: "2026-04-26",
     title: "Census Duplicate Cleanup and Collapsible Unit Census",
     summary:
       "Added safer resident duplicate handling and a cleaner Active Patient Census view grouped by unit with collapsible sections and visible quick actions.",
@@ -209,19 +238,29 @@ const VERSION_HISTORY: VersionEntry[] = [
 ];
 
 export function VersionHistoryPanel({ currentUserRole }: VersionHistoryPanelProps) {
-  const visibleVersionHistory = VERSION_HISTORY;
+  const visibleVersionHistory = VERSION_HISTORY.filter((entry) => !entry.adminOnly || String(currentUserRole || "").toLowerCase() === "admin");
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 text-sm font-black text-slate-800">
-        <History size={18} className="text-sky-700" /> Version History
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm font-black text-slate-800">
+          <History size={18} className="text-sky-700" /> Version History
+        </div>
+        <span className="inline-flex w-fit items-center rounded-full bg-sky-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-sky-800 ring-1 ring-sky-100">
+          Current v{CURRENT_VERSION}
+        </span>
       </div>
 
       <div className="mt-4 space-y-3">
         {visibleVersionHistory.map((entry) => (
-          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === "2.2.0"}>
+          <details key={entry.version} className="rounded-2xl border border-slate-100 bg-slate-50 p-4" open={entry.version === CURRENT_VERSION}>
             <summary className="cursor-pointer text-sm font-black text-slate-800">
               v{entry.version} — {entry.title}
+              {entry.version === CURRENT_VERSION && (
+                <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-100">
+                  Current
+                </span>
+              )}
             </summary>
             <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-600">{entry.summary}</p>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
