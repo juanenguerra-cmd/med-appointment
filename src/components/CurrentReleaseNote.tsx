@@ -1,20 +1,19 @@
 import { CheckCircle2, History, ShieldCheck, Users } from "lucide-react";
 
 const releaseItems = [
-  "Fixed the Help / Info admin management action buttons by using the correct Card actions prop.",
-  "Restored the New Facility button in Facility Management for admin users.",
-  "Restored the New User button in User Access Management for admin users.",
-  "Kept Set, Edit, and Delete facility actions plus Edit user action available in the management lists.",
-  "Updated package metadata and visible release notes to identify v2.5.4 as the current admin actions fix baseline.",
+  "Added inline Admin Quick Action bars inside Facility Management and User Access Management.",
+  "Kept the header New Facility and New User buttons while adding body-level fallback buttons for visibility.",
+  "Improved admin management visibility on wide and narrow screens.",
+  "Updated package metadata and visible release notes to identify v2.5.5 as the current admin management visibility baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.4 UI remains stable.",
-  "No D1 migration is required for this UI action-button fix.",
+  "Run npm run build to confirm the v2.5.5 UI remains stable.",
+  "No D1 migration is required for this UI visibility patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Confirm New Facility appears in Facility Management.",
-  "Confirm New User appears in User Access Management.",
+  "Confirm New Facility appears in the card header and inline quick action bar.",
+  "Confirm New User appears in the card header and inline quick action bar.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.4 — Admin Help Actions Fix
+            v2.5.5 — Admin Management Visibility Safeguard
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release restores the visible admin management buttons on the Help / Info page for adding facilities and users.
+            This release adds visible inline admin quick actions so facility and user creation controls remain easy to find on the Help / Info page.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Actions</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> UI Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Visibility</span>
         </div>
       </div>
 
