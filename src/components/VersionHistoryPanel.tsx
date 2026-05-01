@@ -10,31 +10,53 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.1";
+const CURRENT_VERSION = "2.5.2";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.2",
+    releaseDate: "2026-04-30",
+    title: "Patient Census Backend Reconciliation",
+    summary:
+      "This release switches Patient Census replacement to backend-first reconciliation while keeping a frontend fallback for operational safety.",
+    capabilities: [
+      "replaceResidents() now calls /api/census/reconcile through the typed censusReconcileService.",
+      "The local resident list updates from the database response after server-side reconciliation completes.",
+      "A frontend fallback remains available if the backend endpoint is temporarily unavailable.",
+      "No D1 migration is required for this workflow switch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app so the backend census endpoint and frontend switch are live.",
+      "Paste a small test census and confirm backend reconciliation completes successfully.",
+    ],
+    userImpact: [
+      "Reduces partial-save risk during census replacement.",
+      "Keeps operations safer through fallback protection.",
+      "Makes census import more reliable and easier to audit from summary counts.",
+    ],
+  },
   {
     version: "2.5.1",
     releaseDate: "2026-04-30",
     title: "Census Reconciliation Service Integration",
     summary:
-      "This release adds the typed frontend service wrapper for the backend census reconciliation endpoint while keeping the active Patient Census workflow stable during validation.",
+      "This release added the typed frontend service wrapper for the backend census reconciliation endpoint while keeping the active Patient Census workflow stable during validation.",
     capabilities: [
       "Added censusReconcileService for /api/census/reconcile.",
       "Standardized frontend types for backend reconciliation summaries.",
-      "Preserved the existing Patient Census save workflow until the final UI switch is locally build-tested.",
-      "No D1 migration is required for this integration patch.",
+      "Preserved the existing Patient Census save workflow until the final UI switch was locally build-tested.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
-      "Deploy the app so the service and backend endpoint are available.",
-      "Use the service in the next narrow patch to switch replaceResidents() to backend reconciliation.",
+      "Deploy the service wrapper and backend endpoint.",
+      "Validate service availability.",
+      "Prepare replaceResidents() for backend reconciliation.",
     ],
     userImpact: [
-      "Prepares the Patient Census workflow for safer one-request backend reconciliation.",
-      "Keeps the current census save behavior stable while integration is staged.",
-      "Reduces risk before replacing the large frontend multi-request save loop.",
+      "Prepared the Patient Census workflow for safer one-request backend reconciliation.",
+      "Kept the current census save behavior stable while integration was staged.",
+      "Reduced risk before replacing the large frontend multi-request save loop.",
     ],
   },
   {
@@ -42,7 +64,7 @@ const VERSION_HISTORY: VersionEntry[] = [
     releaseDate: "2026-04-30",
     title: "Backend Census Reconciliation Foundation",
     summary:
-      "This release adds the backend foundation for one-request census reconciliation while keeping the existing frontend workflow available during validation.",
+      "This release added the backend foundation for one-request census reconciliation while keeping the existing frontend workflow available during validation.",
     capabilities: [
       "Added /api/census/reconcile for backend census reconciliation.",
       "Backend route calculates created, updated, reactivated, discharged, unchanged, active-after-import, and discharged-after-import counts.",
@@ -54,9 +76,9 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keep the current frontend workflow available during validation.",
     ],
     userImpact: [
-      "Creates the backend foundation for safer census saves.",
-      "Reduces future risk of partial census save workflows.",
-      "Keeps the current frontend workflow stable while the new endpoint is validated.",
+      "Created the backend foundation for safer census saves.",
+      "Reduced future risk of partial census save workflows.",
+      "Kept the current frontend workflow stable while the new endpoint was validated.",
     ],
   },
   {
@@ -76,31 +98,9 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Continue normal user management without Cloudflare Auth.",
     ],
     userImpact: [
-      "Improves password storage security.",
-      "Preserves existing user access during the transition.",
-      "Creates a safer user-management baseline.",
-    ],
-  },
-  {
-    version: "2.3.0",
-    releaseDate: "2026-04-30",
-    title: "Next-Phase Architecture Cleanup Baseline",
-    summary:
-      "Aligned package metadata, kept Census View modal ownership clean, and prepared the app for security and modularization work.",
-    capabilities: [
-      "Package metadata identifies the app as med-appointment v2.3.0.",
-      "Patient Census keeps resident detail display owned by PatientCensusUnitList.",
-      "Legacy parent modal props are retained as temporary no-ops for build-safe App.tsx cleanup.",
-    ],
-    processFlow: [
-      "Pull latest main branch.",
-      "Run npm run build.",
-      "Open Patient Census and select View to confirm one resident-detail modal opens.",
-    ],
-    userImpact: [
-      "Version identity is clearer.",
-      "Census View remains stable.",
-      "Creates a clean baseline for future cleanup work.",
+      "Improved password storage security.",
+      "Preserved existing user access during the transition.",
+      "Created a safer user-management baseline.",
     ],
   },
 ];
