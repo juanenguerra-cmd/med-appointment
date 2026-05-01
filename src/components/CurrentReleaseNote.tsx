@@ -1,19 +1,19 @@
-import { CheckCircle2, Database, Eye, History } from "lucide-react";
+import { CheckCircle2, Database, Eye, History, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Cleaned up the schema alignment migration so it no longer re-adds columns already owned by the resident identity, user password, and transport-detail migrations.",
-  "Kept the D1 alignment coverage for facilities, user-facility access, transportation directory, resident facility link, and remaining appointment fields expected by the current app.",
-  "Preserved the Census View modal fix so Census → View opens one resident detail window only.",
-  "Updated version history and the visible release note so v2.2.2 is the current maintenance baseline.",
+  "Updated package metadata from the generic react-example baseline to med-appointment v2.3.0.",
+  "Cleaned the Patient Census page prop contract so resident detail display remains owned by PatientCensusUnitList while legacy parent modal props are treated as temporary no-ops.",
+  "Preserved the v2.2.2 D1 migration cleanup baseline and documented that future database changes should be small, specific migrations.",
+  "Established the next-phase cleanup baseline before deeper security hardening, auth middleware, and App.tsx modularization.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the UI and TypeScript build remain stable.",
-  "For a fresh D1 database, run migrations in order; the schema alignment file now avoids overlap with existing migration files.",
-  "For the already-deployed D1 database, no duplicate-column rerun is expected if the previous migration name was already recorded as applied.",
-  "Open Patient Census and select View on a resident row to confirm only one resident detail modal opens.",
-  "Create or edit an appointment to confirm transport, escort, consult, and resident identity fields save without D1 column errors.",
+  "Run npm run build to confirm the v2.3.0 UI and TypeScript build remain stable.",
+  "No new D1 migration is required for this v2.3.0 metadata and Census prop cleanup patch.",
+  "Open Help and confirm Current Release Note and Version History show v2.3.0 as the current baseline.",
+  "Open Patient Census and select View on a resident row to confirm the resident detail modal still opens only once.",
+  "Use this baseline as the starting point for the next security-hardening pass: password hashing, session handling, and server-side facility authorization.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,16 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.2.2 — D1 Migration Cleanup and Current Baseline
+            v2.3.0 — Next-Phase Architecture Cleanup Baseline
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This maintenance release cleans up overlapping D1 migration ownership while preserving the deployed schema alignment and Census View modal fix.
+            This release formalizes the next cleanup baseline by aligning package metadata, keeping the Census View modal ownership clean, and preparing the app for the next security and modularization phase.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> D1</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> Baseline</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Eye size={12} className="mr-1 inline" /> View</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Next Security</span>
         </div>
       </div>
 
