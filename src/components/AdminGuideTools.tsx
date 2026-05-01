@@ -38,7 +38,6 @@ export function AdminGuideTools({
   return (
     <div className="space-y-6">
       <Card
-        icon={<FileText size={22} />}
         title="Guide & Help (Current Workflow)"
         subtitle="Quick guide on census reconciliation, scheduling review, reporting, and resident appointment history."
       >
@@ -77,10 +76,9 @@ export function AdminGuideTools({
       {isAdmin ? (
         <>
           <Card
-            icon={<Home size={22} />}
             title="Facility Management"
             subtitle="Configure facility profile, active facility selection, and facility records."
-            action={
+            actions={
               <Button
                 variant="primary"
                 icon={<Plus size={16} />}
@@ -119,10 +117,9 @@ export function AdminGuideTools({
           </Card>
 
           <Card
-            icon={<User size={22} />}
             title="User Access Management"
             subtitle="Add users, edit user details, and manage user access workflow."
-            action={
+            actions={
               <Button
                 variant="primary"
                 icon={<Plus size={16} />}
@@ -156,7 +153,6 @@ export function AdminGuideTools({
         </>
       ) : (
         <Card
-          icon={<User size={22} />}
           title="Admin Management"
           subtitle="Facility and user management actions are available for admin accounts only."
         >
