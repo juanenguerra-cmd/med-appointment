@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, X, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { Plus, Search, X, ArrowUpDown, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -17,12 +17,17 @@ interface AdminGuideToolsProps {
   setIsUserModalOpen: (open: boolean) => void;
 }
 
+type FacilitySort = "name-asc" | "name-desc" | "current-first";
+type UserSort = "name-asc" | "name-desc" | "role-asc" | "admin-first";
+
 const isAdminRole = (role: unknown) => {
   const normalized = String(role || "").trim().toLowerCase();
   return normalized === "admin" || normalized === "administrator" || normalized === "super admin" || normalized === "superadmin";
 };
 
 const includesQuery = (value: unknown, query: string) => String(value || "").toLowerCase().includes(query);
+const textValue = (value: unknown) => String(value || "").trim().toLowerCase();
+const userDisplayName = (user: any) => String(user?.fullName || user?.name || user?.email || "");
 
 const SummaryTile = ({ label, value, hint }: { label: string; value: number | string; hint: string }) => (
   <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
@@ -54,6 +59,20 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
+const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: any) => void; children: React.ReactNode; ariaLabel: string }) => (
+  <div className="relative">
+    <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      aria-label={ariaLabel}
+      className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-xs font-black uppercase tracking-wider text-slate-600 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+    >
+      {children}
+    </select>
+  </div>
+);
+
 export function AdminGuideTools({
   currentUserRole,
   facilities,
@@ -68,6 +87,8 @@ export function AdminGuideTools({
 }: AdminGuideToolsProps) {
   const [facilitySearch, setFacilitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
+  const [facilitySort, setFacilitySort] = useState<FacilitySort>("current-first");
+  const [userSort, setUserSort] = useState<UserSort>("admin-first");
   const isAdmin = isAdminRole(currentUserRole);
   const adminUsers = users.filter((user: any) => isAdminRole(user?.role)).length;
   const staffUsers = Math.max(users.length - adminUsers, 0);
@@ -75,22 +96,44 @@ export function AdminGuideTools({
   const normalizedFacilitySearch = facilitySearch.trim().toLowerCase();
   const normalizedUserSearch = userSearch.trim().toLowerCase();
 
-  const filteredFacilities = normalizedFacilitySearch
+  const filteredFacilities = (normalizedFacilitySearch
     ? facilities.filter((facility) =>
         includesQuery(facility.name, normalizedFacilitySearch) ||
         includesQuery((facility as any).address, normalizedFacilitySearch) ||
         includesQuery((facility as any).phone, normalizedFacilitySearch)
       )
-    : facilities;
+    : facilities
+  ).slice().sort((a, b) => {
+    if (facilitySort === "current-first") {
+      const aCurrent = a.id === currentFacilityId ? 0 : 1;
+      const bCurrent = b.id === currentFacilityId ? 0 : 1;
+      if (aCurrent !== bCurrent) return aCurrent - bCurrent;
+    }
+    const nameCompare = textValue(a.name).localeCompare(textValue(b.name));
+    return facilitySort === "name-desc" ? -nameCompare : nameCompare;
+  });
 
-  const filteredUsers = normalizedUserSearch
+  const filteredUsers = (normalizedUserSearch
     ? users.filter((user: any) =>
         includesQuery(user.fullName, normalizedUserSearch) ||
         includesQuery(user.name, normalizedUserSearch) ||
         includesQuery(user.email, normalizedUserSearch) ||
         includesQuery(user.role, normalizedUserSearch)
       )
-    : users;
+    : users
+  ).slice().sort((a: any, b: any) => {
+    if (userSort === "admin-first") {
+      const aAdmin = isAdminRole(a?.role) ? 0 : 1;
+      const bAdmin = isAdminRole(b?.role) ? 0 : 1;
+      if (aAdmin !== bAdmin) return aAdmin - bAdmin;
+    }
+    if (userSort === "role-asc") {
+      const roleCompare = textValue(a?.role).localeCompare(textValue(b?.role));
+      if (roleCompare !== 0) return roleCompare;
+    }
+    const nameCompare = textValue(userDisplayName(a)).localeCompare(textValue(userDisplayName(b)));
+    return userSort === "name-desc" ? -nameCompare : nameCompare;
+  });
 
   const openNewFacility = () => {
     setEditingFac(null);
@@ -176,8 +219,13 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
-              <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_auto] lg:items-center">
                 <SearchBox value={facilitySearch} onChange={setFacilitySearch} placeholder="Search facilities by name, address, or phone..." />
+                <SortSelect value={facilitySort} onChange={setFacilitySort} ariaLabel="Sort facilities">
+                  <option value="current-first">Current first</option>
+                  <option value="name-asc">Name A-Z</option>
+                  <option value="name-desc">Name Z-A</option>
+                </SortSelect>
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Showing {filteredFacilities.length} of {facilities.length}
                 </p>
@@ -239,8 +287,14 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
-              <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_auto] lg:items-center">
                 <SearchBox value={userSearch} onChange={setUserSearch} placeholder="Search users by name, email, or role..." />
+                <SortSelect value={userSort} onChange={setUserSort} ariaLabel="Sort users">
+                  <option value="admin-first">Admins first</option>
+                  <option value="name-asc">Name A-Z</option>
+                  <option value="name-desc">Name Z-A</option>
+                  <option value="role-asc">Role A-Z</option>
+                </SortSelect>
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Showing {filteredUsers.length} of {users.length}
                 </p>
@@ -263,7 +317,7 @@ export function AdminGuideTools({
                   <div key={u.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="font-black text-slate-800">{u.fullName || u.name || u.email}</p>
+                        <p className="font-black text-slate-800">{userDisplayName(u)}</p>
                         <p className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-600">{u.role || "Staff"}</p>
                       </div>
                       <Button className="w-full sm:w-auto" onClick={() => { setEditingUser(u); setIsUserModalOpen(true); }}>Edit User</Button>
