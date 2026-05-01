@@ -10,9 +10,33 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.8";
+const CURRENT_VERSION = "2.5.9";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.9",
+    releaseDate: "2026-04-30",
+    title: "Admin Search Clear Controls",
+    summary:
+      "This release adds clear buttons to admin search boxes so facility and user filters can be reset quickly.",
+    capabilities: [
+      "Added clear-search controls to Facility Management and User Access Management search boxes.",
+      "Search inputs now reserve space for the clear button so text does not overlap the control.",
+      "Kept the v2.5.8 search filters, showing-count labels, and empty search-result messages.",
+      "No D1 migration is required for this admin search-control patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Type into facility/user search and use the clear button to reset the lists.",
+    ],
+    userImpact: [
+      "Admins can reset search filters faster.",
+      "Facility and user lists are easier to navigate during setup and maintenance.",
+      "The Help / Info admin search controls feel more complete.",
+    ],
+  },
   {
     version: "2.5.8",
     releaseDate: "2026-04-30",
@@ -24,11 +48,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added search to User Access Management by user name, email, or role.",
       "Added showing-count labels for filtered facility and user lists.",
       "Added empty search-result messages when no records match.",
-      "No D1 migration is required for this admin search patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Search facilities and users to confirm filtering works as expected.",
     ],
@@ -78,27 +99,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can manage facilities and users from a cleaner layout.",
       "Action buttons remain visible and easier to use on mobile and desktop.",
       "The Help / Info admin area feels less crowded.",
-    ],
-  },
-  {
-    version: "2.5.5",
-    releaseDate: "2026-04-30",
-    title: "Admin Management Visibility Safeguard",
-    summary:
-      "This release added visible inline admin quick actions so facility and user creation controls remain easy to find on the Help / Info page.",
-    capabilities: [
-      "Added inline Admin Quick Action bars inside Facility Management and User Access Management.",
-      "Kept the header New Facility and New User buttons while adding body-level fallback buttons.",
-      "Improved admin action visibility on wide and narrow screens.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Confirm New Facility and New User appear in both the card header and inline quick action bar.",
-    ],
-    userImpact: [
-      "Admins can find facility and user creation controls faster.",
-      "Buttons remain visible even if the header action area is missed or compressed.",
-      "The admin management workflow is clearer and easier to use.",
     ],
   },
 ];
