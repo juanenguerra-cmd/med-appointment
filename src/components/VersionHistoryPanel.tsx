@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.9";
+const CURRENT_VERSION = "2.6.0";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.6.0",
+    releaseDate: "2026-04-30",
+    title: "Admin Management Sort Controls",
+    summary:
+      "This release adds sort controls to admin facility and user lists so management records are easier to organize.",
+    capabilities: [
+      "Added sort controls to Facility Management and User Access Management.",
+      "Facilities can be sorted by Current first, Name A-Z, and Name Z-A.",
+      "Users can be sorted by Admins first, Name A-Z, Name Z-A, and Role A-Z.",
+      "Kept v2.5.9 search, clear-search, showing-count, and empty-result behavior.",
+      "No D1 migration is required for this admin sort-control patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Sort facilities and users to confirm ordering works as expected.",
+    ],
+    userImpact: [
+      "Admins can organize facility records faster.",
+      "Admins can organize users by name, role, or admin priority.",
+      "The Help / Info admin lists are easier to maintain as records grow.",
+    ],
+  },
   {
     version: "2.5.9",
     releaseDate: "2026-04-30",
@@ -23,11 +48,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added clear-search controls to Facility Management and User Access Management search boxes.",
       "Search inputs now reserve space for the clear button so text does not overlap the control.",
       "Kept the v2.5.8 search filters, showing-count labels, and empty search-result messages.",
-      "No D1 migration is required for this admin search-control patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Type into facility/user search and use the clear button to reset the lists.",
     ],
@@ -78,27 +100,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can quickly review setup status before managing records.",
       "Facility and user creation actions are available from the snapshot card.",
       "The Help / Info admin area provides better at-a-glance context.",
-    ],
-  },
-  {
-    version: "2.5.6",
-    releaseDate: "2026-04-30",
-    title: "Admin Management Layout Polish",
-    summary:
-      "This release improves the Help / Info admin management layout so facility and user controls are easier to scan and use.",
-    capabilities: [
-      "Changed Facility Management and User Access Management into a responsive two-column admin grid on wide screens.",
-      "Improved quick-action bars, current facility badge, role badge, and mobile button widths.",
-      "Reduced visual crowding while preserving New Facility, New User, Set, Edit, Delete, and Edit User actions.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Confirm Facility Management and User Access Management are easier to scan and use.",
-    ],
-    userImpact: [
-      "Admins can manage facilities and users from a cleaner layout.",
-      "Action buttons remain visible and easier to use on mobile and desktop.",
-      "The Help / Info admin area feels less crowded.",
     ],
   },
 ];
