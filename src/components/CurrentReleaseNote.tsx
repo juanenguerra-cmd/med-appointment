@@ -1,16 +1,19 @@
 import { CheckCircle2, Database, Eye, History } from "lucide-react";
 
 const releaseItems = [
-  "Added a D1 schema alignment migration so the database includes the facility, user access, transportation directory, resident facility link, and newer appointment fields expected by the current app.",
-  "Removed the duplicate parent resident-detail modal trigger from the Patient Census View workflow so Census → View opens one resident detail window only.",
-  "Updated the user guide to remind admins to apply the D1 migration after deployment and to document the corrected resident View workflow.",
+  "Cleaned up the schema alignment migration so it no longer re-adds columns already owned by the resident identity, user password, and transport-detail migrations.",
+  "Kept the D1 alignment coverage for facilities, user-facility access, transportation directory, resident facility link, and remaining appointment fields expected by the current app.",
+  "Preserved the Census View modal fix so Census → View opens one resident detail window only.",
+  "Updated version history and the visible release note so v2.2.2 is the current maintenance baseline.",
 ];
 
 const workflowItems = [
-  "Deploy the updated app build.",
-  "Apply migration 0004_schema_alignment.sql to the D1 database after the existing migrations.",
+  "Pull the latest main branch before the next build or deploy.",
+  "Run npm run build to confirm the UI and TypeScript build remain stable.",
+  "For a fresh D1 database, run migrations in order; the schema alignment file now avoids overlap with existing migration files.",
+  "For the already-deployed D1 database, no duplicate-column rerun is expected if the previous migration name was already recorded as applied.",
   "Open Patient Census and select View on a resident row to confirm only one resident detail modal opens.",
-  "Create or edit an appointment to confirm the newer appointment fields save without D1 column errors.",
+  "Create or edit an appointment to confirm transport, escort, consult, and resident identity fields save without D1 column errors.",
 ];
 
 export function CurrentReleaseNote() {
@@ -22,10 +25,10 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.2.1 — D1 Schema Alignment and Census View Modal Fix
+            v2.2.2 — D1 Migration Cleanup and Current Baseline
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This maintenance release stabilizes the database structure expected by the current Cloudflare Worker API and cleans up the Patient Census resident-detail workflow.
+            This maintenance release cleans up overlapping D1 migration ownership while preserving the deployed schema alignment and Census View modal fix.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
