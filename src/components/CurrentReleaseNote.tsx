@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Search, Users } from "lucide-react";
 
 const releaseItems = [
-  "Added search filters to Facility Management and User Access Management on the Help / Info page.",
-  "Facility search now filters by facility name, address, or phone when available.",
-  "User search now filters by name, email, or role.",
-  "Added showing-count labels and empty search-result messages for easier admin review.",
-  "Updated package metadata and visible release notes to identify v2.5.8 as the current admin search baseline.",
+  "Added clear-search controls to the Facility Management and User Access Management search boxes.",
+  "Search inputs now reserve space for the clear button so text does not overlap the control.",
+  "Admins can quickly reset filtered facility or user lists without manually deleting search text.",
+  "Kept the v2.5.8 search filters, showing-count labels, and empty search-result messages.",
+  "Updated package metadata and visible release notes to identify v2.5.9 as the current admin search control baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.8 UI remains stable.",
-  "No D1 migration is required for this admin search patch.",
+  "Run npm run build to confirm the v2.5.9 UI remains stable.",
+  "No D1 migration is required for this admin search-control patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Search facilities by name, address, or phone and confirm the count updates.",
-  "Search users by name, email, or role and confirm the count updates.",
+  "Type into the facility search box and confirm the clear button resets the list.",
+  "Type into the user search box and confirm the clear button resets the list.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.8 — Admin Management Search Filters
+            v2.5.9 — Admin Search Clear Controls
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds admin search filters so facility and user lists are easier to navigate as records grow.
+            This release adds clear buttons to admin search boxes so facility and user filters can be reset quickly.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Search</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Clear Search</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Lists</span>
         </div>
       </div>
