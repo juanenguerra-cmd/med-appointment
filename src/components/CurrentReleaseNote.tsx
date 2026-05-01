@@ -1,19 +1,20 @@
-import { CheckCircle2, Database, History, ShieldCheck } from "lucide-react";
+import { CheckCircle2, History, ShieldCheck, Users } from "lucide-react";
 
 const releaseItems = [
-  "Expanded backend census reconciliation summary fields for easier validation after import.",
-  "Added raw incoming row count, skipped invalid row count, duplicate incoming count, queued statement count, and backend mode to the reconciliation response.",
-  "Updated the frontend census reconciliation service types to match the expanded backend summary.",
-  "Updated package metadata and visible release notes to identify v2.5.3 as the current census observability baseline.",
+  "Fixed the Help / Info admin management action buttons by using the correct Card actions prop.",
+  "Restored the New Facility button in Facility Management for admin users.",
+  "Restored the New User button in User Access Management for admin users.",
+  "Kept Set, Edit, and Delete facility actions plus Edit user action available in the management lists.",
+  "Updated package metadata and visible release notes to identify v2.5.4 as the current admin actions fix baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.3 UI and Worker build remain stable.",
-  "No D1 migration is required for this observability patch.",
-  "Deploy the Worker so the expanded /api/census/reconcile summary is available.",
-  "Paste a small test census and confirm Patient Census saves through backend reconciliation.",
-  "Review the browser console for rawIncoming, skippedInvalid, duplicateIncoming, statementsQueued, and backend mode after import validation.",
+  "Run npm run build to confirm the v2.5.4 UI remains stable.",
+  "No D1 migration is required for this UI action-button fix.",
+  "Deploy the app and open Help / Info as an admin user.",
+  "Confirm New Facility appears in Facility Management.",
+  "Confirm New User appears in User Access Management.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +26,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.3 — Census Reconciliation Observability
+            v2.5.4 — Admin Help Actions Fix
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release improves census import validation by expanding backend reconciliation summary counts and updating frontend service types.
+            This release restores the visible admin management buttons on the Help / Info page for adding facilities and users.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Database size={12} className="mr-1 inline" /> Summary</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Validation</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Actions</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> UI Fix</span>
         </div>
       </div>
 
