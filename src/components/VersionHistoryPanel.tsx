@@ -10,24 +10,45 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.5";
+const CURRENT_VERSION = "2.5.6";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.6",
+    releaseDate: "2026-04-30",
+    title: "Admin Management Layout Polish",
+    summary:
+      "This release improves the Help / Info admin management layout so facility and user controls are easier to scan and use.",
+    capabilities: [
+      "Changed Facility Management and User Access Management into a responsive two-column admin grid on wide screens.",
+      "Improved quick-action bars, current facility badge, role badge, and mobile button widths.",
+      "Reduced visual crowding while preserving New Facility, New User, Set, Edit, Delete, and Edit User actions.",
+      "No D1 migration is required for this UI polish patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Confirm Facility Management and User Access Management are easier to scan and use.",
+    ],
+    userImpact: [
+      "Admins can manage facilities and users from a cleaner layout.",
+      "Action buttons remain visible and easier to use on mobile and desktop.",
+      "The Help / Info admin area feels less crowded.",
+    ],
+  },
   {
     version: "2.5.5",
     releaseDate: "2026-04-30",
     title: "Admin Management Visibility Safeguard",
     summary:
-      "This release adds visible inline admin quick actions so facility and user creation controls remain easy to find on the Help / Info page.",
+      "This release added visible inline admin quick actions so facility and user creation controls remain easy to find on the Help / Info page.",
     capabilities: [
       "Added inline Admin Quick Action bars inside Facility Management and User Access Management.",
       "Kept the header New Facility and New User buttons while adding body-level fallback buttons.",
       "Improved admin action visibility on wide and narrow screens.",
-      "No D1 migration is required for this UI visibility patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Confirm New Facility and New User appear in both the card header and inline quick action bar.",
     ],
@@ -78,28 +99,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Makes census import validation easier after each save.",
       "Helps identify skipped invalid rows or duplicate incoming residents.",
       "Improves confidence that backend reconciliation is processing the expected data.",
-    ],
-  },
-  {
-    version: "2.5.2",
-    releaseDate: "2026-04-30",
-    title: "Patient Census Backend Reconciliation",
-    summary:
-      "This release switched Patient Census replacement to backend-first reconciliation while keeping a frontend fallback for operational safety.",
-    capabilities: [
-      "replaceResidents() calls /api/census/reconcile through the typed censusReconcileService.",
-      "The local resident list updates from the database response after server-side reconciliation completes.",
-      "A frontend fallback remains available if the backend endpoint is temporarily unavailable.",
-    ],
-    processFlow: [
-      "Deploy the app so backend census reconciliation is live.",
-      "Paste a small test census.",
-      "Confirm backend reconciliation completes successfully.",
-    ],
-    userImpact: [
-      "Reduces partial-save risk during census replacement.",
-      "Keeps operations safer through fallback protection.",
-      "Makes census import more reliable and easier to audit from summary counts.",
     ],
   },
 ];
