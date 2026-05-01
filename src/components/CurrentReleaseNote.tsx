@@ -1,19 +1,20 @@
 import { CheckCircle2, History, ShieldCheck, Users } from "lucide-react";
 
 const releaseItems = [
-  "Added inline Admin Quick Action bars inside Facility Management and User Access Management.",
-  "Kept the header New Facility and New User buttons while adding body-level fallback buttons for visibility.",
-  "Improved admin management visibility on wide and narrow screens.",
-  "Updated package metadata and visible release notes to identify v2.5.5 as the current admin management visibility baseline.",
+  "Polished the Help / Info admin management layout for cleaner facility and user cards.",
+  "Changed Facility Management and User Access Management into a responsive two-column admin grid on wide screens.",
+  "Improved quick-action bars, current facility badge, role badge, and mobile button widths.",
+  "Reduced visual crowding while keeping New Facility, New User, Set, Edit, Delete, and Edit User actions available.",
+  "Updated package metadata and visible release notes to identify v2.5.6 as the current admin layout polish baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.5.5 UI remains stable.",
-  "No D1 migration is required for this UI visibility patch.",
+  "Run npm run build to confirm the v2.5.6 UI remains stable.",
+  "No D1 migration is required for this layout polish patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Confirm New Facility appears in the card header and inline quick action bar.",
-  "Confirm New User appears in the card header and inline quick action bar.",
+  "Confirm Facility Management and User Access Management are cleaner and easier to scan.",
+  "Confirm New Facility and New User remain visible in the header and quick-action areas.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +26,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.5.5 — Admin Management Visibility Safeguard
+            v2.5.6 — Admin Management Layout Polish
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds visible inline admin quick actions so facility and user creation controls remain easy to find on the Help / Info page.
+            This release improves the Help / Info admin management layout so facility and user controls are easier to scan and use.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Actions</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Visibility</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Layout</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> UI Polish</span>
         </div>
       </div>
 
