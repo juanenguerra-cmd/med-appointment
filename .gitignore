@@ -7,6 +7,9 @@ coverage/
 .env*
 !.env.example
 
+# Local Cloudflare/Wrangler development state
+.wrangler/
+
 # Local accidental command-output files
 /git
 /main
