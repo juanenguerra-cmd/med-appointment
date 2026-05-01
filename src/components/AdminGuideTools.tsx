@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { Plus, Search, X, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -39,8 +39,18 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-xs font-semibold text-slate-700 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+      className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-10 text-xs font-semibold text-slate-700 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
     />
+    {value && (
+      <button
+        type="button"
+        onClick={() => onChange("")}
+        className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        aria-label="Clear search"
+      >
+        <X size={14} />
+      </button>
+    )}
   </div>
 );
 
