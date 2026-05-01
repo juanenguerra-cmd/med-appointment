@@ -10,9 +10,33 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.5.0";
+const CURRENT_VERSION = "2.5.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.5.1",
+    releaseDate: "2026-04-30",
+    title: "Census Reconciliation Service Integration",
+    summary:
+      "This release adds the typed frontend service wrapper for the backend census reconciliation endpoint while keeping the active Patient Census workflow stable during validation.",
+    capabilities: [
+      "Added censusReconcileService for /api/census/reconcile.",
+      "Standardized frontend types for backend reconciliation summaries.",
+      "Preserved the existing Patient Census save workflow until the final UI switch is locally build-tested.",
+      "No D1 migration is required for this integration patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app so the service and backend endpoint are available.",
+      "Use the service in the next narrow patch to switch replaceResidents() to backend reconciliation.",
+    ],
+    userImpact: [
+      "Prepares the Patient Census workflow for safer one-request backend reconciliation.",
+      "Keeps the current census save behavior stable while integration is staged.",
+      "Reduces risk before replacing the large frontend multi-request save loop.",
+    ],
+  },
   {
     version: "2.5.0",
     releaseDate: "2026-04-30",
@@ -23,13 +47,11 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added /api/census/reconcile for backend census reconciliation.",
       "Backend route calculates created, updated, reactivated, discharged, unchanged, active-after-import, and discharged-after-import counts.",
       "Added a v2.5 Worker entrypoint that registers the new route while preserving the existing Worker API.",
-      "No D1 migration is required for this backend endpoint.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the Worker so /api/census/reconcile is available.",
-      "Validate the endpoint with a small test census before switching the full Patient Census UI workflow to backend-only reconciliation.",
+      "Validate the endpoint with a small test census.",
+      "Keep the current frontend workflow available during validation.",
     ],
     userImpact: [
       "Creates the backend foundation for safer census saves.",
@@ -79,28 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Version identity is clearer.",
       "Census View remains stable.",
       "Creates a clean baseline for future cleanup work.",
-    ],
-  },
-  {
-    version: "2.2.2",
-    releaseDate: "2026-04-30",
-    title: "D1 Migration Cleanup and Current Baseline",
-    summary:
-      "Cleaned overlapping migration ownership while preserving schema alignment and Census View modal behavior.",
-    capabilities: [
-      "Reduced duplicate-column risk in future fresh database setup.",
-      "Kept D1 schema ownership clearer for future small migrations.",
-      "Preserved the corrected Census View behavior.",
-    ],
-    processFlow: [
-      "Run migrations in order for fresh environments.",
-      "Avoid re-running previously applied migration names on deployed databases.",
-      "Use small, specific migrations for future database changes.",
-    ],
-    userImpact: [
-      "Fewer migration conflicts.",
-      "Cleaner database maintenance baseline.",
-      "Stable Census View workflow.",
     ],
   },
 ];
