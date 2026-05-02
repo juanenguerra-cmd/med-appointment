@@ -116,3 +116,14 @@ export {
 } from "./appointmentPdfHelpers";
 
 export type { AppointmentPdfPayload } from "./appointmentPdfHelpers";
+
+export {
+  validateAppointmentRequiredFields,
+  validateAppointmentScheduleFields,
+  validateAppointmentTransportFields,
+  validateAppointment,
+  hasAppointmentValidationErrors,
+  summarizeAppointmentValidation,
+} from "./appointmentValidationHelpers";
+
+export type { AppointmentValidationIssue } from "./appointmentValidationHelpers";
