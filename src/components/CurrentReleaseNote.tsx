@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Search, Users } from "lucide-react";
 
 const releaseItems = [
-  "Added sort controls to Facility Management and User Access Management on the Help / Info page.",
-  "Facility list can now be sorted by Current first, Name A-Z, or Name Z-A.",
-  "User list can now be sorted by Admins first, Name A-Z, Name Z-A, or Role A-Z.",
-  "Kept v2.5.9 search, clear-search, showing-count, and empty-result behavior.",
-  "Updated package metadata and visible release notes to identify v2.6.0 as the current admin list control baseline.",
+  "Added Reset controls to Facility Management and User Access Management list filters.",
+  "Facility Reset clears facility search and restores the default Current first sort.",
+  "User Reset clears user search and restores the default Admins first sort.",
+  "Reset buttons automatically disable when list controls are already at their default settings.",
+  "Updated package metadata and visible release notes to identify v2.6.1 as the current admin list reset baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.6.0 UI remains stable.",
-  "No D1 migration is required for this admin sort-control patch.",
+  "Run npm run build to confirm the v2.6.1 UI remains stable.",
+  "No D1 migration is required for this admin reset-control patch.",
   "Deploy the app and open Help / Info as an admin user.",
-  "Sort facilities by current facility and name order.",
-  "Sort users by admin-first, name order, and role order.",
+  "Change facility search or sort, then use Reset to return to the default list view.",
+  "Change user search or sort, then use Reset to return to the default list view.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.6.0 — Admin Management Sort Controls
+            v2.6.1 — Admin List Reset Controls
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds sort controls to admin facility and user lists so management records are easier to organize.
+            This release adds one-click reset controls for admin facility and user list filters.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Sort + Search</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Reset Lists</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Lists</span>
         </div>
       </div>
