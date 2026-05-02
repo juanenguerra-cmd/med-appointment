@@ -52,3 +52,12 @@ export {
   getAppointmentTransportLabel,
   getAppointmentSummaryLine,
 } from "./appointmentDisplayHelpers";
+
+export {
+  toAppointmentReportRow,
+  toAppointmentReportRows,
+  appointmentReportColumns,
+  appointmentReportColumnLabels,
+} from "./appointmentReportHelpers";
+
+export type { AppointmentReportRow } from "./appointmentReportHelpers";
