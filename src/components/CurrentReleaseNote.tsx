@@ -1,18 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added a stable data utility barrel file at src/utils/data/index.ts for future data utility import cleanup.",
-  "Re-exported data validation, audit log, and census reconciliation utilities through the data utility barrel.",
-  "Kept App.tsx unchanged so current behavior remains stable while future data utility imports can be cleaned safely.",
-  "Updated package metadata and visible release notes to identify v2.9.8 as the current data utility barrel baseline.",
+  "Added docs/import-cleanup-guide.md to document the stable import paths created during the cleanup foundation phase.",
+  "Documented recommended import paths for hooks, components, appointment utilities, shared utilities, data utilities, services, and types.",
+  "Added a safe cleanup order for future App.tsx import replacement work.",
+  "Kept App.tsx unchanged so current behavior remains stable while the next import cleanup phase is prepared.",
+  "Updated package metadata and visible release notes to identify v2.9.9 as the current import cleanup guide baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the data utility barrel compiles cleanly.",
+  "Run npm run build to confirm the documentation-only guide update does not affect the app build.",
   "Run npx wrangler deploy only after the build passes.",
-  "No D1 migration is required for this compatibility patch.",
-  "Use the data utility barrel in future cleanup patches when moving data utility imports out of App.tsx or hooks.",
+  "No D1 migration is required for this documentation and cleanup-planning patch.",
+  "Follow docs/import-cleanup-guide.md before replacing import groups inside App.tsx.",
 ];
 
 export function CurrentReleaseNote() {
@@ -24,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.8 — Data Utility Barrel Foundation
+            v2.9.9 — Import Cleanup Guide Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a stable data utility barrel for future import cleanup while preserving current app behavior.
+            This release documents the stable import paths and safe order for the next App.tsx import cleanup phase.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Data Barrel</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Cleanup Guide</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
