@@ -154,3 +154,12 @@ export type {
   AppointmentModalMode,
   AppointmentModalWorkflowState,
 } from "./appointmentModalWorkflowHelpers";
+
+export {
+  updateAppointmentDraftField,
+  updateAppointmentDraftFields,
+  updateAppointmentModalWorkflowField,
+  updateAppointmentModalWorkflowFields,
+} from "./appointmentModalFieldHelpers";
+
+export type { AppointmentDraftField } from "./appointmentModalFieldHelpers";
