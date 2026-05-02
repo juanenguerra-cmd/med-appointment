@@ -163,3 +163,11 @@ export {
 } from "./appointmentModalFieldHelpers";
 
 export type { AppointmentDraftField } from "./appointmentModalFieldHelpers";
+
+export {
+  normalizeAppointmentDraftForSave,
+  createAppointmentModalSavePayload,
+  shouldBlockAppointmentSave,
+} from "./appointmentModalSaveHelpers";
+
+export type { AppointmentModalSavePayload } from "./appointmentModalSaveHelpers";
