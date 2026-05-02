@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.3";
+const CURRENT_VERSION = "2.7.4";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.4",
+    releaseDate: "2026-04-30",
+    title: "Appointment Status Helper Foundation",
+    summary:
+      "This release adds reusable appointment status helpers for future App.tsx and appointment list cleanup.",
+    capabilities: [
+      "Added appointment status helpers at src/utils/appointmentStatusHelpers.ts.",
+      "Added helpers for status grouping, status labels, badge class selection, active status checks, pending scheduling review checks, and status sort weight.",
+      "Exported the appointment status helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment status helpers in the next narrow App.tsx or appointment-table replacement patch.",
+      "Continue replacing duplicated App.tsx logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared status foundation for consistent appointment badges and filtering.",
+      "Makes future appointment list cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.7.3",
     releaseDate: "2026-04-30",
@@ -24,11 +49,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Grouped appointment draft helpers, resident appointment matching helpers, and appointment sort-time helper behind one import target.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
       "Prepared the next narrow App.tsx replacement step by reducing future import clutter.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointmentModalToolkit in the next narrow App.tsx import-replacement patch.",
       "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
     ],
@@ -79,29 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Creates more safe extraction points for reducing App.tsx size.",
       "Keeps current app workflows stable while cleanup continues.",
       "Makes resident history matching and appointment modal defaults easier to reuse later.",
-    ],
-  },
-  {
-    version: "2.7.0",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Modular Cleanup Phase 1",
-    summary:
-      "This release begins the App.tsx split by adding reusable foundation modules for navigation, dates, string handling, and schedule sorting.",
-    capabilities: [
-      "Added app navigation metadata module at src/constants/appNavigation.ts.",
-      "Added shared date helpers at src/utils/dateHelpers.ts.",
-      "Added shared string helper at src/utils/stringHelpers.ts.",
-      "Added shared schedule-time helper at src/utils/scheduleTime.ts.",
-      "Kept App.tsx behavior stable by avoiding a broad rewrite in this phase.",
-    ],
-    processFlow: [
-      "Use the new helper modules as the foundation for the next narrow App.tsx import-replacement patch.",
-      "Continue App.tsx cleanup in small build-tested steps instead of one large rewrite.",
-    ],
-    userImpact: [
-      "Creates a safer foundation for reducing App.tsx size.",
-      "Makes future patches easier to review and less likely to break unrelated workflows.",
-      "Preserves current app behavior while modular cleanup begins.",
     ],
   },
 ];
