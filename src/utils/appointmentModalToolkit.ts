@@ -24,3 +24,12 @@ export {
 } from "./appointmentStatusHelpers";
 
 export type { AppointmentStatusGroup } from "./appointmentStatusHelpers";
+
+export {
+  appointmentSearchText,
+  isAppointmentWithinDateRange,
+  appointmentMatchesFilters,
+  filterAppointments,
+} from "./appointmentFilterHelpers";
+
+export type { AppointmentFilterOptions } from "./appointmentFilterHelpers";
