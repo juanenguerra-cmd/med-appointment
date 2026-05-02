@@ -10,9 +10,35 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.8.5";
+const CURRENT_VERSION = "2.8.6";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.6",
+    releaseDate: "2026-04-30",
+    title: "Appointment Duplicate Check Helper Foundation",
+    summary:
+      "This release adds reusable appointment duplicate-check helpers for future appointment modal, table, and App.tsx cleanup.",
+    capabilities: [
+      "Added appointment duplicate-check helpers at src/utils/appointmentDuplicateHelpers.ts.",
+      "Added helpers for duplicate key generation, potential duplicate comparison, duplicate list detection, and boolean duplicate checks.",
+      "Duplicate checks compare resident identity, date, time, specialty, provider, and location.",
+      "Exported the appointment duplicate-check helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment duplicate-check helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment duplicate-check logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared duplicate-check foundation for appointment creation and editing.",
+      "Makes future appointment duplicate warning cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.8.5",
     releaseDate: "2026-04-30",
@@ -25,11 +51,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added helpers to detect blocking validation errors and summarize validation results.",
       "Exported the appointment validation helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment validation helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
       "Continue replacing duplicated appointment validation logic in small build-tested steps.",
     ],
@@ -72,7 +95,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added appointment print helpers at src/utils/appointmentPrintHelpers.ts.",
       "Added helpers for print generated time, print header metadata, print rows, print table data, and print summary counts.",
       "Exported the appointment print helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
     ],
     processFlow: [
       "Use appointment print helpers in the next narrow PDF, report, print, or App.tsx replacement patch.",
@@ -82,28 +104,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared print foundation for appointment reports, PDFs, and tables.",
       "Makes future appointment print cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.8.2",
-    releaseDate: "2026-04-30",
-    title: "Appointment Export Helper Foundation",
-    summary:
-      "This release adds reusable appointment CSV/export helpers for future report, table, and App.tsx export cleanup.",
-    capabilities: [
-      "Added appointment export helpers at src/utils/appointmentExportHelpers.ts.",
-      "Added helpers to convert appointment report rows and appointment lists into CSV content.",
-      "Added safe CSV filename generation and CSV download blob creation helpers.",
-      "Exported the appointment export helpers through the appointment modal toolkit.",
-    ],
-    processFlow: [
-      "Use appointment export helpers in the next narrow CSV/export, reports, or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment export logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared CSV/export foundation for appointment reports and tables.",
-      "Makes future appointment export cleanup smaller and easier to review.",
     ],
   },
 ];
