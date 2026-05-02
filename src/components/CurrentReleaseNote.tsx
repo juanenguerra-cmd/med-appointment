@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added an appointment modal toolkit bridge module for future App.tsx modal cleanup.",
-  "Grouped appointment draft helpers, resident appointment matching helpers, and appointment sort-time helper behind one import target.",
+  "Added reusable appointment status helper utilities for future App.tsx and table cleanup.",
+  "Added helpers for status grouping, status labels, badge class selection, active status checks, pending scheduling review checks, and status sort weight.",
+  "Exported the appointment status helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Prepared the next narrow App.tsx replacement step by reducing future import clutter.",
-  "Updated package metadata and visible release notes to identify v2.7.3 as the current modal toolkit baseline.",
+  "Updated package metadata and visible release notes to identify v2.7.4 as the current appointment status helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.7.3 toolkit module compiles cleanly.",
+  "Run npm run build to confirm the v2.7.4 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointmentModalToolkit in the next narrow App.tsx import-replacement patch.",
-  "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
+  "Use appointment status helpers in the next narrow App.tsx or appointment-table replacement patch.",
+  "Continue replacing duplicated App.tsx logic in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.7.3 — Modal Helper Integration Prep
+            v2.7.4 — Appointment Status Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a single appointment modal toolkit import target for the next safe App.tsx cleanup step.
+            This release adds reusable appointment status helpers for future App.tsx and appointment list cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Toolkit</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Status Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
