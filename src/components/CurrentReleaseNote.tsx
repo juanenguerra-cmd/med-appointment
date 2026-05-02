@@ -1,19 +1,18 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added a stable type export compatibility file at src/typeExports.ts for future type import cleanup.",
-  "Re-exported Appointment, Doctor, Facility, MedicalRecord, and Resident as type-only exports.",
-  "Avoided creating src/types/index.ts because src/types.ts already exists and must remain stable.",
-  "Kept App.tsx unchanged so current behavior remains stable while future type imports can be cleaned safely.",
-  "Updated package metadata and visible release notes to identify v2.9.7 as the current type export compatibility baseline.",
+  "Added a stable data utility barrel file at src/utils/data/index.ts for future data utility import cleanup.",
+  "Re-exported data validation, audit log, and census reconciliation utilities through the data utility barrel.",
+  "Kept App.tsx unchanged so current behavior remains stable while future data utility imports can be cleaned safely.",
+  "Updated package metadata and visible release notes to identify v2.9.8 as the current data utility barrel baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the type export compatibility file compiles cleanly.",
+  "Run npm run build to confirm the data utility barrel compiles cleanly.",
   "Run npx wrangler deploy only after the build passes.",
   "No D1 migration is required for this compatibility patch.",
-  "Use src/typeExports.ts in future cleanup patches when moving type imports out of App.tsx.",
+  "Use the data utility barrel in future cleanup patches when moving data utility imports out of App.tsx or hooks.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +24,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.7 — Type Export Compatibility Foundation
+            v2.9.8 — Data Utility Barrel Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a stable type export compatibility file for future type import cleanup while preserving current App.tsx behavior.
+            This release adds a stable data utility barrel for future import cleanup while preserving current app behavior.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Type Exports</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Data Barrel</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
