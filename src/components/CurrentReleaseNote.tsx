@@ -1,19 +1,20 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment display helper utilities for future App.tsx, reports, calendar, and appointment table cleanup.",
-  "Added helpers for appointment date, time, date/time, resident label, provider/location label, transport label, and summary line formatting.",
-  "Exported the appointment display helpers through the appointment modal toolkit.",
+  "Added reusable appointment report helper utilities for future reports, PDFs, tables, and App.tsx cleanup.",
+  "Added report-row conversion for appointment date, time, resident, unit, room, specialty, provider/location, status, transport, and notes.",
+  "Added reusable appointment report column keys and column labels.",
+  "Exported the appointment report helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.7.7 as the current appointment display helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.7.8 as the current appointment report helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.7.7 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.7.8 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment display helpers in the next narrow App.tsx, reports, calendar, or appointment-table replacement patch.",
-  "Continue replacing duplicated App.tsx display formatting in small build-tested steps.",
+  "Use appointment report helpers in the next narrow reports, PDF, table, or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment report formatting in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.7.7 — Appointment Display Helper Foundation
+            v2.7.8 — Appointment Report Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment display-format helpers for future App.tsx, reports, calendar, and appointment list cleanup.
+            This release adds reusable appointment report-row helpers for future reports, PDFs, tables, and App.tsx cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Display Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Report Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
