@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added docs/import-cleanup-guide.md to document the stable import paths created during the cleanup foundation phase.",
-  "Documented recommended import paths for hooks, components, appointment utilities, shared utilities, data utilities, services, and types.",
-  "Added a safe cleanup order for future App.tsx import replacement work.",
-  "Kept App.tsx unchanged so current behavior remains stable while the next import cleanup phase is prepared.",
-  "Updated package metadata and visible release notes to identify v2.9.9 as the current import cleanup guide baseline.",
+  "Added docs/app-tsx-cleanup-readiness-gate.md to prepare the next direct App.tsx import cleanup phase.",
+  "Documented the stable foundations already created for hooks, components, utilities, data utilities, services, and types.",
+  "Defined the recommended import cleanup order and required build check after each import group.",
+  "Kept App.tsx unchanged because the connector view was truncated and a partial rewrite would be risky.",
+  "Updated package metadata and visible release notes to identify v3.0.0 as the current App.tsx cleanup readiness baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the documentation-only guide update does not affect the app build.",
+  "Run npm run build to confirm the readiness guide update does not affect the app build.",
   "Run npx wrangler deploy only after the build passes.",
   "No D1 migration is required for this documentation and cleanup-planning patch.",
-  "Follow docs/import-cleanup-guide.md before replacing import groups inside App.tsx.",
+  "Start the next direct App.tsx cleanup with only the Button/Card component import group.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.9 — Import Cleanup Guide Foundation
+            v3.0.0 — App.tsx Cleanup Readiness Gate
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release documents the stable import paths and safe order for the next App.tsx import cleanup phase.
+            This release prepares the next direct App.tsx import cleanup phase with a documented safe order and build-check requirement.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Cleanup Guide</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Readiness Gate</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
