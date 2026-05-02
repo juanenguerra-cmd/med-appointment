@@ -73,3 +73,11 @@ export {
 } from "./appointmentAnalyticsHelpers";
 
 export type { AppointmentCountMap } from "./appointmentAnalyticsHelpers";
+
+export {
+  toAppointmentTableRow,
+  toAppointmentTableRows,
+  buildAppointmentTableRows,
+} from "./appointmentTableHelpers";
+
+export type { AppointmentTableRow } from "./appointmentTableHelpers";
