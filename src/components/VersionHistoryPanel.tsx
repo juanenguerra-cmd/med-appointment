@@ -10,9 +10,36 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.8.7";
+const CURRENT_VERSION = "2.8.8";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.8",
+    releaseDate: "2026-04-30",
+    title: "Appointment Modal Workflow Helper Foundation",
+    summary:
+      "This release adds reusable appointment modal workflow helpers for new, edit, duplicate, and resident-selection workflows.",
+    capabilities: [
+      "Added appointment modal workflow helpers at src/utils/appointmentModalWorkflowHelpers.ts.",
+      "Added helpers to create new, edit, and duplicate appointment modal draft states.",
+      "Added a reusable workflow-state helper that combines draft setup, safety summary, and safety messages.",
+      "Added a resident-application helper that updates the modal workflow state after selecting a resident.",
+      "Exported the appointment modal workflow helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment modal workflow helpers in the next narrow appointment modal or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment modal workflow logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared workflow foundation for new, edit, duplicate, and resident-selection appointment modal actions.",
+      "Makes future appointment modal workflow cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.8.7",
     releaseDate: "2026-04-30",
@@ -25,11 +52,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added a reusable safety message helper for required items, warnings, and possible duplicate alerts.",
       "Exported the appointment modal safety helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment modal safety helpers in the next narrow appointment modal or App.tsx replacement patch.",
       "Continue replacing duplicated appointment modal safety logic in small build-tested steps.",
     ],
@@ -73,7 +97,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added validation helpers for required appointment fields, schedule fields, and transportation fields.",
       "Added helpers to detect blocking validation errors and summarize validation results.",
       "Exported the appointment validation helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
     ],
     processFlow: [
       "Use appointment validation helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
@@ -83,28 +106,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared validation foundation for appointment modal and table workflows.",
       "Makes future appointment validation cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.8.4",
-    releaseDate: "2026-04-30",
-    title: "Appointment PDF Helper Foundation",
-    summary:
-      "This release adds reusable appointment PDF payload helpers for future PDF export, report, table, and App.tsx cleanup.",
-    capabilities: [
-      "Added appointment PDF helpers at src/utils/appointmentPdfHelpers.ts.",
-      "Added helpers for PDF payload creation, safe PDF filename generation, and PDF footer text.",
-      "PDF payloads combine print header metadata, summary counts, and table-ready report data in one reusable structure.",
-      "Exported the appointment PDF helpers through the appointment modal toolkit.",
-    ],
-    processFlow: [
-      "Use appointment PDF helpers in the next narrow PDF export, report, or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment PDF logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared PDF payload foundation for appointment reports and tables.",
-      "Makes future appointment PDF cleanup smaller and easier to review.",
     ],
   },
 ];
