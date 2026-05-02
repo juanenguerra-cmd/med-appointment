@@ -10,9 +10,35 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.6.1";
+const CURRENT_VERSION = "2.7.0";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.0",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Modular Cleanup Phase 1",
+    summary:
+      "This release begins the App.tsx split by adding reusable foundation modules for navigation, dates, string handling, and schedule sorting.",
+    capabilities: [
+      "Added app navigation metadata module at src/constants/appNavigation.ts.",
+      "Added shared date helpers at src/utils/dateHelpers.ts.",
+      "Added shared string helper at src/utils/stringHelpers.ts.",
+      "Added shared schedule-time helper at src/utils/scheduleTime.ts.",
+      "Kept App.tsx behavior stable by avoiding a broad rewrite in this phase.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use the new helper modules as the foundation for the next narrow App.tsx import-replacement patch.",
+      "Continue App.tsx cleanup in small build-tested steps instead of one large rewrite.",
+    ],
+    userImpact: [
+      "Creates a safer foundation for reducing App.tsx size.",
+      "Makes future patches easier to review and less likely to break unrelated workflows.",
+      "Preserves current app behavior while modular cleanup begins.",
+    ],
+  },
   {
     version: "2.6.1",
     releaseDate: "2026-04-30",
@@ -24,11 +50,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Facility Reset clears facility search and restores the default Current first sort.",
       "User Reset clears user search and restores the default Admins first sort.",
       "Reset buttons automatically disable when list controls are already at their default settings.",
-      "No D1 migration is required for this admin reset-control patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Change facility/user search or sort, then use Reset to return to the default list view.",
     ],
@@ -79,28 +102,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can reset search filters faster.",
       "Facility and user lists are easier to navigate during setup and maintenance.",
       "The Help / Info admin search controls feel more complete.",
-    ],
-  },
-  {
-    version: "2.5.8",
-    releaseDate: "2026-04-30",
-    title: "Admin Management Search Filters",
-    summary:
-      "This release adds admin search filters so facility and user lists are easier to navigate as records grow.",
-    capabilities: [
-      "Added search to Facility Management by facility name, address, or phone.",
-      "Added search to User Access Management by user name, email, or role.",
-      "Added showing-count labels for filtered facility and user lists.",
-      "Added empty search-result messages when no records match.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Search facilities and users to confirm filtering works as expected.",
-    ],
-    userImpact: [
-      "Admins can find facility records faster.",
-      "Admins can find user records faster.",
-      "The Help / Info admin lists remain usable as records grow.",
     ],
   },
 ];
