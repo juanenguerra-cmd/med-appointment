@@ -754,3 +754,5 @@ export function useHealthData() {
     isLoaded,
   };
 }
+
+export default useHealthData;
