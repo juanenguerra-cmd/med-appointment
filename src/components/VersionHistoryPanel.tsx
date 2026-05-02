@@ -10,31 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.9.6";
+const CURRENT_VERSION = "2.9.7";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "2.9.6",
+    version: "2.9.7",
     releaseDate: "2026-04-30",
-    title: "Services Barrel Foundation",
-    summary: "Added a stable services barrel for future import cleanup while preserving current App.tsx behavior.",
+    title: "Type Export Compatibility Foundation",
+    summary: "Added a stable type export compatibility file for future type import cleanup while preserving current App.tsx behavior.",
     capabilities: [
-      "Added src/services/index.ts as a stable services export point.",
-      "Re-exported the census reconciliation service.",
-      "Kept App.tsx unchanged for safety.",
+      "Added src/typeExports.ts as a stable type-only export point.",
+      "Re-exported Appointment, Doctor, Facility, MedicalRecord, and Resident.",
+      "Avoided changing src/types.ts for safety.",
+      "Kept App.tsx unchanged.",
       "No D1 migration is required.",
     ],
     processFlow: [
       "Pull the latest main branch.",
       "Run npm run build before deployment.",
       "Deploy only after the build passes.",
-      "Use the services barrel in future service import cleanup patches.",
+      "Use src/typeExports.ts in future type import cleanup patches.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Creates one stable import point for future service cleanup.",
+      "Creates one stable type import point for future cleanup.",
       "Keeps current app behavior unchanged.",
     ],
+  },
+  {
+    version: "2.9.6",
+    releaseDate: "2026-04-30",
+    title: "Services Barrel Foundation",
+    summary: "Added a stable services barrel for future import cleanup while preserving current App.tsx behavior.",
+    capabilities: ["Added src/services/index.ts.", "Kept App.tsx unchanged for safety."],
+    processFlow: ["Run npm run build before deployment.", "Use the services barrel in future cleanup patches."],
+    userImpact: ["Keeps current workflows stable.", "Keeps current app behavior unchanged."],
   },
   {
     version: "2.9.5",
@@ -43,15 +53,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     summary: "Added a stable component barrel for future import cleanup while preserving current App.tsx behavior.",
     capabilities: ["Added src/components/index.ts.", "Kept App.tsx unchanged for safety."],
     processFlow: ["Run npm run build before deployment.", "Use the component barrel in future cleanup patches."],
-    userImpact: ["Keeps current workflows stable.", "Keeps current app behavior unchanged."],
-  },
-  {
-    version: "2.9.4",
-    releaseDate: "2026-04-30",
-    title: "Shared Utility Barrel Foundation",
-    summary: "Added a stable shared utility barrel for future import cleanup while preserving current App.tsx behavior.",
-    capabilities: ["Added src/utils/index.ts.", "Kept App.tsx unchanged for safety."],
-    processFlow: ["Run npm run build before deployment.", "Use the shared barrel in future cleanup patches."],
     userImpact: ["Keeps current workflows stable.", "Keeps current app behavior unchanged."],
   },
 ];
