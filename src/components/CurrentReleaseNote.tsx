@@ -1,18 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added a stable services barrel file at src/services/index.ts for future service import cleanup.",
-  "Re-exported the census reconciliation service through the services barrel.",
-  "Kept App.tsx unchanged so current behavior remains stable while future service imports can be cleaned safely.",
-  "Updated package metadata and visible release notes to identify v2.9.6 as the current services barrel baseline.",
+  "Added a stable type export compatibility file at src/typeExports.ts for future type import cleanup.",
+  "Re-exported Appointment, Doctor, Facility, MedicalRecord, and Resident as type-only exports.",
+  "Avoided creating src/types/index.ts because src/types.ts already exists and must remain stable.",
+  "Kept App.tsx unchanged so current behavior remains stable while future type imports can be cleaned safely.",
+  "Updated package metadata and visible release notes to identify v2.9.7 as the current type export compatibility baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the services barrel compiles cleanly.",
+  "Run npm run build to confirm the type export compatibility file compiles cleanly.",
   "Run npx wrangler deploy only after the build passes.",
   "No D1 migration is required for this compatibility patch.",
-  "Use the services barrel in future cleanup patches when moving service imports out of App.tsx.",
+  "Use src/typeExports.ts in future cleanup patches when moving type imports out of App.tsx.",
 ];
 
 export function CurrentReleaseNote() {
@@ -24,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.6 — Services Barrel Foundation
+            v2.9.7 — Type Export Compatibility Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a stable services barrel for future import cleanup while preserving current App.tsx behavior.
+            This release adds a stable type export compatibility file for future type import cleanup while preserving current App.tsx behavior.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Services Barrel</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Type Exports</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
