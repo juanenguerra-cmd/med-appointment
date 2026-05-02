@@ -127,3 +127,12 @@ export {
 } from "./appointmentValidationHelpers";
 
 export type { AppointmentValidationIssue } from "./appointmentValidationHelpers";
+
+export {
+  getAppointmentDuplicateKey,
+  areAppointmentsPotentialDuplicates,
+  findPotentialDuplicateAppointments,
+  hasPotentialDuplicateAppointment,
+} from "./appointmentDuplicateHelpers";
+
+export type { AppointmentDuplicateCheckOptions } from "./appointmentDuplicateHelpers";
