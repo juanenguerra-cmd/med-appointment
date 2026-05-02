@@ -108,3 +108,11 @@ export {
 } from "./appointmentPrintHelpers";
 
 export type { AppointmentPrintHeader } from "./appointmentPrintHelpers";
+
+export {
+  createAppointmentPdfPayload,
+  createAppointmentPdfFilename,
+  createAppointmentPdfFooter,
+} from "./appointmentPdfHelpers";
+
+export type { AppointmentPdfPayload } from "./appointmentPdfHelpers";
