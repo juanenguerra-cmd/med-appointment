@@ -10,17 +10,17 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.9.2";
+const CURRENT_VERSION = "2.9.3";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "2.9.2",
+    version: "2.9.3",
     releaseDate: "2026-04-30",
-    title: "Hook Export Compatibility Foundation",
-    summary: "Added a stable hook barrel export for future import cleanup while preserving current App.tsx behavior.",
+    title: "Appointment Utility Barrel Foundation",
+    summary: "Added a stable appointment utility barrel for future appointment import cleanup while preserving current App.tsx behavior.",
     capabilities: [
-      "Added src/hooks/index.ts as a stable hook export point.",
-      "Re-exported useHealthData as default and named compatibility exports.",
+      "Added src/utils/appointment/index.ts as a stable appointment utility export point.",
+      "Re-exported the existing appointment modal toolkit through the new barrel.",
       "Kept App.tsx unchanged for safety.",
       "No D1 migration is required.",
     ],
@@ -28,39 +28,31 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Pull the latest main branch.",
       "Run npm run build before deployment.",
       "Deploy only after the build passes.",
-      "Use the hook barrel in future hook import cleanup patches.",
+      "Use the appointment utility barrel in future appointment import cleanup patches.",
     ],
     userImpact: [
-      "Keeps build compatibility stable.",
-      "Creates one stable import point for future hook cleanup.",
+      "Keeps appointment workflows stable.",
+      "Creates one stable import point for future appointment cleanup.",
       "Keeps current app behavior unchanged.",
     ],
+  },
+  {
+    version: "2.9.2",
+    releaseDate: "2026-04-30",
+    title: "Hook Export Compatibility Foundation",
+    summary: "Added a stable hook barrel export for future import cleanup while preserving current App.tsx behavior.",
+    capabilities: ["Added src/hooks/index.ts as a stable hook export point.", "Kept App.tsx unchanged for safety."],
+    processFlow: ["Run npm run build before deployment.", "Use the hook barrel in future cleanup patches."],
+    userImpact: ["Keeps build compatibility stable.", "Keeps current app behavior unchanged."],
   },
   {
     version: "2.9.1",
     releaseDate: "2026-04-30",
     title: "Build Compatibility Fix",
     summary: "Fixed the Vite build failure by restoring default-import compatibility for useHealthData.",
-    capabilities: [
-      "Added default export compatibility to src/hooks/useHealthData.ts.",
-      "Kept the named export intact.",
-      "Kept App.tsx unchanged.",
-    ],
+    capabilities: ["Added default export compatibility to src/hooks/useHealthData.ts.", "Kept App.tsx unchanged."],
     processFlow: ["Run npm run build before deployment.", "Deploy only after the build passes."],
     userImpact: ["Restores production build compatibility.", "Keeps app behavior unchanged."],
-  },
-  {
-    version: "2.9.0",
-    releaseDate: "2026-04-30",
-    title: "Appointment Modal Save Payload Helper Foundation",
-    summary: "Added reusable appointment modal save-payload helpers for future modal cleanup.",
-    capabilities: [
-      "Added src/utils/appointmentModalSaveHelpers.ts.",
-      "Added save-payload and save-blocking helpers.",
-      "Exported helpers through the appointment modal toolkit.",
-    ],
-    processFlow: ["Use save helpers in a future narrow modal cleanup patch."],
-    userImpact: ["Keeps appointment workflows stable while cleanup continues."],
   },
 ];
 
