@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment PDF helper utilities for future PDF export, report, and App.tsx cleanup.",
-  "Added helpers for PDF payload creation, safe PDF filename generation, and PDF footer text.",
-  "PDF payloads now combine print header metadata, summary counts, and table-ready report data in one reusable structure.",
-  "Exported the appointment PDF helpers through the appointment modal toolkit.",
+  "Added reusable appointment validation helper utilities for future appointment modal, table, and App.tsx cleanup.",
+  "Added validation helpers for required appointment fields, schedule fields, and transportation fields.",
+  "Added helpers to detect blocking validation errors and summarize validation results.",
+  "Exported the appointment validation helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.8.4 as the current appointment PDF helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.8.5 as the current appointment validation helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.8.4 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.8.5 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment PDF helpers in the next narrow PDF export, report, or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment PDF logic in small build-tested steps.",
+  "Use appointment validation helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment validation logic in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.8.4 — Appointment PDF Helper Foundation
+            v2.8.5 — Appointment Validation Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment PDF payload helpers for future PDF export, report, table, and App.tsx cleanup.
+            This release adds reusable appointment validation helpers for future appointment modal, table, and App.tsx cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> PDF Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Validation Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
