@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.5";
+const CURRENT_VERSION = "2.7.6";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.6",
+    releaseDate: "2026-04-30",
+    title: "Appointment Sort Helper Foundation",
+    summary:
+      "This release adds reusable appointment sorting helpers for future App.tsx, reports, calendar, and appointment list cleanup.",
+    capabilities: [
+      "Added appointment sort helpers at src/utils/appointmentSortHelpers.ts.",
+      "Added helpers for date ascending, date descending, status-priority, resident, specialty, and provider sorting.",
+      "Exported the appointment sort helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment sort helpers in the next narrow App.tsx, reports, calendar, or appointment-table replacement patch.",
+      "Continue replacing duplicated App.tsx logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared sorting foundation for appointments, reports, and calendar views.",
+      "Makes future appointment list cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.7.5",
     releaseDate: "2026-04-30",
@@ -24,11 +49,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added helpers for appointment search text, date-range matching, multi-field filter matching, and filtered appointment lists.",
       "Exported the appointment filter helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment filter helpers in the next narrow App.tsx, reports, or appointment-table replacement patch.",
       "Continue replacing duplicated App.tsx logic in small build-tested steps.",
     ],
@@ -48,7 +70,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added appointment status helpers at src/utils/appointmentStatusHelpers.ts.",
       "Added helpers for status grouping, status labels, badge class selection, active status checks, pending scheduling review checks, and status sort weight.",
       "Exported the appointment status helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
     ],
     processFlow: [
       "Use appointment status helpers in the next narrow App.tsx or appointment-table replacement patch.",
@@ -69,7 +90,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: [
       "Added appointment modal toolkit at src/utils/appointmentModalToolkit.ts.",
       "Grouped appointment draft helpers, resident appointment matching helpers, and appointment sort-time helper behind one import target.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
       "Prepared the next narrow App.tsx replacement step by reducing future import clutter.",
     ],
     processFlow: [
@@ -80,28 +100,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Makes the next App.tsx modal cleanup step smaller and easier to review.",
       "Creates a cleaner shared toolkit for appointment modal behavior.",
-    ],
-  },
-  {
-    version: "2.7.2",
-    releaseDate: "2026-04-30",
-    title: "Appointment Modal Helper Foundation",
-    summary:
-      "This release adds reusable appointment draft helper utilities for the next safe App.tsx modal cleanup step.",
-    capabilities: [
-      "Added appointment draft helper utilities at src/utils/appointmentDraftHelpers.ts.",
-      "Added helpers for new appointment drafts, duplicate appointment drafts, and edit appointment drafts.",
-      "Added reusable resident-to-appointment draft application logic with unit resolution.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-    ],
-    processFlow: [
-      "Use appointmentDraftHelpers in the next narrow App.tsx import-replacement patch.",
-      "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Creates a safer foundation for reducing App.tsx appointment modal logic.",
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Makes resident selection, duplicate appointment, and new appointment behavior easier to reuse later.",
     ],
   },
 ];
