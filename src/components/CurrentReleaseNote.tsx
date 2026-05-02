@@ -1,20 +1,20 @@
-import { CheckCircle2, History, Search, Users } from "lucide-react";
+import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added Reset controls to Facility Management and User Access Management list filters.",
-  "Facility Reset clears facility search and restores the default Current first sort.",
-  "User Reset clears user search and restores the default Admins first sort.",
-  "Reset buttons automatically disable when list controls are already at their default settings.",
-  "Updated package metadata and visible release notes to identify v2.6.1 as the current admin list reset baseline.",
+  "Started App.tsx Modular Cleanup Phase 1 with safe foundation modules instead of a risky full rewrite.",
+  "Added shared app navigation metadata in src/constants/appNavigation.ts.",
+  "Added shared date helpers in src/utils/dateHelpers.ts.",
+  "Added shared string helper in src/utils/stringHelpers.ts.",
+  "Added shared schedule-time helper in src/utils/scheduleTime.ts.",
+  "Updated package metadata and visible release notes to identify v2.7.0 as the current modular cleanup baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.6.1 UI remains stable.",
-  "No D1 migration is required for this admin reset-control patch.",
-  "Deploy the app and open Help / Info as an admin user.",
-  "Change facility search or sort, then use Reset to return to the default list view.",
-  "Change user search or sort, then use Reset to return to the default list view.",
+  "Run npm run build to confirm the v2.7.0 foundation modules compile cleanly.",
+  "No D1 migration is required for this modular cleanup patch.",
+  "Use the new helper modules as the baseline for the next narrow App.tsx import-replacement patch.",
+  "Avoid broad App.tsx rewrites; continue replacing duplicated helpers in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,15 +26,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.6.1 — Admin List Reset Controls
+            v2.7.0 — App.tsx Modular Cleanup Phase 1
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds one-click reset controls for admin facility and user list filters.
+            This release begins the App.tsx split by adding reusable foundation modules for navigation, dates, string handling, and schedule sorting.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Search size={12} className="mr-1 inline" /> Reset Lists</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Users size={12} className="mr-1 inline" /> Admin Lists</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Modular</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
 
