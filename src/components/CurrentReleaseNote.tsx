@@ -1,21 +1,18 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment modal save-payload helper utilities for future appointment modal and App.tsx cleanup.",
-  "Added a helper to normalize appointment draft values before save.",
-  "Added a save-payload helper that combines mode, normalized appointment data, safety messages, duplicate count, and validation counts.",
-  "Added a helper to determine when appointment save should be blocked.",
-  "Exported the appointment modal save helpers through the appointment modal toolkit.",
-  "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.9.0 as the current appointment modal save helper baseline.",
+  "Fixed the Vite production build error caused by App.tsx importing useHealthData as a default export.",
+  "Added a default export compatibility bridge to src/hooks/useHealthData.ts while keeping the existing named export intact.",
+  "Kept App.tsx unchanged to avoid a risky broad rewrite of the main application file.",
+  "Updated package metadata and visible release notes to identify v2.9.1 as the current build compatibility fix baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.9.0 helper modules compile cleanly.",
-  "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment modal save helpers in the next narrow appointment modal or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment modal save logic in small build-tested steps.",
+  "Run npm run build to confirm the default export compatibility fix resolves the Vite error.",
+  "Run npx wrangler deploy only after the build passes.",
+  "No D1 migration is required for this compatibility patch.",
+  "Continue App.tsx cleanup in small build-tested steps after build stability is restored.",
 ];
 
 export function CurrentReleaseNote() {
@@ -27,15 +24,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.0 — Appointment Modal Save Payload Helper Foundation
+            v2.9.1 — Build Compatibility Fix
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment modal save-payload helpers for future appointment modal and App.tsx cleanup.
+            This release fixes the Vite build failure by restoring default-import compatibility for the useHealthData hook.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Save Helpers</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Build Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
 
