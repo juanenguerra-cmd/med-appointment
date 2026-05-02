@@ -1,20 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment export helper utilities for future CSV, report, and App.tsx export cleanup.",
-  "Added helpers to convert appointment report rows and appointment lists into CSV content.",
-  "Added safe CSV filename generation and CSV download blob creation helpers.",
-  "Exported the appointment export helpers through the appointment modal toolkit.",
+  "Added reusable appointment print helper utilities for future PDF, report, and App.tsx print cleanup.",
+  "Added helpers for print generated time, print header metadata, print rows, print table data, and print summary counts.",
+  "Exported the appointment print helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.8.2 as the current appointment export helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.8.3 as the current appointment print helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.8.2 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.8.3 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment export helpers in the next narrow CSV/export, reports, or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment export logic in small build-tested steps.",
+  "Use appointment print helpers in the next narrow PDF, report, print, or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment print logic in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.8.2 — Appointment Export Helper Foundation
+            v2.8.3 — Appointment Print Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment CSV/export helpers for future report, table, and App.tsx export cleanup.
+            This release adds reusable appointment print helpers for future PDF, report, table, and App.tsx print cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Export Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Print Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
