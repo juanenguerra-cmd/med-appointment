@@ -10,9 +10,35 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.8.4";
+const CURRENT_VERSION = "2.8.5";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.5",
+    releaseDate: "2026-04-30",
+    title: "Appointment Validation Helper Foundation",
+    summary:
+      "This release adds reusable appointment validation helpers for future appointment modal, table, and App.tsx cleanup.",
+    capabilities: [
+      "Added appointment validation helpers at src/utils/appointmentValidationHelpers.ts.",
+      "Added validation helpers for required appointment fields, schedule fields, and transportation fields.",
+      "Added helpers to detect blocking validation errors and summarize validation results.",
+      "Exported the appointment validation helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment validation helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment validation logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared validation foundation for appointment modal and table workflows.",
+      "Makes future appointment validation cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.8.4",
     releaseDate: "2026-04-30",
@@ -25,11 +51,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "PDF payloads combine print header metadata, summary counts, and table-ready report data in one reusable structure.",
       "Exported the appointment PDF helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment PDF helpers in the next narrow PDF export, report, or App.tsx replacement patch.",
       "Continue replacing duplicated appointment PDF logic in small build-tested steps.",
     ],
@@ -72,7 +95,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added helpers to convert appointment report rows and appointment lists into CSV content.",
       "Added safe CSV filename generation and CSV download blob creation helpers.",
       "Exported the appointment export helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
     ],
     processFlow: [
       "Use appointment export helpers in the next narrow CSV/export, reports, or App.tsx replacement patch.",
@@ -82,28 +104,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared CSV/export foundation for appointment reports and tables.",
       "Makes future appointment export cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.8.1",
-    releaseDate: "2026-04-30",
-    title: "Appointment Calendar Helper Foundation",
-    summary:
-      "This release adds reusable appointment calendar grouping helpers for future calendar view, dashboard, reports, and App.tsx cleanup.",
-    capabilities: [
-      "Added appointment calendar helpers at src/utils/appointmentCalendarHelpers.ts.",
-      "Added helpers for appointment date keys, calendar day labels, date grouping, date-specific appointment lists, and calendar summary counts.",
-      "Exported the appointment calendar helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-    ],
-    processFlow: [
-      "Use appointment calendar helpers in the next narrow calendar, dashboard, reports, or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment calendar grouping in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared calendar grouping foundation for appointment calendar and dashboard views.",
-      "Makes future appointment calendar cleanup smaller and easier to review.",
     ],
   },
 ];
