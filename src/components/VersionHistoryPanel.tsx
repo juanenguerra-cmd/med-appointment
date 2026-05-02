@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.0";
+const CURRENT_VERSION = "3.0.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.0.0",
+    version: "3.0.1",
     releaseDate: "2026-04-30",
-    title: "App.tsx Cleanup Readiness Gate",
-    summary: "Prepared the next direct App.tsx import cleanup phase with a documented safe order and build-check requirement.",
+    title: "App.tsx Component Import Cleanup Patch Guide",
+    summary: "Documented the exact first App.tsx component import cleanup patch for Button and Card.",
     capabilities: [
-      "Added docs/app-tsx-cleanup-readiness-gate.md.",
-      "Documented stable foundations for hooks, components, utilities, data utilities, services, and types.",
-      "Defined the recommended import cleanup order and build check after each import group.",
-      "Kept App.tsx unchanged because the connector view was truncated.",
+      "Added docs/app-tsx-component-import-cleanup-phase1.md.",
+      "Documented the current Card/Button direct imports and replacement component barrel import.",
+      "Documented imports that should not change yet, including LockScreen and AppointmentModal.",
+      "Kept App.tsx unchanged because connector content was still truncated.",
       "No D1 migration is required.",
     ],
     processFlow: [
       "Pull the latest main branch.",
       "Run npm run build before deployment.",
       "Deploy only after the build passes.",
-      "Start the next direct App.tsx cleanup with only the Button/Card component import group.",
+      "When editing locally, replace only the Card/Button imports, then build before continuing.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Prepares the next App.tsx cleanup phase.",
-      "Reduces risk by requiring a build check after each import group.",
+      "Gives an exact safe first App.tsx import cleanup patch.",
+      "Reduces risk by limiting the next local change to one import group.",
     ],
+  },
+  {
+    version: "3.0.0",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Cleanup Readiness Gate",
+    summary: "Prepared the next direct App.tsx import cleanup phase with a documented safe order and build-check requirement.",
+    capabilities: ["Added docs/app-tsx-cleanup-readiness-gate.md.", "Kept App.tsx unchanged."],
+    processFlow: ["Run npm run build before deployment.", "Start with only the Button/Card component import group."],
+    userImpact: ["Keeps current workflows stable.", "Prepares the next App.tsx cleanup phase."],
   },
   {
     version: "2.9.9",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added docs/import-cleanup-guide.md.", "Kept App.tsx unchanged."],
     processFlow: ["Run npm run build before deployment.", "Follow the guide before replacing App.tsx import groups."],
     userImpact: ["Keeps current workflows stable.", "Prepares the next App.tsx cleanup phase."],
-  },
-  {
-    version: "2.9.8",
-    releaseDate: "2026-04-30",
-    title: "Data Utility Barrel Foundation",
-    summary: "Added a stable data utility barrel for future import cleanup while preserving current app behavior.",
-    capabilities: ["Added src/utils/data/index.ts.", "Kept App.tsx unchanged for safety."],
-    processFlow: ["Run npm run build before deployment.", "Use the data utility barrel in future cleanup patches."],
-    userImpact: ["Keeps current workflows stable.", "Keeps current app behavior unchanged."],
   },
 ];
 
