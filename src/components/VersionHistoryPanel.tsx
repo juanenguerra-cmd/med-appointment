@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.8.2";
+const CURRENT_VERSION = "2.8.3";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.3",
+    releaseDate: "2026-04-30",
+    title: "Appointment Print Helper Foundation",
+    summary:
+      "This release adds reusable appointment print helpers for future PDF, report, table, and App.tsx print cleanup.",
+    capabilities: [
+      "Added appointment print helpers at src/utils/appointmentPrintHelpers.ts.",
+      "Added helpers for print generated time, print header metadata, print rows, print table data, and print summary counts.",
+      "Exported the appointment print helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment print helpers in the next narrow PDF, report, print, or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment print logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared print foundation for appointment reports, PDFs, and tables.",
+      "Makes future appointment print cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.8.2",
     releaseDate: "2026-04-30",
@@ -25,11 +50,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added safe CSV filename generation and CSV download blob creation helpers.",
       "Exported the appointment export helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment export helpers in the next narrow CSV/export, reports, or App.tsx replacement patch.",
       "Continue replacing duplicated appointment export logic in small build-tested steps.",
     ],
@@ -81,28 +103,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared table-row foundation for appointment lists, reports, and calendar views.",
       "Makes future appointment table cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.7.9",
-    releaseDate: "2026-04-30",
-    title: "Appointment Analytics Helper Foundation",
-    summary:
-      "This release adds reusable appointment analytics/count helpers for future dashboard, reports, QAPI summaries, and App.tsx cleanup.",
-    capabilities: [
-      "Added appointment analytics helpers at src/utils/appointmentAnalyticsHelpers.ts.",
-      "Added count helpers for appointment status group, specialty, unit, provider, and transportation company.",
-      "Added sorted count-row conversion and a combined appointment analytics summary helper.",
-      "Exported the appointment analytics helpers through the appointment modal toolkit.",
-    ],
-    processFlow: [
-      "Use appointment analytics helpers in the next narrow dashboard, reports, QAPI summary, or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment analytics logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared analytics foundation for dashboard counts, reports, and QAPI summaries.",
-      "Makes future appointment analytics cleanup smaller and easier to review.",
     ],
   },
 ];
