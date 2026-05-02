@@ -42,3 +42,13 @@ export {
 } from "./appointmentSortHelpers";
 
 export type { AppointmentSortMode } from "./appointmentSortHelpers";
+
+export {
+  formatAppointmentDate,
+  formatAppointmentTime,
+  formatAppointmentDateTime,
+  getAppointmentResidentLabel,
+  getAppointmentProviderLabel,
+  getAppointmentTransportLabel,
+  getAppointmentSummaryLine,
+} from "./appointmentDisplayHelpers";
