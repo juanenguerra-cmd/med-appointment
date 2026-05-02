@@ -1,18 +1,18 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment filtering helper utilities for future App.tsx, reports, and appointment table cleanup.",
-  "Added helpers for appointment search text, date-range matching, multi-field filter matching, and filtered appointment lists.",
-  "Exported the appointment filter helpers through the appointment modal toolkit.",
+  "Added reusable appointment sort helper utilities for future App.tsx, reports, calendar, and appointment table cleanup.",
+  "Added helpers for date ascending, date descending, status-priority, resident, specialty, and provider sorting.",
+  "Exported the appointment sort helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.7.5 as the current appointment filtering helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.7.6 as the current appointment sort helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.7.5 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.7.6 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment filter helpers in the next narrow App.tsx, reports, or appointment-table replacement patch.",
+  "Use appointment sort helpers in the next narrow App.tsx, reports, calendar, or appointment-table replacement patch.",
   "Continue replacing duplicated App.tsx logic in small build-tested steps.",
 ];
 
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.7.5 — Appointment Filtering Helper Foundation
+            v2.7.6 — Appointment Sort Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment filtering helpers for future App.tsx, reports, and appointment list cleanup.
+            This release adds reusable appointment sorting helpers for future App.tsx, reports, calendar, and appointment list cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Filter Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Sort Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
