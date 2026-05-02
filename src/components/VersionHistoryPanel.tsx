@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.6.0";
+const CURRENT_VERSION = "2.6.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.6.1",
+    releaseDate: "2026-04-30",
+    title: "Admin List Reset Controls",
+    summary:
+      "This release adds one-click reset controls for admin facility and user list filters.",
+    capabilities: [
+      "Added Reset controls to Facility Management and User Access Management list filters.",
+      "Facility Reset clears facility search and restores the default Current first sort.",
+      "User Reset clears user search and restores the default Admins first sort.",
+      "Reset buttons automatically disable when list controls are already at their default settings.",
+      "No D1 migration is required for this admin reset-control patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Deploy the app and open Help / Info as an admin user.",
+      "Change facility/user search or sort, then use Reset to return to the default list view.",
+    ],
+    userImpact: [
+      "Admins can reset list controls faster.",
+      "Facility and user list management is easier during setup and maintenance.",
+      "The Help / Info admin list controls feel more complete and forgiving.",
+    ],
+  },
   {
     version: "2.6.0",
     releaseDate: "2026-04-30",
@@ -24,11 +49,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Facilities can be sorted by Current first, Name A-Z, and Name Z-A.",
       "Users can be sorted by Admins first, Name A-Z, Name Z-A, and Role A-Z.",
       "Kept v2.5.9 search, clear-search, showing-count, and empty-result behavior.",
-      "No D1 migration is required for this admin sort-control patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Deploy the app and open Help / Info as an admin user.",
       "Sort facilities and users to confirm ordering works as expected.",
     ],
@@ -79,27 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can find facility records faster.",
       "Admins can find user records faster.",
       "The Help / Info admin lists remain usable as records grow.",
-    ],
-  },
-  {
-    version: "2.5.7",
-    releaseDate: "2026-04-30",
-    title: "Admin Management Summary Counts",
-    summary:
-      "This release adds quick admin summary counts so facility and user setup status is easier to review from Help / Info.",
-    capabilities: [
-      "Added an Admin Management Snapshot section on the Help / Info page.",
-      "Added count tiles for total facilities, current facility status, admin users, and staff users.",
-      "Added New Facility and New User actions directly to the snapshot card.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Confirm the Admin Management Snapshot shows facility and user setup counts.",
-    ],
-    userImpact: [
-      "Admins can quickly review setup status before managing records.",
-      "Facility and user creation actions are available from the snapshot card.",
-      "The Help / Info admin area provides better at-a-glance context.",
     ],
   },
 ];
