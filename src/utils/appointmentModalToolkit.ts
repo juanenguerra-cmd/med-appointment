@@ -61,3 +61,15 @@ export {
 } from "./appointmentReportHelpers";
 
 export type { AppointmentReportRow } from "./appointmentReportHelpers";
+
+export {
+  countAppointmentsByStatusGroup,
+  countAppointmentsBySpecialty,
+  countAppointmentsByUnit,
+  countAppointmentsByProvider,
+  countAppointmentsByTransportCompany,
+  mapToSortedCountRows,
+  getAppointmentAnalyticsSummary,
+} from "./appointmentAnalyticsHelpers";
+
+export type { AppointmentCountMap } from "./appointmentAnalyticsHelpers";
