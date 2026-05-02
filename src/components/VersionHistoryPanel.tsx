@@ -10,9 +10,33 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.0";
+const CURRENT_VERSION = "2.7.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.1",
+    releaseDate: "2026-04-30",
+    title: "Modular Cleanup Foundation Expansion",
+    summary:
+      "This release adds the next safe helper modules for resident appointment matching and appointment draft defaults.",
+    capabilities: [
+      "Added resident appointment matching helper at src/utils/residentAppointmentMatching.ts.",
+      "Added appointment draft defaults at src/constants/appointmentDefaults.ts.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use the new resident matching and appointment default modules for the next narrow App.tsx import-replacement patch.",
+      "Continue replacing duplicated App.tsx logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Creates more safe extraction points for reducing App.tsx size.",
+      "Keeps current app workflows stable while cleanup continues.",
+      "Makes resident history matching and appointment modal defaults easier to reuse later.",
+    ],
+  },
   {
     version: "2.7.0",
     releaseDate: "2026-04-30",
@@ -25,11 +49,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added shared string helper at src/utils/stringHelpers.ts.",
       "Added shared schedule-time helper at src/utils/scheduleTime.ts.",
       "Kept App.tsx behavior stable by avoiding a broad rewrite in this phase.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use the new helper modules as the foundation for the next narrow App.tsx import-replacement patch.",
       "Continue App.tsx cleanup in small build-tested steps instead of one large rewrite.",
     ],
@@ -81,27 +102,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can organize facility records faster.",
       "Admins can organize users by name, role, or admin priority.",
       "The Help / Info admin lists are easier to maintain as records grow.",
-    ],
-  },
-  {
-    version: "2.5.9",
-    releaseDate: "2026-04-30",
-    title: "Admin Search Clear Controls",
-    summary:
-      "This release adds clear buttons to admin search boxes so facility and user filters can be reset quickly.",
-    capabilities: [
-      "Added clear-search controls to Facility Management and User Access Management search boxes.",
-      "Search inputs now reserve space for the clear button so text does not overlap the control.",
-      "Kept the v2.5.8 search filters, showing-count labels, and empty search-result messages.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Type into facility/user search and use the clear button to reset the lists.",
-    ],
-    userImpact: [
-      "Admins can reset search filters faster.",
-      "Facility and user lists are easier to navigate during setup and maintenance.",
-      "The Help / Info admin search controls feel more complete.",
     ],
   },
 ];
