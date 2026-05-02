@@ -1,18 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Fixed the Vite production build error caused by App.tsx importing useHealthData as a default export.",
-  "Added a default export compatibility bridge to src/hooks/useHealthData.ts while keeping the existing named export intact.",
-  "Kept App.tsx unchanged to avoid a risky broad rewrite of the main application file.",
-  "Updated package metadata and visible release notes to identify v2.9.1 as the current build compatibility fix baseline.",
+  "Added a hooks barrel export file at src/hooks/index.ts for future stable hook imports.",
+  "Re-exported useHealthData as a default export from the hook barrel.",
+  "Re-exported useHealthData as a named compatibility export from the hook barrel.",
+  "Kept App.tsx unchanged so current behavior remains stable while future imports can be cleaned safely.",
+  "Updated package metadata and visible release notes to identify v2.9.2 as the current hook export compatibility baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the default export compatibility fix resolves the Vite error.",
+  "Run npm run build to confirm the hook barrel export compiles cleanly.",
   "Run npx wrangler deploy only after the build passes.",
   "No D1 migration is required for this compatibility patch.",
-  "Continue App.tsx cleanup in small build-tested steps after build stability is restored.",
+  "Use the hook barrel in future cleanup patches when moving hook imports out of App.tsx.",
 ];
 
 export function CurrentReleaseNote() {
@@ -24,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.9.1 — Build Compatibility Fix
+            v2.9.2 — Hook Export Compatibility Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release fixes the Vite build failure by restoring default-import compatibility for the useHealthData hook.
+            This release adds a stable hook barrel export for future import cleanup while preserving current App.tsx behavior.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Build Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Hook Barrel</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
