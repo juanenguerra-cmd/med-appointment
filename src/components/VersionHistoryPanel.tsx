@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.1";
+const CURRENT_VERSION = "2.7.2";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.2",
+    releaseDate: "2026-04-30",
+    title: "Appointment Modal Helper Foundation",
+    summary:
+      "This release adds reusable appointment draft helper utilities for the next safe App.tsx modal cleanup step.",
+    capabilities: [
+      "Added appointment draft helper utilities at src/utils/appointmentDraftHelpers.ts.",
+      "Added helpers for new appointment drafts, duplicate appointment drafts, and edit appointment drafts.",
+      "Added reusable resident-to-appointment draft application logic with unit resolution.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointmentDraftHelpers in the next narrow App.tsx import-replacement patch.",
+      "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Creates a safer foundation for reducing App.tsx appointment modal logic.",
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Makes resident selection, duplicate appointment, and new appointment behavior easier to reuse later.",
+    ],
+  },
   {
     version: "2.7.1",
     releaseDate: "2026-04-30",
@@ -23,11 +48,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added resident appointment matching helper at src/utils/residentAppointmentMatching.ts.",
       "Added appointment draft defaults at src/constants/appointmentDefaults.ts.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use the new resident matching and appointment default modules for the next narrow App.tsx import-replacement patch.",
       "Continue replacing duplicated App.tsx logic in small build-tested steps.",
     ],
@@ -70,7 +92,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added Reset controls to Facility Management and User Access Management list filters.",
       "Facility Reset clears facility search and restores the default Current first sort.",
       "User Reset clears user search and restores the default Admins first sort.",
-      "Reset buttons automatically disable when list controls are already at their default settings.",
     ],
     processFlow: [
       "Deploy the app and open Help / Info as an admin user.",
@@ -80,28 +101,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Admins can reset list controls faster.",
       "Facility and user list management is easier during setup and maintenance.",
       "The Help / Info admin list controls feel more complete and forgiving.",
-    ],
-  },
-  {
-    version: "2.6.0",
-    releaseDate: "2026-04-30",
-    title: "Admin Management Sort Controls",
-    summary:
-      "This release adds sort controls to admin facility and user lists so management records are easier to organize.",
-    capabilities: [
-      "Added sort controls to Facility Management and User Access Management.",
-      "Facilities can be sorted by Current first, Name A-Z, and Name Z-A.",
-      "Users can be sorted by Admins first, Name A-Z, Name Z-A, and Role A-Z.",
-      "Kept v2.5.9 search, clear-search, showing-count, and empty-result behavior.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Sort facilities and users to confirm ordering works as expected.",
-    ],
-    userImpact: [
-      "Admins can organize facility records faster.",
-      "Admins can organize users by name, role, or admin priority.",
-      "The Help / Info admin lists are easier to maintain as records grow.",
     ],
   },
 ];
