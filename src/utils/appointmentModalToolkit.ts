@@ -91,3 +91,10 @@ export {
 } from "./appointmentCalendarHelpers";
 
 export type { AppointmentCalendarDay } from "./appointmentCalendarHelpers";
+
+export {
+  appointmentReportRowsToCsv,
+  appointmentsToCsv,
+  createCsvFilename,
+  createCsvDownloadBlob,
+} from "./appointmentExportHelpers";
