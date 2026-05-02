@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.2";
+const CURRENT_VERSION = "2.7.3";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.7.3",
+    releaseDate: "2026-04-30",
+    title: "Modal Helper Integration Prep",
+    summary:
+      "This release adds a single appointment modal toolkit import target for the next safe App.tsx cleanup step.",
+    capabilities: [
+      "Added appointment modal toolkit at src/utils/appointmentModalToolkit.ts.",
+      "Grouped appointment draft helpers, resident appointment matching helpers, and appointment sort-time helper behind one import target.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "Prepared the next narrow App.tsx replacement step by reducing future import clutter.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointmentModalToolkit in the next narrow App.tsx import-replacement patch.",
+      "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Makes the next App.tsx modal cleanup step smaller and easier to review.",
+      "Creates a cleaner shared toolkit for appointment modal behavior.",
+    ],
+  },
   {
     version: "2.7.2",
     releaseDate: "2026-04-30",
@@ -24,11 +49,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added helpers for new appointment drafts, duplicate appointment drafts, and edit appointment drafts.",
       "Added reusable resident-to-appointment draft application logic with unit resolution.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointmentDraftHelpers in the next narrow App.tsx import-replacement patch.",
       "Continue replacing duplicated App.tsx modal logic in small build-tested steps.",
     ],
@@ -80,27 +102,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Creates a safer foundation for reducing App.tsx size.",
       "Makes future patches easier to review and less likely to break unrelated workflows.",
       "Preserves current app behavior while modular cleanup begins.",
-    ],
-  },
-  {
-    version: "2.6.1",
-    releaseDate: "2026-04-30",
-    title: "Admin List Reset Controls",
-    summary:
-      "This release adds one-click reset controls for admin facility and user list filters.",
-    capabilities: [
-      "Added Reset controls to Facility Management and User Access Management list filters.",
-      "Facility Reset clears facility search and restores the default Current first sort.",
-      "User Reset clears user search and restores the default Admins first sort.",
-    ],
-    processFlow: [
-      "Deploy the app and open Help / Info as an admin user.",
-      "Change facility/user search or sort, then use Reset to return to the default list view.",
-    ],
-    userImpact: [
-      "Admins can reset list controls faster.",
-      "Facility and user list management is easier during setup and maintenance.",
-      "The Help / Info admin list controls feel more complete and forgiving.",
     ],
   },
 ];
