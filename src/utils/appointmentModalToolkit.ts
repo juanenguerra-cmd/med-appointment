@@ -136,3 +136,10 @@ export {
 } from "./appointmentDuplicateHelpers";
 
 export type { AppointmentDuplicateCheckOptions } from "./appointmentDuplicateHelpers";
+
+export {
+  getAppointmentModalSafetySummary,
+  getAppointmentModalSafetyMessages,
+} from "./appointmentModalSafetyHelpers";
+
+export type { AppointmentModalSafetySummary } from "./appointmentModalSafetyHelpers";
