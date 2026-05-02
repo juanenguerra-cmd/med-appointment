@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment analytics helper utilities for future dashboard, reports, QAPI summaries, and App.tsx cleanup.",
-  "Added count helpers for appointment status group, specialty, unit, provider, and transportation company.",
-  "Added sorted count-row conversion and a combined appointment analytics summary helper.",
-  "Exported the appointment analytics helpers through the appointment modal toolkit.",
+  "Added reusable appointment table helper utilities for future appointment table, reports, calendar, and App.tsx cleanup.",
+  "Added table-row conversion that combines appointment date/time, resident, specialty, provider/location, status badge, and transport labels.",
+  "Added buildAppointmentTableRows to filter, sort, and convert appointments into table-ready rows in one reusable helper.",
+  "Exported the appointment table helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.7.9 as the current appointment analytics helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.8.0 as the current appointment table helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.7.9 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.8.0 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment analytics helpers in the next narrow dashboard, reports, QAPI summary, or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment analytics logic in small build-tested steps.",
+  "Use appointment table helpers in the next narrow appointment table, reports, calendar, or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment table formatting in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.7.9 — Appointment Analytics Helper Foundation
+            v2.8.0 — Appointment Table Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment analytics/count helpers for future dashboard, reports, QAPI summaries, and App.tsx cleanup.
+            This release adds reusable appointment table-row helpers for future appointment table, reports, calendar, and App.tsx cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Analytics Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Table Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
