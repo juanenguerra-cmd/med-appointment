@@ -10,9 +10,35 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.7.9";
+const CURRENT_VERSION = "2.8.0";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.0",
+    releaseDate: "2026-04-30",
+    title: "Appointment Table Helper Foundation",
+    summary:
+      "This release adds reusable appointment table-row helpers for future appointment table, reports, calendar, and App.tsx cleanup.",
+    capabilities: [
+      "Added appointment table helpers at src/utils/appointmentTableHelpers.ts.",
+      "Added table-row conversion that combines appointment date/time, resident, specialty, provider/location, status badge, and transport labels.",
+      "Added buildAppointmentTableRows to filter, sort, and convert appointments into table-ready rows in one reusable helper.",
+      "Exported the appointment table helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment table helpers in the next narrow appointment table, reports, calendar, or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment table formatting in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared table-row foundation for appointment lists, reports, and calendar views.",
+      "Makes future appointment table cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.7.9",
     releaseDate: "2026-04-30",
@@ -25,11 +51,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added sorted count-row conversion and a combined appointment analytics summary helper.",
       "Exported the appointment analytics helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment analytics helpers in the next narrow dashboard, reports, QAPI summary, or App.tsx replacement patch.",
       "Continue replacing duplicated appointment analytics logic in small build-tested steps.",
     ],
@@ -82,28 +105,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared display-format foundation for appointment tables, cards, reports, and calendar views.",
       "Makes future appointment display cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.7.6",
-    releaseDate: "2026-04-30",
-    title: "Appointment Sort Helper Foundation",
-    summary:
-      "This release adds reusable appointment sorting helpers for future App.tsx, reports, calendar, and appointment list cleanup.",
-    capabilities: [
-      "Added appointment sort helpers at src/utils/appointmentSortHelpers.ts.",
-      "Added helpers for date ascending, date descending, status-priority, resident, specialty, and provider sorting.",
-      "Exported the appointment sort helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-    ],
-    processFlow: [
-      "Use appointment sort helpers in the next narrow App.tsx, reports, calendar, or appointment-table replacement patch.",
-      "Continue replacing duplicated App.tsx logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared sorting foundation for appointments, reports, and calendar views.",
-      "Makes future appointment list cleanup smaller and easier to review.",
     ],
   },
 ];
