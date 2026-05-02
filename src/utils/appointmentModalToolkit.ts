@@ -81,3 +81,13 @@ export {
 } from "./appointmentTableHelpers";
 
 export type { AppointmentTableRow } from "./appointmentTableHelpers";
+
+export {
+  getAppointmentDateKey,
+  formatCalendarDayLabel,
+  groupAppointmentsByDate,
+  getAppointmentsForDate,
+  getCalendarSummary,
+} from "./appointmentCalendarHelpers";
+
+export type { AppointmentCalendarDay } from "./appointmentCalendarHelpers";
