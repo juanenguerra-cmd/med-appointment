@@ -98,3 +98,13 @@ export {
   createCsvFilename,
   createCsvDownloadBlob,
 } from "./appointmentExportHelpers";
+
+export {
+  formatPrintGeneratedAt,
+  createAppointmentPrintHeader,
+  createAppointmentPrintRows,
+  createAppointmentPrintTable,
+  createAppointmentPrintSummary,
+} from "./appointmentPrintHelpers";
+
+export type { AppointmentPrintHeader } from "./appointmentPrintHelpers";
