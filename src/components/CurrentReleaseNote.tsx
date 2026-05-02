@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added docs/app-tsx-cleanup-readiness-gate.md to prepare the next direct App.tsx import cleanup phase.",
-  "Documented the stable foundations already created for hooks, components, utilities, data utilities, services, and types.",
-  "Defined the recommended import cleanup order and required build check after each import group.",
-  "Kept App.tsx unchanged because the connector view was truncated and a partial rewrite would be risky.",
-  "Updated package metadata and visible release notes to identify v3.0.0 as the current App.tsx cleanup readiness baseline.",
+  "Added docs/app-tsx-component-import-cleanup-phase1.md with the exact Button/Card import cleanup patch.",
+  "Documented the current direct imports and the replacement component barrel import.",
+  "Documented imports that should not change yet, including LockScreen and AppointmentModal.",
+  "Kept App.tsx unchanged because the connector still returned truncated file content.",
+  "Updated package metadata and visible release notes to identify v3.0.1 as the current App.tsx component import cleanup guide baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the readiness guide update does not affect the app build.",
+  "Run npm run build to confirm the guide update does not affect the app build.",
   "Run npx wrangler deploy only after the build passes.",
   "No D1 migration is required for this documentation and cleanup-planning patch.",
-  "Start the next direct App.tsx cleanup with only the Button/Card component import group.",
+  "When editing locally, replace only the Card/Button imports with import { Button, Card } from \"./components\"; then build before continuing.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.0 — App.tsx Cleanup Readiness Gate
+            v3.0.1 — App.tsx Component Import Cleanup Patch Guide
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release prepares the next direct App.tsx import cleanup phase with a documented safe order and build-check requirement.
+            This release documents the exact first App.tsx component import cleanup patch for Button and Card.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Readiness Gate</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Patch Guide</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
