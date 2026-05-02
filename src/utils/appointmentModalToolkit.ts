@@ -33,3 +33,12 @@ export {
 } from "./appointmentFilterHelpers";
 
 export type { AppointmentFilterOptions } from "./appointmentFilterHelpers";
+
+export {
+  compareAppointmentsByDateAsc,
+  compareAppointmentsByDateDesc,
+  compareAppointmentsByStatusPriority,
+  sortAppointments,
+} from "./appointmentSortHelpers";
+
+export type { AppointmentSortMode } from "./appointmentSortHelpers";
