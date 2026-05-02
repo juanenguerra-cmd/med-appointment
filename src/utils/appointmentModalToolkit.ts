@@ -143,3 +143,14 @@ export {
 } from "./appointmentModalSafetyHelpers";
 
 export type { AppointmentModalSafetySummary } from "./appointmentModalSafetyHelpers";
+
+export {
+  createAppointmentModalDraft,
+  createAppointmentModalWorkflowState,
+  applyResidentToAppointmentModalWorkflowState,
+} from "./appointmentModalWorkflowHelpers";
+
+export type {
+  AppointmentModalMode,
+  AppointmentModalWorkflowState,
+} from "./appointmentModalWorkflowHelpers";
