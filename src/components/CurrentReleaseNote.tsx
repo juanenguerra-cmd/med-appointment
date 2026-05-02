@@ -1,20 +1,20 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment duplicate-check helper utilities for future appointment modal, table, and App.tsx cleanup.",
-  "Added helpers for duplicate key generation, potential duplicate comparison, duplicate list detection, and boolean duplicate checks.",
-  "Duplicate checks compare resident identity, date, time, specialty, provider, and location.",
-  "Exported the appointment duplicate-check helpers through the appointment modal toolkit.",
+  "Added reusable appointment modal safety helper utilities for future appointment modal and App.tsx cleanup.",
+  "Added a combined safety summary helper that brings together appointment validation results and possible duplicate appointment results.",
+  "Added a reusable safety message helper for required items, warnings, and possible duplicate alerts.",
+  "Exported the appointment modal safety helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.8.6 as the current appointment duplicate-check helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.8.7 as the current appointment modal safety helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.8.6 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.8.7 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment duplicate-check helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment duplicate-check logic in small build-tested steps.",
+  "Use appointment modal safety helpers in the next narrow appointment modal or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment modal safety logic in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +26,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.8.6 — Appointment Duplicate Check Helper Foundation
+            v2.8.7 — Appointment Modal Safety Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment duplicate-check helpers for future appointment modal, table, and App.tsx cleanup.
+            This release adds reusable appointment modal safety helpers that combine validation and duplicate-check summaries.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Duplicate Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Modal Safety</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
