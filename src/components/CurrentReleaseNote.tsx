@@ -1,20 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added reusable appointment table helper utilities for future appointment table, reports, calendar, and App.tsx cleanup.",
-  "Added table-row conversion that combines appointment date/time, resident, specialty, provider/location, status badge, and transport labels.",
-  "Added buildAppointmentTableRows to filter, sort, and convert appointments into table-ready rows in one reusable helper.",
-  "Exported the appointment table helpers through the appointment modal toolkit.",
+  "Added reusable appointment calendar helper utilities for future calendar view, dashboard, reports, and App.tsx cleanup.",
+  "Added helpers for appointment date keys, calendar day labels, date grouping, date-specific appointment lists, and calendar summary counts.",
+  "Exported the appointment calendar helpers through the appointment modal toolkit.",
   "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
-  "Updated package metadata and visible release notes to identify v2.8.0 as the current appointment table helper baseline.",
+  "Updated package metadata and visible release notes to identify v2.8.1 as the current appointment calendar helper baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.8.0 helper modules compile cleanly.",
+  "Run npm run build to confirm the v2.8.1 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use appointment table helpers in the next narrow appointment table, reports, calendar, or App.tsx replacement patch.",
-  "Continue replacing duplicated appointment table formatting in small build-tested steps.",
+  "Use appointment calendar helpers in the next narrow calendar, dashboard, reports, or App.tsx replacement patch.",
+  "Continue replacing duplicated appointment calendar grouping in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.8.0 — Appointment Table Helper Foundation
+            v2.8.1 — Appointment Calendar Helper Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds reusable appointment table-row helpers for future appointment table, reports, calendar, and App.tsx cleanup.
+            This release adds reusable appointment calendar grouping helpers for future calendar view, dashboard, reports, and App.tsx cleanup.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Table Helpers</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Calendar Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Split</span>
         </div>
       </div>
