@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.9.0";
+const CURRENT_VERSION = "2.9.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.9.1",
+    releaseDate: "2026-04-30",
+    title: "Build Compatibility Fix",
+    summary:
+      "This release fixes the Vite build failure by restoring default-import compatibility for the useHealthData hook.",
+    capabilities: [
+      "Added a default export compatibility bridge to src/hooks/useHealthData.ts.",
+      "Kept the existing named export intact so both import styles are supported.",
+      "Resolved the production build error where App.tsx imported useHealthData as a default export.",
+      "Kept App.tsx unchanged in this patch to avoid a broad rewrite of the main application file.",
+      "No D1 migration is required for this compatibility patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Run npx wrangler deploy only after the build passes.",
+      "Continue App.tsx cleanup in small build-tested steps after build stability is restored.",
+    ],
+    userImpact: [
+      "Restores production build compatibility.",
+      "Allows deployment to continue after the build passes.",
+      "Keeps the app behavior unchanged while fixing the import/export mismatch.",
+    ],
+  },
   {
     version: "2.9.0",
     releaseDate: "2026-04-30",
@@ -26,11 +51,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added a helper to determine when appointment save should be blocked.",
       "Exported the appointment modal save helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment modal save helpers in the next narrow appointment modal or App.tsx replacement patch.",
       "Continue replacing duplicated appointment modal save logic in small build-tested steps.",
     ],
@@ -85,28 +107,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared workflow foundation for new, edit, duplicate, and resident-selection appointment modal actions.",
       "Makes future appointment modal workflow cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.8.7",
-    releaseDate: "2026-04-30",
-    title: "Appointment Modal Safety Helper Foundation",
-    summary:
-      "This release adds reusable appointment modal safety helpers that combine validation and duplicate-check summaries.",
-    capabilities: [
-      "Added appointment modal safety helpers at src/utils/appointmentModalSafetyHelpers.ts.",
-      "Added a combined safety summary helper that brings together appointment validation results and possible duplicate appointment results.",
-      "Added a reusable safety message helper for required items, warnings, and possible duplicate alerts.",
-      "Exported the appointment modal safety helpers through the appointment modal toolkit.",
-    ],
-    processFlow: [
-      "Use appointment modal safety helpers in the next narrow appointment modal or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment modal safety logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared safety foundation for appointment creation and editing.",
-      "Makes future appointment modal safety cleanup smaller and easier to review.",
     ],
   },
 ];
