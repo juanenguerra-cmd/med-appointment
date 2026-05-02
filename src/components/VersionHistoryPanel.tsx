@@ -10,9 +10,35 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "2.8.8";
+const CURRENT_VERSION = "2.8.9";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "2.8.9",
+    releaseDate: "2026-04-30",
+    title: "Appointment Modal Field Update Helper Foundation",
+    summary:
+      "This release adds reusable appointment modal field-update helpers for future appointment modal and App.tsx cleanup.",
+    capabilities: [
+      "Added appointment modal field helpers at src/utils/appointmentModalFieldHelpers.ts.",
+      "Added helpers to update a single appointment draft field or multiple draft fields at once.",
+      "Added workflow-state field update helpers that automatically refresh safety summaries and safety messages after field changes.",
+      "Exported the appointment modal field helpers through the appointment modal toolkit.",
+      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
+      "No D1 migration is required for this modular cleanup patch.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run build before deployment.",
+      "Use appointment modal field helpers in the next narrow appointment modal or App.tsx replacement patch.",
+      "Continue replacing duplicated appointment modal field update logic in small build-tested steps.",
+    ],
+    userImpact: [
+      "Keeps appointment workflows stable while cleanup continues.",
+      "Creates a shared field-update foundation for appointment modal workflows.",
+      "Makes future appointment modal field cleanup smaller and easier to review.",
+    ],
+  },
   {
     version: "2.8.8",
     releaseDate: "2026-04-30",
@@ -26,11 +52,8 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added a resident-application helper that updates the modal workflow state after selecting a resident.",
       "Exported the appointment modal workflow helpers through the appointment modal toolkit.",
       "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
-      "No D1 migration is required for this modular cleanup patch.",
     ],
     processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
       "Use appointment modal workflow helpers in the next narrow appointment modal or App.tsx replacement patch.",
       "Continue replacing duplicated appointment modal workflow logic in small build-tested steps.",
     ],
@@ -74,7 +97,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Added helpers for duplicate key generation, potential duplicate comparison, duplicate list detection, and boolean duplicate checks.",
       "Duplicate checks compare resident identity, date, time, specialty, provider, and location.",
       "Exported the appointment duplicate-check helpers through the appointment modal toolkit.",
-      "Kept App.tsx behavior unchanged in this patch to avoid a broad rewrite.",
     ],
     processFlow: [
       "Use appointment duplicate-check helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
@@ -84,28 +106,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Keeps appointment workflows stable while cleanup continues.",
       "Creates a shared duplicate-check foundation for appointment creation and editing.",
       "Makes future appointment duplicate warning cleanup smaller and easier to review.",
-    ],
-  },
-  {
-    version: "2.8.5",
-    releaseDate: "2026-04-30",
-    title: "Appointment Validation Helper Foundation",
-    summary:
-      "This release adds reusable appointment validation helpers for future appointment modal, table, and App.tsx cleanup.",
-    capabilities: [
-      "Added appointment validation helpers at src/utils/appointmentValidationHelpers.ts.",
-      "Added validation helpers for required appointment fields, schedule fields, and transportation fields.",
-      "Added helpers to detect blocking validation errors and summarize validation results.",
-      "Exported the appointment validation helpers through the appointment modal toolkit.",
-    ],
-    processFlow: [
-      "Use appointment validation helpers in the next narrow appointment modal, table, or App.tsx replacement patch.",
-      "Continue replacing duplicated appointment validation logic in small build-tested steps.",
-    ],
-    userImpact: [
-      "Keeps appointment workflows stable while cleanup continues.",
-      "Creates a shared validation foundation for appointment modal and table workflows.",
-      "Makes future appointment validation cleanup smaller and easier to review.",
     ],
   },
 ];
