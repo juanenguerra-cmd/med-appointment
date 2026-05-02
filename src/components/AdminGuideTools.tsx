@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, X, ArrowUpDown, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
+import { Plus, Search, X, ArrowUpDown, RotateCcw, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility } from "../types";
@@ -19,6 +19,9 @@ interface AdminGuideToolsProps {
 
 type FacilitySort = "name-asc" | "name-desc" | "current-first";
 type UserSort = "name-asc" | "name-desc" | "role-asc" | "admin-first";
+
+const DEFAULT_FACILITY_SORT: FacilitySort = "current-first";
+const DEFAULT_USER_SORT: UserSort = "admin-first";
 
 const isAdminRole = (role: unknown) => {
   const normalized = String(role || "").trim().toLowerCase();
@@ -73,6 +76,17 @@ const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; o
   </div>
 );
 
+const ResetButton = ({ onClick, disabled }: { onClick: () => void; disabled: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className="inline-flex h-[42px] items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wider text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-40"
+  >
+    <RotateCcw size={14} /> Reset
+  </button>
+);
+
 export function AdminGuideTools({
   currentUserRole,
   facilities,
@@ -87,14 +101,16 @@ export function AdminGuideTools({
 }: AdminGuideToolsProps) {
   const [facilitySearch, setFacilitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
-  const [facilitySort, setFacilitySort] = useState<FacilitySort>("current-first");
-  const [userSort, setUserSort] = useState<UserSort>("admin-first");
+  const [facilitySort, setFacilitySort] = useState<FacilitySort>(DEFAULT_FACILITY_SORT);
+  const [userSort, setUserSort] = useState<UserSort>(DEFAULT_USER_SORT);
   const isAdmin = isAdminRole(currentUserRole);
   const adminUsers = users.filter((user: any) => isAdminRole(user?.role)).length;
   const staffUsers = Math.max(users.length - adminUsers, 0);
   const currentFacility = facilities.find((facility) => facility.id === currentFacilityId);
   const normalizedFacilitySearch = facilitySearch.trim().toLowerCase();
   const normalizedUserSearch = userSearch.trim().toLowerCase();
+  const facilityControlsDirty = facilitySearch.trim() !== "" || facilitySort !== DEFAULT_FACILITY_SORT;
+  const userControlsDirty = userSearch.trim() !== "" || userSort !== DEFAULT_USER_SORT;
 
   const filteredFacilities = (normalizedFacilitySearch
     ? facilities.filter((facility) =>
@@ -143,6 +159,16 @@ export function AdminGuideTools({
   const openNewUser = () => {
     setEditingUser(null);
     setIsUserModalOpen(true);
+  };
+
+  const resetFacilityControls = () => {
+    setFacilitySearch("");
+    setFacilitySort(DEFAULT_FACILITY_SORT);
+  };
+
+  const resetUserControls = () => {
+    setUserSearch("");
+    setUserSort(DEFAULT_USER_SORT);
   };
 
   return (
@@ -219,13 +245,14 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
-              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_auto] lg:items-center">
+              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={facilitySearch} onChange={setFacilitySearch} placeholder="Search facilities by name, address, or phone..." />
                 <SortSelect value={facilitySort} onChange={setFacilitySort} ariaLabel="Sort facilities">
                   <option value="current-first">Current first</option>
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>
                 </SortSelect>
+                <ResetButton onClick={resetFacilityControls} disabled={!facilityControlsDirty} />
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Showing {filteredFacilities.length} of {facilities.length}
                 </p>
@@ -287,7 +314,7 @@ export function AdminGuideTools({
                 </Button>
               </div>
 
-              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_auto] lg:items-center">
+              <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={userSearch} onChange={setUserSearch} placeholder="Search users by name, email, or role..." />
                 <SortSelect value={userSort} onChange={setUserSort} ariaLabel="Sort users">
                   <option value="admin-first">Admins first</option>
@@ -295,6 +322,7 @@ export function AdminGuideTools({
                   <option value="name-desc">Name Z-A</option>
                   <option value="role-asc">Role A-Z</option>
                 </SortSelect>
+                <ResetButton onClick={resetUserControls} disabled={!userControlsDirty} />
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Showing {filteredUsers.length} of {users.length}
                 </p>
