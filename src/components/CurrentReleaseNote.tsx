@@ -1,20 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Started App.tsx Modular Cleanup Phase 1 with safe foundation modules instead of a risky full rewrite.",
-  "Added shared app navigation metadata in src/constants/appNavigation.ts.",
-  "Added shared date helpers in src/utils/dateHelpers.ts.",
-  "Added shared string helper in src/utils/stringHelpers.ts.",
-  "Added shared schedule-time helper in src/utils/scheduleTime.ts.",
-  "Updated package metadata and visible release notes to identify v2.7.0 as the current modular cleanup baseline.",
+  "Expanded the App.tsx modular cleanup foundation with additional reusable helper modules.",
+  "Added resident appointment matching helper in src/utils/residentAppointmentMatching.ts.",
+  "Added appointment draft defaults in src/constants/appointmentDefaults.ts.",
+  "Kept App.tsx behavior unchanged in this patch to avoid a risky broad rewrite.",
+  "Updated package metadata and visible release notes to identify v2.7.1 as the current modular cleanup expansion baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the v2.7.0 foundation modules compile cleanly.",
+  "Run npm run build to confirm the v2.7.1 helper modules compile cleanly.",
   "No D1 migration is required for this modular cleanup patch.",
-  "Use the new helper modules as the baseline for the next narrow App.tsx import-replacement patch.",
-  "Avoid broad App.tsx rewrites; continue replacing duplicated helpers in small build-tested steps.",
+  "Use the new resident matching and appointment default modules for the next narrow App.tsx import-replacement patch.",
+  "Continue replacing duplicated App.tsx logic in small build-tested steps.",
 ];
 
 export function CurrentReleaseNote() {
@@ -26,10 +25,10 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v2.7.0 — App.tsx Modular Cleanup Phase 1
+            v2.7.1 — Modular Cleanup Foundation Expansion
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release begins the App.tsx split by adding reusable foundation modules for navigation, dates, string handling, and schedule sorting.
+            This release adds the next safe helper modules for resident appointment matching and appointment draft defaults.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
