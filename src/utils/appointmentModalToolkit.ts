@@ -13,3 +13,14 @@ export {
 } from "./residentAppointmentMatching";
 
 export { getAppointmentSortTime } from "./scheduleTime";
+
+export {
+  getAppointmentStatusGroup,
+  isPendingSchedulingReview,
+  isActiveAppointmentStatus,
+  getAppointmentStatusLabel,
+  getAppointmentStatusBadgeClass,
+  getAppointmentStatusSortWeight,
+} from "./appointmentStatusHelpers";
+
+export type { AppointmentStatusGroup } from "./appointmentStatusHelpers";
