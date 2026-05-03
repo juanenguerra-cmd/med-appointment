@@ -10,31 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.2";
+const CURRENT_VERSION = "3.0.3";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.0.3",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Component Import Cleanup Script",
+    summary: "Added a local-safe script to perform the first App.tsx component import cleanup without overwriting the large file through GitHub.",
+    capabilities: [
+      "Added scripts/refactor-app-component-imports-a1.mjs.",
+      "Added npm script refactor:app-components.",
+      "The script removes direct Button, Card, LockScreen, and AppointmentModal imports and adds one component barrel import.",
+      "Kept App.tsx unchanged in the repository because connector content was truncated.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch.",
+      "Run npm run refactor:app-components locally from the repository root.",
+      "Run npm run build immediately after the refactor script.",
+      "Commit the resulting App.tsx change only after the build passes.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Provides a safer local path for the first App.tsx import cleanup.",
+      "Avoids overwriting the large App.tsx file through a truncated connector view.",
+    ],
+  },
   {
     version: "3.0.2",
     releaseDate: "2026-04-30",
     title: "Component Barrel Expansion Phase 2",
     summary: "Expanded the component barrel so the next App.tsx component import cleanup can include LockScreen and AppointmentModal safely.",
-    capabilities: [
-      "Expanded src/components/index.ts to include LockScreen and AppointmentModal exports.",
-      "Prepared the component barrel for the next App.tsx component import cleanup step.",
-      "Kept App.tsx unchanged for safety.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run build before deployment.",
-      "Deploy only after the build passes.",
-      "After build validation, App.tsx component imports can be consolidated through ./components.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Prepares a safer component import cleanup step.",
-      "Keeps current app behavior unchanged.",
-    ],
+    capabilities: ["Expanded src/components/index.ts.", "Kept App.tsx unchanged."],
+    processFlow: ["Run npm run build before deployment.", "After build validation, component imports can be consolidated through ./components."],
+    userImpact: ["Keeps current workflows stable.", "Prepares a safer component import cleanup step."],
   },
   {
     version: "3.0.1",
@@ -44,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added docs/app-tsx-component-import-cleanup-phase1.md.", "Kept App.tsx unchanged."],
     processFlow: ["Run npm run build before deployment.", "Replace only the Card/Button imports when editing locally."],
     userImpact: ["Keeps current workflows stable.", "Gives an exact first App.tsx import cleanup patch."],
-  },
-  {
-    version: "3.0.0",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Cleanup Readiness Gate",
-    summary: "Prepared the next direct App.tsx import cleanup phase with a documented safe order and build-check requirement.",
-    capabilities: ["Added docs/app-tsx-cleanup-readiness-gate.md.", "Kept App.tsx unchanged."],
-    processFlow: ["Run npm run build before deployment.", "Start with only the Button/Card component import group."],
-    userImpact: ["Keeps current workflows stable.", "Prepares the next App.tsx cleanup phase."],
   },
 ];
 
