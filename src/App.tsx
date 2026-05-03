@@ -45,7 +45,7 @@ import {
   CopyPlus,
 } from "lucide-react";
 import { AppointmentModal, Button, Card, LockScreen } from "./components";
-import { useHealthData } from "./hooks/useHealthData";
+import { useHealthData } from "./hooks";
 import type { Appointment, Facility, Resident, TransportationCompany } from "./typeExports";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
