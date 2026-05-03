@@ -10,33 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.10";
+const CURRENT_VERSION = "3.0.11";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.0.10",
+    version: "3.0.11",
     releaseDate: "2026-04-30",
-    title: "App.tsx Phase A Import Cleanup Runner",
-    summary: "Added one local command to run the full Phase A App.tsx import cleanup sequence and verifier.",
+    title: "Phase A Build Verification Runner",
+    summary: "Added one local command to run Phase A App.tsx import cleanup, verification, and production build.",
     capabilities: [
-      "Added scripts/run-app-phase-a-import-cleanup.mjs.",
-      "Added npm script refactor:app-phase-a.",
-      "The runner executes component, type, hook, service, data utility, appointment utility, and Phase A verifier scripts.",
+      "Added scripts/run-app-phase-a-import-cleanup-build.mjs.",
+      "Added npm script refactor:app-phase-a-build.",
+      "The runner executes the Phase A cleanup runner first, then runs npm run build.",
       "Kept App.tsx unchanged in the repository so local build and verifier results remain the source of truth.",
       "No D1 migration is required.",
     ],
     processFlow: [
       "Pull the latest main branch.",
-      "Run npm run refactor:app-phase-a locally from the repository root.",
-      "Run npm run build immediately after the runner completes.",
-      "Review git diff src/App.tsx after the build passes.",
+      "Run npm run refactor:app-phase-a-build locally from the repository root.",
+      "Review git diff src/App.tsx after the runner completes successfully.",
       "Commit App.tsx only after verification and build both pass.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Combines Phase A import cleanup into one local command.",
-      "Reduces missed steps by running the verifier after all import cleanup scripts.",
+      "Combines Phase A import cleanup, verification, and build into one local command.",
+      "Reduces missed steps before committing App.tsx changes.",
     ],
+  },
+  {
+    version: "3.0.10",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Phase A Import Cleanup Runner",
+    summary: "Added one local command to run the full Phase A App.tsx import cleanup sequence and verifier.",
+    capabilities: ["Added scripts/run-app-phase-a-import-cleanup.mjs.", "Added npm script refactor:app-phase-a."],
+    processFlow: ["Run npm run refactor:app-phase-a locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Combines Phase A import cleanup into one local command."],
   },
   {
     version: "3.0.9",
@@ -46,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/verify-app-phase-a-imports.mjs.", "Added npm script verify:app-phase-a-imports."],
     processFlow: ["Run npm run verify:app-phase-a-imports locally.", "Run npm run build after the verifier passes."],
     userImpact: ["Keeps current workflows stable.", "Confirms whether Phase A import cleanup is complete."],
-  },
-  {
-    version: "3.0.8",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Appointment Utility Import Cleanup Script",
-    summary: "Added a local-safe script to consolidate App.tsx appointment utility imports into the appointment utility barrel path.",
-    capabilities: ["Added scripts/refactor-app-appointment-imports-a6.mjs.", "Added npm script refactor:app-appointments."],
-    processFlow: ["Run npm run refactor:app-appointments locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Provides a safer local App.tsx cleanup path."],
   },
 ];
 
