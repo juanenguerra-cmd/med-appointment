@@ -1,16 +1,16 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-component-imports-a1.mjs to safely update App.tsx component imports locally.",
-  "Added npm script refactor:app-components for the local component import cleanup step.",
-  "The script removes direct Button, Card, LockScreen, and AppointmentModal imports and adds one component barrel import.",
-  "Kept App.tsx unchanged in the repository because the connector still returned truncated file content.",
-  "Updated package metadata and visible release notes to identify v3.0.3 as the current App.tsx component import cleanup script baseline.",
+  "Added scripts/refactor-app-type-imports-a2.mjs to safely update App.tsx type imports locally.",
+  "Added npm script refactor:app-types for the local type import cleanup step.",
+  "The script replaces the direct ./types import with a type-only import from ./typeExports.",
+  "Kept App.tsx unchanged in the repository so the local build can validate the exact file change first.",
+  "Updated package metadata and visible release notes to identify v3.0.4 as the current App.tsx type import cleanup script baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before running the refactor script.",
-  "Run npm run refactor:app-components locally from the repository root.",
+  "Run npm run refactor:app-types locally from the repository root.",
   "Run npm run build immediately after the refactor script.",
   "Commit the resulting App.tsx change only after the build passes.",
   "No D1 migration is required for this import cleanup patch.",
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.3 — App.tsx Component Import Cleanup Script
+            v3.0.4 — App.tsx Type Import Cleanup Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe script to perform the first App.tsx component import cleanup without overwriting the large file through GitHub.
+            This release adds a local-safe script to convert App.tsx type imports to the type export compatibility path.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Refactor Script</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Type Script</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
