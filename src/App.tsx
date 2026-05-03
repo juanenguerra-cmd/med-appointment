@@ -44,10 +44,8 @@ import {
   Copy,
   CopyPlus,
 } from "lucide-react";
+import { AppointmentModal, Button, Card, LockScreen } from "./components";
 import { useHealthData } from "./hooks/useHealthData";
-import { Card } from "./components/Card";
-import { Button } from "./components/Button";
-import { LockScreen } from "./components/LockScreen";
 import { Appointment, Resident, Facility, TransportationCompany } from "./types";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
@@ -58,7 +56,6 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { CensusPage } from "./pages/CensusPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
-import { AppointmentModal } from "./components/appointments/AppointmentModal";
 import {
   getConsultFormLabel,
   openConsultForm,
