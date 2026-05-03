@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.0.3",
+  "version": "3.0.4",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -14,7 +14,8 @@
     "build:clean": "npm run clean && npm run build",
     "build:verify": "npm run clean && npm run build",
     "predeploy": "npm run build:verify",
-    "refactor:app-components": "node scripts/refactor-app-component-imports-a1.mjs"
+    "refactor:app-components": "node scripts/refactor-app-component-imports-a1.mjs",
+    "refactor:app-types": "node scripts/refactor-app-type-imports-a2.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
