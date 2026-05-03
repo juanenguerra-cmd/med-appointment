@@ -1,16 +1,16 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-service-imports-a4.mjs to safely update App.tsx service imports locally.",
-  "Added npm script refactor:app-services for the local service import cleanup step.",
-  "The script replaces the direct census reconciliation service import with the services barrel import from ./services when present.",
+  "Added scripts/refactor-app-data-imports-a5.mjs to safely update App.tsx data utility imports locally.",
+  "Added npm script refactor:app-data for the local data utility import cleanup step.",
+  "The script consolidates direct data validation, audit log, and census reconciliation imports into the ./utils/data barrel import.",
   "Kept App.tsx unchanged in the repository so the local build can validate the exact file change first.",
-  "Updated package metadata and visible release notes to identify v3.0.6 as the current App.tsx service import cleanup script baseline.",
+  "Updated package metadata and visible release notes to identify v3.0.7 as the current App.tsx data utility import cleanup script baseline.",
 ];
 
 const workflowItems = [
   "Pull the latest main branch before running the refactor script.",
-  "Run npm run refactor:app-services locally from the repository root.",
+  "Run npm run refactor:app-data locally from the repository root.",
   "Run npm run build immediately after the refactor script.",
   "Commit the resulting App.tsx change only if the script changed App.tsx and the build passes.",
   "No D1 migration is required for this import cleanup patch.",
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.6 — App.tsx Service Import Cleanup Script
+            v3.0.7 — App.tsx Data Utility Import Cleanup Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe script to convert App.tsx service imports to the services barrel path.
+            This release adds a local-safe script to consolidate App.tsx data utility imports into the data utility barrel path.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Service Script</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Data Script</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
