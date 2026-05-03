@@ -1,18 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Expanded src/components/index.ts to include LockScreen and AppointmentModal exports.",
-  "Prepared the component barrel for the next App.tsx component import cleanup step.",
-  "Kept App.tsx unchanged so current behavior remains stable while the component barrel is expanded safely.",
-  "Updated package metadata and visible release notes to identify v3.0.2 as the current component barrel expansion baseline.",
+  "Added scripts/refactor-app-component-imports-a1.mjs to safely update App.tsx component imports locally.",
+  "Added npm script refactor:app-components for the local component import cleanup step.",
+  "The script removes direct Button, Card, LockScreen, and AppointmentModal imports and adds one component barrel import.",
+  "Kept App.tsx unchanged in the repository because the connector still returned truncated file content.",
+  "Updated package metadata and visible release notes to identify v3.0.3 as the current App.tsx component import cleanup script baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before the next build or deploy.",
-  "Run npm run build to confirm the expanded component barrel compiles cleanly.",
-  "Run npx wrangler deploy only after the build passes.",
-  "No D1 migration is required for this component barrel patch.",
-  "The next App.tsx component import cleanup can combine Button, Card, LockScreen, and AppointmentModal from ./components after build validation.",
+  "Pull the latest main branch before running the refactor script.",
+  "Run npm run refactor:app-components locally from the repository root.",
+  "Run npm run build immediately after the refactor script.",
+  "Commit the resulting App.tsx change only after the build passes.",
+  "No D1 migration is required for this import cleanup patch.",
 ];
 
 export function CurrentReleaseNote() {
@@ -24,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.2 — Component Barrel Expansion Phase 2
+            v3.0.3 — App.tsx Component Import Cleanup Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release expands the component barrel so the next App.tsx component import cleanup can include LockScreen and AppointmentModal safely.
+            This release adds a local-safe script to perform the first App.tsx component import cleanup without overwriting the large file through GitHub.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Component Barrel</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Refactor Script</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
