@@ -1,18 +1,18 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/verify-app-phase-a-imports.mjs to verify App.tsx Phase A import cleanup locally.",
-  "Added npm script verify:app-phase-a-imports for checking remaining direct Phase A imports.",
-  "The verifier checks component, type, hook, service, data utility, and appointment utility import groups.",
+  "Added scripts/run-app-phase-a-import-cleanup.mjs to run all Phase A App.tsx import cleanup scripts in order.",
+  "Added npm script refactor:app-phase-a for one-command local Phase A import cleanup and verification.",
+  "The runner executes component, type, hook, service, data utility, appointment utility, and Phase A verifier scripts.",
   "Kept App.tsx unchanged in the repository so local build and verifier results remain the source of truth.",
-  "Updated package metadata and visible release notes to identify v3.0.9 as the current Phase A import cleanup verifier baseline.",
+  "Updated package metadata and visible release notes to identify v3.0.10 as the current Phase A runner baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the verifier.",
-  "Run all intended Phase A refactor scripts locally.",
-  "Run npm run verify:app-phase-a-imports after the refactor scripts.",
-  "Run npm run build after the verifier passes.",
+  "Pull the latest main branch before running the Phase A runner.",
+  "Run npm run refactor:app-phase-a locally from the repository root.",
+  "Run npm run build immediately after the runner completes.",
+  "Review git diff src/App.tsx after the build passes.",
   "Commit App.tsx only after verification and build both pass.",
 ];
 
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.9 — App.tsx Phase A Import Cleanup Verifier
+            v3.0.10 — App.tsx Phase A Import Cleanup Runner
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local verifier to confirm whether all Phase A App.tsx import cleanup groups are complete.
+            This release adds one local command to run the full Phase A App.tsx import cleanup sequence and verifier.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Import Verifier</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Phase A Runner</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
