@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.7";
+const CURRENT_VERSION = "3.0.8";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.0.7",
+    version: "3.0.8",
     releaseDate: "2026-04-30",
-    title: "App.tsx Data Utility Import Cleanup Script",
-    summary: "Added a local-safe script to consolidate App.tsx data utility imports into the data utility barrel path.",
+    title: "App.tsx Appointment Utility Import Cleanup Script",
+    summary: "Added a local-safe script to consolidate App.tsx appointment utility imports into the appointment utility barrel path.",
     capabilities: [
-      "Added scripts/refactor-app-data-imports-a5.mjs.",
-      "Added npm script refactor:app-data.",
-      "The script consolidates direct data validation, audit log, and census reconciliation imports into ./utils/data.",
+      "Added scripts/refactor-app-appointment-imports-a6.mjs.",
+      "Added npm script refactor:app-appointments.",
+      "The script consolidates direct appointment utility imports into ./utils/appointment.",
       "Kept App.tsx unchanged in the repository so local build can validate the exact file change first.",
       "No D1 migration is required.",
     ],
     processFlow: [
       "Pull the latest main branch.",
-      "Run npm run refactor:app-data locally from the repository root.",
+      "Run npm run refactor:app-appointments locally from the repository root.",
       "Run npm run build immediately after the refactor script.",
       "Commit the resulting App.tsx change only if the script changed App.tsx and the build passes.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Provides a safer local path for App.tsx data utility import cleanup.",
+      "Provides a safer local path for App.tsx appointment utility import cleanup.",
       "Avoids overwriting the large App.tsx file through a truncated connector view.",
     ],
+  },
+  {
+    version: "3.0.7",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Data Utility Import Cleanup Script",
+    summary: "Added a local-safe script to consolidate App.tsx data utility imports into the data utility barrel path.",
+    capabilities: ["Added scripts/refactor-app-data-imports-a5.mjs.", "Added npm script refactor:app-data."],
+    processFlow: ["Run npm run refactor:app-data locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Provides a safer local App.tsx cleanup path."],
   },
   {
     version: "3.0.6",
@@ -44,15 +53,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     summary: "Added a local-safe script to convert App.tsx service imports to the services barrel path.",
     capabilities: ["Added scripts/refactor-app-service-imports-a4.mjs.", "Added npm script refactor:app-services."],
     processFlow: ["Run npm run refactor:app-services locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Provides a safer local App.tsx cleanup path."],
-  },
-  {
-    version: "3.0.5",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Hook Import Cleanup Script",
-    summary: "Added a local-safe script to convert the App.tsx useHealthData import to the hook barrel path.",
-    capabilities: ["Added scripts/refactor-app-hook-imports-a3.mjs.", "Added npm script refactor:app-hooks."],
-    processFlow: ["Run npm run refactor:app-hooks locally.", "Run npm run build immediately after."],
     userImpact: ["Keeps current workflows stable.", "Provides a safer local App.tsx cleanup path."],
   },
 ];
