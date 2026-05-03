@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.3";
+const CURRENT_VERSION = "3.0.4";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.0.3",
+    version: "3.0.4",
     releaseDate: "2026-04-30",
-    title: "App.tsx Component Import Cleanup Script",
-    summary: "Added a local-safe script to perform the first App.tsx component import cleanup without overwriting the large file through GitHub.",
+    title: "App.tsx Type Import Cleanup Script",
+    summary: "Added a local-safe script to convert App.tsx type imports to the type export compatibility path.",
     capabilities: [
-      "Added scripts/refactor-app-component-imports-a1.mjs.",
-      "Added npm script refactor:app-components.",
-      "The script removes direct Button, Card, LockScreen, and AppointmentModal imports and adds one component barrel import.",
-      "Kept App.tsx unchanged in the repository because connector content was truncated.",
+      "Added scripts/refactor-app-type-imports-a2.mjs.",
+      "Added npm script refactor:app-types.",
+      "The script replaces the direct ./types import with a type-only import from ./typeExports.",
+      "Kept App.tsx unchanged in the repository so local build can validate the exact file change first.",
       "No D1 migration is required.",
     ],
     processFlow: [
       "Pull the latest main branch.",
-      "Run npm run refactor:app-components locally from the repository root.",
+      "Run npm run refactor:app-types locally from the repository root.",
       "Run npm run build immediately after the refactor script.",
       "Commit the resulting App.tsx change only after the build passes.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Provides a safer local path for the first App.tsx import cleanup.",
+      "Provides a safer local path for the App.tsx type import cleanup.",
       "Avoids overwriting the large App.tsx file through a truncated connector view.",
     ],
+  },
+  {
+    version: "3.0.3",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Component Import Cleanup Script",
+    summary: "Added a local-safe script to perform the first App.tsx component import cleanup without overwriting the large file through GitHub.",
+    capabilities: ["Added scripts/refactor-app-component-imports-a1.mjs.", "Added npm script refactor:app-components."],
+    processFlow: ["Run npm run refactor:app-components locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Provides a safer local App.tsx cleanup path."],
   },
   {
     version: "3.0.2",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Expanded src/components/index.ts.", "Kept App.tsx unchanged."],
     processFlow: ["Run npm run build before deployment.", "After build validation, component imports can be consolidated through ./components."],
     userImpact: ["Keeps current workflows stable.", "Prepares a safer component import cleanup step."],
-  },
-  {
-    version: "3.0.1",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Component Import Cleanup Patch Guide",
-    summary: "Documented the exact first App.tsx component import cleanup patch for Button and Card.",
-    capabilities: ["Added docs/app-tsx-component-import-cleanup-phase1.md.", "Kept App.tsx unchanged."],
-    processFlow: ["Run npm run build before deployment.", "Replace only the Card/Button imports when editing locally."],
-    userImpact: ["Keeps current workflows stable.", "Gives an exact first App.tsx import cleanup patch."],
   },
 ];
 
