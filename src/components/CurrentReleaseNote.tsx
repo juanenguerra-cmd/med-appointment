@@ -1,17 +1,17 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/run-app-phase-a-import-cleanup-build.mjs to run Phase A import cleanup and production build verification in one command.",
-  "Added npm script refactor:app-phase-a-build for one-command local Phase A cleanup, verification, and build.",
-  "The runner executes the Phase A cleanup runner first, then runs npm run build.",
+  "Added scripts/check-app-phase-a-completion.mjs to verify Phase A completion locally.",
+  "Added npm script check:app-phase-a for one-command Phase A verification, production build, git status, and App.tsx diff review.",
+  "The checklist confirms Phase A imports, runs the production build, and prints the exact commit steps after success.",
   "Kept App.tsx unchanged in the repository so local build and verifier results remain the source of truth.",
-  "Updated package metadata and visible release notes to identify v3.0.11 as the current Phase A build verification runner baseline.",
+  "Updated package metadata and visible release notes to identify v3.0.12 as the current Phase A completion checklist baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the Phase A build runner.",
-  "Run npm run refactor:app-phase-a-build locally from the repository root.",
-  "Review git diff src/App.tsx after the runner completes successfully.",
+  "Pull the latest main branch before running the Phase A completion checklist.",
+  "Run npm run check:app-phase-a locally from the repository root.",
+  "Review git diff src/App.tsx after the checklist completes successfully.",
   "Commit App.tsx only after verification and build both pass.",
   "No D1 migration is required for this import cleanup patch.",
 ];
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.11 — Phase A Build Verification Runner
+            v3.0.12 — Phase A Completion Checklist
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds one local command to run Phase A App.tsx import cleanup, verification, and production build.
+            This release adds one local command to verify Phase A cleanup, run the build, show git status, and review the App.tsx diff.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Build Runner</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Checklist</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
         </div>
       </div>
