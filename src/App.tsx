@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { AppointmentModal, Button, Card, LockScreen } from "./components";
 import { useHealthData } from "./hooks/useHealthData";
-import { Appointment, Resident, Facility, TransportationCompany } from "./types";
+import type { Appointment, Facility, Resident, TransportationCompany } from "./typeExports";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
 import { MEDICAL_SPECIALTIES } from "./constants/medicalSpecialties";
 import { DirectoryPage } from "./pages/DirectoryPage";
