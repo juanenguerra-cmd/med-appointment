@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.0";
+const CURRENT_VERSION = "3.1.1";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.1",
+    releaseDate: "2026-04-30",
+    title: "Extract App Date Time Helpers Foundation",
+    summary: "Added the first Phase B helper module for reusable App.tsx date/time formatting and date comparison helpers.",
+    capabilities: [
+      "Added src/utils/appHelpers/dateTimeHelpers.ts.",
+      "Added reusable date/time display, input formatting, today date, past date, and future date helper functions.",
+      "Exported the date/time helper module through src/utils/appHelpers/index.ts.",
+      "Kept App.tsx unchanged so helper replacement can be done in a small local build-tested commit.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Use imports from ./utils/appHelpers when replacing App.tsx date/time logic.",
+      "Replace only one small group of date/time expressions at a time.",
+      "Run npm run build after each replacement group.",
+      "Do not combine date/time helper extraction with UI or D1 schema changes.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Starts Phase B helper extraction with low-risk date/time helpers.",
+      "Prepares App.tsx for smaller date/time replacement commits without changing behavior yet.",
+    ],
+  },
   {
     version: "3.1.0",
     releaseDate: "2026-04-30",
     title: "App.tsx Helper Extraction Phase B Foundation",
     summary: "Started Phase B by adding the guide and helper barrel foundation for safe App.tsx helper/function extraction.",
-    capabilities: [
-      "Added docs/app-tsx-helper-extraction-phase-b.md.",
-      "Added src/utils/appHelpers/index.ts as the helper extraction barrel.",
-      "Documented the recommended helper extraction order and safety rules.",
-      "Documented that helper extraction should be completed one group at a time with a build after each group.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Use src/utils/appHelpers for extracted App.tsx helper groups.",
-      "Start with date/time display helpers in the next extraction commit.",
-      "Run npm run build after every helper extraction.",
-      "Do not combine helper extraction with UI changes or D1 schema changes.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Starts Phase B without changing user-facing behavior.",
-      "Prepares App.tsx for smaller, safer helper extraction commits.",
-    ],
+    capabilities: ["Added docs/app-tsx-helper-extraction-phase-b.md.", "Added src/utils/appHelpers/index.ts."],
+    processFlow: ["Use src/utils/appHelpers for extracted App.tsx helper groups.", "Run npm run build after every helper extraction."],
+    userImpact: ["Keeps current workflows stable.", "Starts Phase B without changing user-facing behavior."],
   },
   {
     version: "3.0.13",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Marked App.tsx Phase A import cleanup as complete.", "No D1 migration is required."],
     processFlow: ["Continue using npm run check:app-phase-a when verifying import cleanup health.", "Begin helper/function extraction in small build-tested commits."],
     userImpact: ["Keeps current workflows stable.", "Closes Phase A import cleanup."],
-  },
-  {
-    version: "3.0.12",
-    releaseDate: "2026-04-30",
-    title: "Phase A Completion Checklist",
-    summary: "Added one local command to verify Phase A cleanup, run the build, show git status, and review the App.tsx diff.",
-    capabilities: ["Added scripts/check-app-phase-a-completion.mjs.", "Added npm script check:app-phase-a."],
-    processFlow: ["Run npm run check:app-phase-a locally.", "Commit App.tsx only after verification and build both pass."],
-    userImpact: ["Keeps current workflows stable.", "Makes Phase A completion review easier before committing App.tsx."],
   },
 ];
 
