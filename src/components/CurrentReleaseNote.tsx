@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/audit-app-date-time-helpers.mjs to scan App.tsx for date/time helper replacement opportunities.",
-  "Added npm script audit:app-dates for local date/time helper audit review.",
-  "The audit prints likely App.tsx line locations for display formatting, input formatting, and today-date patterns.",
-  "Kept App.tsx unchanged so replacements can be completed one small group at a time after audit review.",
-  "Updated package metadata and visible release notes to identify v3.1.2 as the date/time helper audit baseline.",
+  "Added scripts/refactor-app-today-date-helper-b1.mjs to safely replace low-risk today-date input patterns in App.tsx locally.",
+  "Added npm script refactor:app-today-date for the first actual Phase B date/time helper replacement step.",
+  "The script replaces new Date().toISOString().slice/substring(0, 10) with getTodayDateInputValue().",
+  "The script also adds getTodayDateInputValue to the ./utils/appHelpers import when needed.",
+  "Updated package metadata and visible release notes to identify v3.1.3 as the today-date helper refactor script baseline.",
 ];
 
 const workflowItems = [
-  "Run npm run audit:app-dates locally to identify date/time replacement candidates.",
-  "Replace only one small date/time group at a time inside App.tsx.",
-  "Run npm run build after each replacement group.",
-  "Do not combine date/time helper extraction with UI or D1 schema changes.",
-  "No D1 migration is required for this audit release.",
+  "Pull the latest main branch before running the today-date refactor script.",
+  "Run npm run refactor:app-today-date locally from the repository root.",
+  "Run npm run build immediately after the refactor script.",
+  "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
+  "No D1 migration is required for this helper refactor release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.2 — App.tsx Date Time Helper Audit Script
+            v3.1.3 — App.tsx Today Date Helper Refactor Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local audit script to identify safe App.tsx date/time helper replacement candidates before modifying the large file.
+            This release adds the first local-safe Phase B refactor script to replace low-risk App.tsx today-date input patterns.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Date Audit</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Review</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Today Date</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
         </div>
       </div>
 
