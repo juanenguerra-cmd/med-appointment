@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.0.12";
+const CURRENT_VERSION = "3.0.13";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.0.13",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Phase A Import Cleanup Complete",
+    summary: "Marked Phase A import cleanup complete after App.tsx imports were consolidated through stable barrel paths and build verification passed.",
+    capabilities: [
+      "Marked App.tsx Phase A import cleanup as complete.",
+      "Documented that component, type, hook, service, data utility, and appointment utility imports now use stable barrel paths.",
+      "Documented that Phase A verification and production build were completed before closing the phase.",
+      "Kept Phase A helper scripts available for future verification or repeat cleanup checks.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Continue using npm run check:app-phase-a when verifying import cleanup health.",
+      "Run npm run build before deployment.",
+      "Run npx wrangler deploy only after the build passes.",
+      "Begin the next cleanup phase with helper/function extraction from App.tsx in small build-tested commits.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Closes Phase A import cleanup.",
+      "Prepares the app for the next App.tsx cleanup phase without changing user-facing behavior.",
+    ],
+  },
   {
     version: "3.0.12",
     releaseDate: "2026-04-30",
     title: "Phase A Completion Checklist",
     summary: "Added one local command to verify Phase A cleanup, run the build, show git status, and review the App.tsx diff.",
-    capabilities: [
-      "Added scripts/check-app-phase-a-completion.mjs.",
-      "Added npm script check:app-phase-a.",
-      "The checklist confirms Phase A imports, runs the production build, and prints the exact commit steps after success.",
-      "Kept App.tsx unchanged in the repository so local build and verifier results remain the source of truth.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch.",
-      "Run npm run check:app-phase-a locally from the repository root.",
-      "Review git diff src/App.tsx after the checklist completes successfully.",
-      "Commit App.tsx only after verification and build both pass.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Makes Phase A completion review easier before committing App.tsx.",
-      "Reduces missed steps by checking imports, build, status, and diff together.",
-    ],
+    capabilities: ["Added scripts/check-app-phase-a-completion.mjs.", "Added npm script check:app-phase-a."],
+    processFlow: ["Run npm run check:app-phase-a locally.", "Commit App.tsx only after verification and build both pass."],
+    userImpact: ["Keeps current workflows stable.", "Makes Phase A completion review easier before committing App.tsx."],
   },
   {
     version: "3.0.11",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/run-app-phase-a-import-cleanup-build.mjs.", "Added npm script refactor:app-phase-a-build."],
     processFlow: ["Run npm run refactor:app-phase-a-build locally.", "Review git diff src/App.tsx after success."],
     userImpact: ["Keeps current workflows stable.", "Combines Phase A cleanup and build into one local command."],
-  },
-  {
-    version: "3.0.10",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Phase A Import Cleanup Runner",
-    summary: "Added one local command to run the full Phase A App.tsx import cleanup sequence and verifier.",
-    capabilities: ["Added scripts/run-app-phase-a-import-cleanup.mjs.", "Added npm script refactor:app-phase-a."],
-    processFlow: ["Run npm run refactor:app-phase-a locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Combines Phase A import cleanup into one local command."],
   },
 ];
 
