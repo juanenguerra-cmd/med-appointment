@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/check-app-phase-a-completion.mjs to verify Phase A completion locally.",
-  "Added npm script check:app-phase-a for one-command Phase A verification, production build, git status, and App.tsx diff review.",
-  "The checklist confirms Phase A imports, runs the production build, and prints the exact commit steps after success.",
-  "Kept App.tsx unchanged in the repository so local build and verifier results remain the source of truth.",
-  "Updated package metadata and visible release notes to identify v3.0.12 as the current Phase A completion checklist baseline.",
+  "Marked App.tsx Phase A import cleanup as complete after the local App.tsx cleanup was committed and pushed.",
+  "Documented that App.tsx imports were consolidated through the stable component, type, hook, service, data utility, and appointment utility barrel paths.",
+  "Documented that Phase A verification and production build were completed before marking the phase complete.",
+  "Kept the Phase A helper scripts available for future verification or repeat cleanup checks.",
+  "Updated package metadata and visible release notes to identify v3.0.13 as the Phase A import cleanup completion baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the Phase A completion checklist.",
-  "Run npm run check:app-phase-a locally from the repository root.",
-  "Review git diff src/App.tsx after the checklist completes successfully.",
-  "Commit App.tsx only after verification and build both pass.",
-  "No D1 migration is required for this import cleanup patch.",
+  "Continue using npm run check:app-phase-a when verifying import cleanup health.",
+  "Use npm run build before deployment.",
+  "Run npx wrangler deploy only after the build passes.",
+  "No D1 migration is required for this Phase A completion release.",
+  "Next cleanup phase should begin with helper/function extraction from App.tsx in small build-tested commits.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.0.12 — Phase A Completion Checklist
+            v3.0.13 — App.tsx Phase A Import Cleanup Complete
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds one local command to verify Phase A cleanup, run the build, show git status, and review the App.tsx diff.
+            This release marks Phase A import cleanup complete after App.tsx imports were consolidated through stable barrel paths and build verification passed.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Checklist</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Patch</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Phase A Complete</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Verified</span>
         </div>
       </div>
 
