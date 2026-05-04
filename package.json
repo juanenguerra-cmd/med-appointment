@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.1.2",
+  "version": "3.1.3",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -24,7 +24,8 @@
     "refactor:app-phase-a": "node scripts/run-app-phase-a-import-cleanup.mjs",
     "refactor:app-phase-a-build": "node scripts/run-app-phase-a-import-cleanup-build.mjs",
     "check:app-phase-a": "node scripts/check-app-phase-a-completion.mjs",
-    "audit:app-dates": "node scripts/audit-app-date-time-helpers.mjs"
+    "audit:app-dates": "node scripts/audit-app-date-time-helpers.mjs",
+    "refactor:app-today-date": "node scripts/refactor-app-today-date-helper-b1.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
