@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Started Phase B for App.tsx helper/function extraction after Phase A import cleanup was completed.",
-  "Added docs/app-tsx-helper-extraction-phase-b.md to define the helper extraction order and safety rules.",
-  "Added src/utils/appHelpers/index.ts as the new helper barrel for extracted App.tsx helpers.",
-  "Documented that helper extraction must be done one helper group at a time with a build after each extraction.",
-  "Updated package metadata and visible release notes to identify v3.1.0 as the Phase B helper extraction foundation baseline.",
+  "Added src/utils/appHelpers/dateTimeHelpers.ts as the first Phase B App.tsx helper module.",
+  "Added reusable date/time display, date input, date-time input, today date, past date, and future date helper functions.",
+  "Exported the date/time helper module through src/utils/appHelpers/index.ts.",
+  "Kept App.tsx unchanged so the actual helper replacement can be done in a small local build-tested commit.",
+  "Updated package metadata and visible release notes to identify v3.1.1 as the date/time helper foundation baseline.",
 ];
 
 const workflowItems = [
-  "Use src/utils/appHelpers for extracted App.tsx helper groups.",
-  "Start with date/time display helpers in the next extraction commit.",
-  "Run npm run build after every helper extraction.",
-  "Do not combine helper extraction with UI changes or D1 schema changes.",
-  "No D1 migration is required for this Phase B foundation release.",
+  "Use imports from ./utils/appHelpers when replacing App.tsx date/time logic.",
+  "Replace only one small group of date/time expressions at a time.",
+  "Run npm run build after each replacement group.",
+  "Do not combine date/time helper extraction with UI or D1 schema changes.",
+  "No D1 migration is required for this helper foundation release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.0 — App.tsx Helper Extraction Phase B Foundation
+            v3.1.1 — Extract App Date Time Helpers Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release starts Phase B by adding the guide and helper barrel foundation for safe App.tsx helper/function extraction.
+            This release adds the first Phase B helper module for reusable App.tsx date/time formatting and date comparison helpers.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Phase B</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Date Helpers</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Foundation</span>
         </div>
       </div>
