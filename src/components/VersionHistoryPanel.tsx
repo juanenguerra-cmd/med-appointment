@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.1";
+const CURRENT_VERSION = "3.1.2";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.1.1",
+    version: "3.1.2",
     releaseDate: "2026-04-30",
-    title: "Extract App Date Time Helpers Foundation",
-    summary: "Added the first Phase B helper module for reusable App.tsx date/time formatting and date comparison helpers.",
+    title: "App.tsx Date Time Helper Audit Script",
+    summary: "Added a local audit script to identify safe App.tsx date/time helper replacement candidates before modifying the large file.",
     capabilities: [
-      "Added src/utils/appHelpers/dateTimeHelpers.ts.",
-      "Added reusable date/time display, input formatting, today date, past date, and future date helper functions.",
-      "Exported the date/time helper module through src/utils/appHelpers/index.ts.",
-      "Kept App.tsx unchanged so helper replacement can be done in a small local build-tested commit.",
+      "Added scripts/audit-app-date-time-helpers.mjs.",
+      "Added npm script audit:app-dates.",
+      "The audit prints likely App.tsx line locations for display formatting, input formatting, and today-date patterns.",
+      "Kept App.tsx unchanged so replacements can be completed one small group at a time after audit review.",
       "No D1 migration is required.",
     ],
     processFlow: [
-      "Use imports from ./utils/appHelpers when replacing App.tsx date/time logic.",
-      "Replace only one small group of date/time expressions at a time.",
+      "Run npm run audit:app-dates locally to identify date/time replacement candidates.",
+      "Replace only one small date/time group at a time inside App.tsx.",
       "Run npm run build after each replacement group.",
       "Do not combine date/time helper extraction with UI or D1 schema changes.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Starts Phase B helper extraction with low-risk date/time helpers.",
-      "Prepares App.tsx for smaller date/time replacement commits without changing behavior yet.",
+      "Makes date/time helper extraction easier to review before touching App.tsx.",
+      "Supports safer helper replacement in small build-tested commits.",
     ],
+  },
+  {
+    version: "3.1.1",
+    releaseDate: "2026-04-30",
+    title: "Extract App Date Time Helpers Foundation",
+    summary: "Added the first Phase B helper module for reusable App.tsx date/time formatting and date comparison helpers.",
+    capabilities: ["Added src/utils/appHelpers/dateTimeHelpers.ts.", "Exported the date/time helper module through src/utils/appHelpers/index.ts."],
+    processFlow: ["Use imports from ./utils/appHelpers when replacing App.tsx date/time logic.", "Run npm run build after each replacement group."],
+    userImpact: ["Keeps current workflows stable.", "Starts Phase B helper extraction with low-risk date/time helpers."],
   },
   {
     version: "3.1.0",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added docs/app-tsx-helper-extraction-phase-b.md.", "Added src/utils/appHelpers/index.ts."],
     processFlow: ["Use src/utils/appHelpers for extracted App.tsx helper groups.", "Run npm run build after every helper extraction."],
     userImpact: ["Keeps current workflows stable.", "Starts Phase B without changing user-facing behavior."],
-  },
-  {
-    version: "3.0.13",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Phase A Import Cleanup Complete",
-    summary: "Marked Phase A import cleanup complete after App.tsx imports were consolidated through stable barrel paths and build verification passed.",
-    capabilities: ["Marked App.tsx Phase A import cleanup as complete.", "No D1 migration is required."],
-    processFlow: ["Continue using npm run check:app-phase-a when verifying import cleanup health.", "Begin helper/function extraction in small build-tested commits."],
-    userImpact: ["Keeps current workflows stable.", "Closes Phase A import cleanup."],
   },
 ];
 
