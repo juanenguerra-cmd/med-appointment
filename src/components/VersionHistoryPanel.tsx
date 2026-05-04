@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.3";
+const CURRENT_VERSION = "3.1.4";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.1.3",
+    version: "3.1.4",
     releaseDate: "2026-04-30",
-    title: "App.tsx Today Date Helper Refactor Script",
-    summary: "Added the first local-safe Phase B refactor script to replace low-risk App.tsx today-date input patterns.",
+    title: "App.tsx Date Input Helper Refactor Script",
+    summary: "Added a local-safe Phase B refactor script to replace App.tsx date-input conversion patterns with the shared helper.",
     capabilities: [
-      "Added scripts/refactor-app-today-date-helper-b1.mjs.",
-      "Added npm script refactor:app-today-date.",
-      "The script replaces new Date().toISOString().slice/substring(0, 10) with getTodayDateInputValue().",
-      "The script also adds getTodayDateInputValue to the ./utils/appHelpers import when needed.",
+      "Added scripts/refactor-app-date-input-helper-b2.mjs.",
+      "Added npm script refactor:app-date-input.",
+      "The script replaces new Date(value).toISOString().slice/substring(0, 10) with toDateInputValue(value).",
+      "The script also adds toDateInputValue to the ./utils/appHelpers import when needed.",
       "No D1 migration is required.",
     ],
     processFlow: [
-      "Pull the latest main branch before running the today-date refactor script.",
-      "Run npm run refactor:app-today-date locally from the repository root.",
+      "Pull the latest main branch before running the date-input refactor script.",
+      "Run npm run refactor:app-date-input locally from the repository root.",
       "Run npm run build immediately after the refactor script.",
       "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Begins actual Phase B helper replacement with a low-risk date helper.",
-      "Supports safer App.tsx cleanup through a small local build-tested change.",
+      "Continues Phase B helper replacement with a small date-input cleanup step.",
+      "Supports safer App.tsx cleanup through a local build-tested change.",
     ],
+  },
+  {
+    version: "3.1.3",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Today Date Helper Refactor Script",
+    summary: "Added the first local-safe Phase B refactor script to replace low-risk App.tsx today-date input patterns.",
+    capabilities: ["Added scripts/refactor-app-today-date-helper-b1.mjs.", "Added npm script refactor:app-today-date."],
+    processFlow: ["Run npm run refactor:app-today-date locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Begins actual Phase B helper replacement with a low-risk date helper."],
   },
   {
     version: "3.1.2",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/audit-app-date-time-helpers.mjs.", "Added npm script audit:app-dates."],
     processFlow: ["Run npm run audit:app-dates locally.", "Run npm run build after each replacement group."],
     userImpact: ["Keeps current workflows stable.", "Makes date/time helper extraction easier to review."],
-  },
-  {
-    version: "3.1.1",
-    releaseDate: "2026-04-30",
-    title: "Extract App Date Time Helpers Foundation",
-    summary: "Added the first Phase B helper module for reusable App.tsx date/time formatting and date comparison helpers.",
-    capabilities: ["Added src/utils/appHelpers/dateTimeHelpers.ts.", "Exported the date/time helper module through src/utils/appHelpers/index.ts."],
-    processFlow: ["Use imports from ./utils/appHelpers when replacing App.tsx date/time logic.", "Run npm run build after each replacement group."],
-    userImpact: ["Keeps current workflows stable.", "Starts Phase B helper extraction with low-risk date/time helpers."],
   },
 ];
 
