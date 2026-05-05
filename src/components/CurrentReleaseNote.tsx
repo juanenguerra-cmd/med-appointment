@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/audit-app-status-badge-helpers.mjs to scan App.tsx for status and badge helper replacement opportunities.",
-  "Added npm script audit:app-status-badges for local status/badge helper audit review.",
-  "The audit prints likely App.tsx line locations for appointment status, transport readiness, service location, round trip, escort, and badge class patterns.",
-  "Kept App.tsx unchanged so replacements can be completed one small group at a time after audit review.",
-  "Updated package metadata and visible release notes to identify v3.1.10 as the status/badge helper audit baseline.",
+  "Added scripts/refactor-app-appointment-status-badge-b6.mjs to safely prepare App.tsx for appointment status badge helper usage.",
+  "Added npm script refactor:app-appointment-status-badge for the first status/badge helper replacement step.",
+  "The script adds getAppointmentStatusMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
+  "The script adds a Phase B status badge helper note near App.tsx so manual JSX replacement can be done carefully in a small build-tested diff.",
+  "Updated package metadata and visible release notes to identify v3.1.11 as the appointment status badge refactor script baseline.",
 ];
 
 const workflowItems = [
-  "Run npm run audit:app-status-badges locally to identify status/badge replacement candidates.",
-  "Replace only one small status/badge group at a time inside App.tsx.",
-  "Run npm run build after each replacement group.",
-  "Do not combine status/badge helper extraction with UI redesign or D1 schema changes.",
-  "No D1 migration is required for this audit release.",
+  "Pull the latest main branch before running the appointment status badge script.",
+  "Run npm run refactor:app-appointment-status-badge locally from the repository root.",
+  "Replace one appointment status badge JSX block manually using getAppointmentStatusMeta and getStatusBadgeClassName.",
+  "Run npm run build immediately after the manual replacement.",
+  "No D1 migration is required for this helper refactor release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.10 — App.tsx Status/Badge Helper Audit Script
+            v3.1.11 — App.tsx Appointment Status Badge Refactor Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local audit script to identify safe App.tsx status and badge helper replacement candidates before modifying the large file.
+            This release adds a local-safe Phase B script to prepare App.tsx appointment status badge JSX for shared helper usage.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Badge Audit</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Review</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Status Badge</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
         </div>
       </div>
 
