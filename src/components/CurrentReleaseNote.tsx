@@ -1,16 +1,16 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-date-time-input-helper-b3.mjs to safely replace App.tsx date-time input conversion patterns locally.",
-  "Added npm script refactor:app-date-time-input for the next Phase B date/time helper replacement step.",
-  "The script replaces new Date(value).toISOString().slice/substring(0, 16) with toDateTimeInputValue(value).",
-  "The script also adds toDateTimeInputValue to the ./utils/appHelpers import when needed.",
-  "Updated package metadata and visible release notes to identify v3.1.5 as the date-time input helper refactor script baseline.",
+  "Added scripts/refactor-app-date-display-helper-b4.mjs to safely replace App.tsx date/time display formatting patterns locally.",
+  "Added npm script refactor:app-date-display for the next Phase B date/time helper replacement step.",
+  "The script replaces common new Date(value).toLocaleDateString(), toLocaleString(), and toLocaleTimeString() patterns with shared app helper functions.",
+  "The script also adds formatDateForDisplay, formatDateTimeForDisplay, or formatTimeForDisplay to the ./utils/appHelpers import when needed.",
+  "Updated package metadata and visible release notes to identify v3.1.6 as the date/time display helper refactor script baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the date-time input refactor script.",
-  "Run npm run refactor:app-date-time-input locally from the repository root.",
+  "Pull the latest main branch before running the date/time display refactor script.",
+  "Run npm run refactor:app-date-display locally from the repository root.",
   "Run npm run build immediately after the refactor script.",
   "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
   "No D1 migration is required for this helper refactor release.",
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.5 — App.tsx Date-Time Input Helper Refactor Script
+            v3.1.6 — App.tsx Date/Time Display Helper Refactor Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe Phase B refactor script to replace App.tsx date-time input conversion patterns with the shared helper.
+            This release adds a local-safe Phase B refactor script to replace App.tsx date/time display formatting patterns with shared helper functions.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Date-Time Input</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Date Display</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
         </div>
       </div>
