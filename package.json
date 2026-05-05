@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.1.7",
+  "version": "3.1.8",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -29,7 +29,8 @@
     "refactor:app-date-input": "node scripts/refactor-app-date-input-helper-b2.mjs",
     "refactor:app-date-time-input": "node scripts/refactor-app-date-time-input-helper-b3.mjs",
     "refactor:app-date-display": "node scripts/refactor-app-date-display-helper-b4.mjs",
-    "refactor:app-date-comparison": "node scripts/refactor-app-date-comparison-helper-b5.mjs"
+    "refactor:app-date-comparison": "node scripts/refactor-app-date-comparison-helper-b5.mjs",
+    "verify:app-date-helpers": "node scripts/verify-app-date-helper-cleanup.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
