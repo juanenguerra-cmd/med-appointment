@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.7";
+const CURRENT_VERSION = "3.1.8";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.8",
+    releaseDate: "2026-04-30",
+    title: "Phase B Date Helper Completion Verifier",
+    summary: "Added a local verifier to confirm whether App.tsx date/time helper cleanup is complete before moving to the next helper group.",
+    capabilities: [
+      "Added scripts/verify-app-date-helper-cleanup.mjs.",
+      "Added npm script verify:app-date-helpers.",
+      "The verifier scans for remaining today date, date input, date-time input, display formatting, and simple past/future comparison patterns.",
+      "The verifier exits with a failure code when possible remaining cleanup patterns are found.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before running the verifier.",
+      "Run the targeted Phase B date helper refactor scripts locally if needed.",
+      "Run npm run verify:app-date-helpers locally from the repository root.",
+      "Run npm run build after the verifier passes.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Confirms whether date/time helper cleanup is complete before the next helper group.",
+      "Supports safer App.tsx cleanup through a local verification step.",
+    ],
+  },
   {
     version: "3.1.7",
     releaseDate: "2026-04-30",
     title: "App.tsx Date Comparison Helper Refactor Script",
     summary: "Added a local-safe Phase B refactor script to replace simple App.tsx date comparison patterns with shared helper functions.",
-    capabilities: [
-      "Added scripts/refactor-app-date-comparison-helper-b5.mjs.",
-      "Added npm script refactor:app-date-comparison.",
-      "The script replaces simple new Date(value) < new Date() and new Date(value) > new Date() style comparisons with isPastDate(value) or isFutureDate(value).",
-      "The script also adds isPastDate or isFutureDate to the ./utils/appHelpers import when needed.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the date comparison refactor script.",
-      "Run npm run refactor:app-date-comparison locally from the repository root.",
-      "Run npm run build immediately after the refactor script.",
-      "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Continues Phase B helper replacement with date comparison cleanup.",
-      "Supports safer App.tsx cleanup through a local build-tested change.",
-    ],
+    capabilities: ["Added scripts/refactor-app-date-comparison-helper-b5.mjs.", "Added npm script refactor:app-date-comparison."],
+    processFlow: ["Run npm run refactor:app-date-comparison locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date comparison cleanup."],
   },
   {
     version: "3.1.6",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-date-display-helper-b4.mjs.", "Added npm script refactor:app-date-display."],
     processFlow: ["Run npm run refactor:app-date-display locally.", "Run npm run build immediately after."],
     userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date/time display cleanup."],
-  },
-  {
-    version: "3.1.5",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Date-Time Input Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace App.tsx date-time input conversion patterns with the shared helper.",
-    capabilities: ["Added scripts/refactor-app-date-time-input-helper-b3.mjs.", "Added npm script refactor:app-date-time-input."],
-    processFlow: ["Run npm run refactor:app-date-time-input locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with a small date-time input cleanup step."],
   },
 ];
 
