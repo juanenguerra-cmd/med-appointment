@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.11";
+const CURRENT_VERSION = "3.1.12";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.12",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Transport Readiness Badge Refactor Script",
+    summary: "Added a local-safe Phase B script to prepare App.tsx transport readiness badge JSX for shared helper usage.",
+    capabilities: [
+      "Added scripts/refactor-app-transport-readiness-badge-b7.mjs.",
+      "Added npm script refactor:app-transport-readiness-badge.",
+      "The script adds getTransportReadinessMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
+      "The script adds a Phase B transport badge helper note near App.tsx for careful manual JSX replacement.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before running the transport readiness badge script.",
+      "Run npm run refactor:app-transport-readiness-badge locally from the repository root.",
+      "Replace one transport readiness badge JSX block manually using getTransportReadinessMeta and getStatusBadgeClassName.",
+      "Run npm run build immediately after the manual replacement.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Prepares transport readiness badge cleanup without broad automatic JSX rewrites.",
+      "Supports safer App.tsx cleanup through a small local build-tested change.",
+    ],
+  },
   {
     version: "3.1.11",
     releaseDate: "2026-04-30",
     title: "App.tsx Appointment Status Badge Refactor Script",
     summary: "Added a local-safe Phase B script to prepare App.tsx appointment status badge JSX for shared helper usage.",
-    capabilities: [
-      "Added scripts/refactor-app-appointment-status-badge-b6.mjs.",
-      "Added npm script refactor:app-appointment-status-badge.",
-      "The script adds getAppointmentStatusMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
-      "The script adds a Phase B status badge helper note near App.tsx for careful manual JSX replacement.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the appointment status badge script.",
-      "Run npm run refactor:app-appointment-status-badge locally from the repository root.",
-      "Replace one appointment status badge JSX block manually using getAppointmentStatusMeta and getStatusBadgeClassName.",
-      "Run npm run build immediately after the manual replacement.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Prepares appointment status badge cleanup without broad automatic JSX rewrites.",
-      "Supports safer App.tsx cleanup through a small local build-tested change.",
-    ],
+    capabilities: ["Added scripts/refactor-app-appointment-status-badge-b6.mjs.", "Added npm script refactor:app-appointment-status-badge."],
+    processFlow: ["Run npm run refactor:app-appointment-status-badge locally.", "Run npm run build after manual replacement."],
+    userImpact: ["Keeps current workflows stable.", "Prepares appointment status badge cleanup without broad automatic JSX rewrites."],
   },
   {
     version: "3.1.10",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/audit-app-status-badge-helpers.mjs.", "Added npm script audit:app-status-badges."],
     processFlow: ["Run npm run audit:app-status-badges locally.", "Run npm run build after each replacement group."],
     userImpact: ["Keeps current workflows stable.", "Makes status and badge helper extraction easier to review."],
-  },
-  {
-    version: "3.1.9",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Status/Badge Helper Foundation",
-    summary: "Started the status and badge helper group for Phase B by adding reusable metadata helpers for App.tsx badge logic.",
-    capabilities: ["Added src/utils/appHelpers/statusBadgeHelpers.ts.", "Exported the status/badge helper module through src/utils/appHelpers/index.ts."],
-    processFlow: ["Use imports from ./utils/appHelpers when replacing App.tsx status or badge logic.", "Run npm run build after each replacement group."],
-    userImpact: ["Keeps current workflows stable.", "Starts the next Phase B cleanup group after date/time helper verification."],
   },
 ];
 
