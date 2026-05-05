@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.9";
+const CURRENT_VERSION = "3.1.10";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.1.9",
+    version: "3.1.10",
     releaseDate: "2026-04-30",
-    title: "App.tsx Status/Badge Helper Foundation",
-    summary: "Started the status and badge helper group for Phase B by adding reusable metadata helpers for App.tsx badge logic.",
+    title: "App.tsx Status/Badge Helper Audit Script",
+    summary: "Added a local audit script to identify safe App.tsx status and badge helper replacement candidates before modifying the large file.",
     capabilities: [
-      "Added src/utils/appHelpers/statusBadgeHelpers.ts.",
-      "Added helpers for appointment status, transport readiness, service location, round trip, escort, and badge tone class names.",
-      "Exported the status/badge helper module through src/utils/appHelpers/index.ts.",
-      "No App.tsx replacement was performed in this foundation commit.",
+      "Added scripts/audit-app-status-badge-helpers.mjs.",
+      "Added npm script audit:app-status-badges.",
+      "The audit prints likely App.tsx line locations for appointment status, transport readiness, service location, round trip, escort, and badge class patterns.",
+      "Kept App.tsx unchanged so replacements can be completed one small group at a time after audit review.",
       "No D1 migration is required.",
     ],
     processFlow: [
-      "Use imports from ./utils/appHelpers when replacing App.tsx status or badge logic.",
-      "Replace only one status/badge group at a time.",
+      "Run npm run audit:app-status-badges locally to identify status/badge replacement candidates.",
+      "Replace only one small status/badge group at a time inside App.tsx.",
       "Run npm run build after each replacement group.",
       "Do not combine status/badge helper extraction with UI redesign or D1 schema changes.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Starts the next Phase B cleanup group after date/time helper verification.",
-      "Prepares App.tsx for smaller status and badge cleanup commits without changing behavior yet.",
+      "Makes status and badge helper extraction easier to review before touching App.tsx.",
+      "Supports safer helper replacement in small build-tested commits.",
     ],
+  },
+  {
+    version: "3.1.9",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Status/Badge Helper Foundation",
+    summary: "Started the status and badge helper group for Phase B by adding reusable metadata helpers for App.tsx badge logic.",
+    capabilities: ["Added src/utils/appHelpers/statusBadgeHelpers.ts.", "Exported the status/badge helper module through src/utils/appHelpers/index.ts."],
+    processFlow: ["Use imports from ./utils/appHelpers when replacing App.tsx status or badge logic.", "Run npm run build after each replacement group."],
+    userImpact: ["Keeps current workflows stable.", "Starts the next Phase B cleanup group after date/time helper verification."],
   },
   {
     version: "3.1.8",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/verify-app-date-helper-cleanup.mjs.", "Added npm script verify:app-date-helpers."],
     processFlow: ["Run npm run verify:app-date-helpers locally.", "Run npm run build after the verifier passes."],
     userImpact: ["Keeps current workflows stable.", "Confirms whether date/time helper cleanup is complete before the next helper group."],
-  },
-  {
-    version: "3.1.7",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Date Comparison Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace simple App.tsx date comparison patterns with shared helper functions.",
-    capabilities: ["Added scripts/refactor-app-date-comparison-helper-b5.mjs.", "Added npm script refactor:app-date-comparison."],
-    processFlow: ["Run npm run refactor:app-date-comparison locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date comparison cleanup."],
   },
 ];
 
