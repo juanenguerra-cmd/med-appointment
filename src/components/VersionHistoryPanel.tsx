@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.6";
+const CURRENT_VERSION = "3.1.7";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.1.6",
+    version: "3.1.7",
     releaseDate: "2026-04-30",
-    title: "App.tsx Date/Time Display Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace App.tsx date/time display formatting patterns with shared helper functions.",
+    title: "App.tsx Date Comparison Helper Refactor Script",
+    summary: "Added a local-safe Phase B refactor script to replace simple App.tsx date comparison patterns with shared helper functions.",
     capabilities: [
-      "Added scripts/refactor-app-date-display-helper-b4.mjs.",
-      "Added npm script refactor:app-date-display.",
-      "The script replaces common new Date(value).toLocaleDateString(), toLocaleString(), and toLocaleTimeString() patterns with shared app helper functions.",
-      "The script also adds formatDateForDisplay, formatDateTimeForDisplay, or formatTimeForDisplay to the ./utils/appHelpers import when needed.",
+      "Added scripts/refactor-app-date-comparison-helper-b5.mjs.",
+      "Added npm script refactor:app-date-comparison.",
+      "The script replaces simple new Date(value) < new Date() and new Date(value) > new Date() style comparisons with isPastDate(value) or isFutureDate(value).",
+      "The script also adds isPastDate or isFutureDate to the ./utils/appHelpers import when needed.",
       "No D1 migration is required.",
     ],
     processFlow: [
-      "Pull the latest main branch before running the date/time display refactor script.",
-      "Run npm run refactor:app-date-display locally from the repository root.",
+      "Pull the latest main branch before running the date comparison refactor script.",
+      "Run npm run refactor:app-date-comparison locally from the repository root.",
       "Run npm run build immediately after the refactor script.",
       "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Continues Phase B helper replacement with date/time display cleanup.",
+      "Continues Phase B helper replacement with date comparison cleanup.",
       "Supports safer App.tsx cleanup through a local build-tested change.",
     ],
+  },
+  {
+    version: "3.1.6",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Date/Time Display Helper Refactor Script",
+    summary: "Added a local-safe Phase B refactor script to replace App.tsx date/time display formatting patterns with shared helper functions.",
+    capabilities: ["Added scripts/refactor-app-date-display-helper-b4.mjs.", "Added npm script refactor:app-date-display."],
+    processFlow: ["Run npm run refactor:app-date-display locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date/time display cleanup."],
   },
   {
     version: "3.1.5",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-date-time-input-helper-b3.mjs.", "Added npm script refactor:app-date-time-input."],
     processFlow: ["Run npm run refactor:app-date-time-input locally.", "Run npm run build immediately after."],
     userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with a small date-time input cleanup step."],
-  },
-  {
-    version: "3.1.4",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Date Input Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace App.tsx date-input conversion patterns with the shared helper.",
-    capabilities: ["Added scripts/refactor-app-date-input-helper-b2.mjs.", "Added npm script refactor:app-date-input."],
-    processFlow: ["Run npm run refactor:app-date-input locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with a small date-input cleanup step."],
   },
 ];
 
