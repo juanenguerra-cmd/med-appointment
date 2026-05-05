@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.8";
+const CURRENT_VERSION = "3.1.9";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.9",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Status/Badge Helper Foundation",
+    summary: "Started the status and badge helper group for Phase B by adding reusable metadata helpers for App.tsx badge logic.",
+    capabilities: [
+      "Added src/utils/appHelpers/statusBadgeHelpers.ts.",
+      "Added helpers for appointment status, transport readiness, service location, round trip, escort, and badge tone class names.",
+      "Exported the status/badge helper module through src/utils/appHelpers/index.ts.",
+      "No App.tsx replacement was performed in this foundation commit.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Use imports from ./utils/appHelpers when replacing App.tsx status or badge logic.",
+      "Replace only one status/badge group at a time.",
+      "Run npm run build after each replacement group.",
+      "Do not combine status/badge helper extraction with UI redesign or D1 schema changes.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Starts the next Phase B cleanup group after date/time helper verification.",
+      "Prepares App.tsx for smaller status and badge cleanup commits without changing behavior yet.",
+    ],
+  },
   {
     version: "3.1.8",
     releaseDate: "2026-04-30",
     title: "Phase B Date Helper Completion Verifier",
     summary: "Added a local verifier to confirm whether App.tsx date/time helper cleanup is complete before moving to the next helper group.",
-    capabilities: [
-      "Added scripts/verify-app-date-helper-cleanup.mjs.",
-      "Added npm script verify:app-date-helpers.",
-      "The verifier scans for remaining today date, date input, date-time input, display formatting, and simple past/future comparison patterns.",
-      "The verifier exits with a failure code when possible remaining cleanup patterns are found.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the verifier.",
-      "Run the targeted Phase B date helper refactor scripts locally if needed.",
-      "Run npm run verify:app-date-helpers locally from the repository root.",
-      "Run npm run build after the verifier passes.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Confirms whether date/time helper cleanup is complete before the next helper group.",
-      "Supports safer App.tsx cleanup through a local verification step.",
-    ],
+    capabilities: ["Added scripts/verify-app-date-helper-cleanup.mjs.", "Added npm script verify:app-date-helpers."],
+    processFlow: ["Run npm run verify:app-date-helpers locally.", "Run npm run build after the verifier passes."],
+    userImpact: ["Keeps current workflows stable.", "Confirms whether date/time helper cleanup is complete before the next helper group."],
   },
   {
     version: "3.1.7",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-date-comparison-helper-b5.mjs.", "Added npm script refactor:app-date-comparison."],
     processFlow: ["Run npm run refactor:app-date-comparison locally.", "Run npm run build immediately after."],
     userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date comparison cleanup."],
-  },
-  {
-    version: "3.1.6",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Date/Time Display Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace App.tsx date/time display formatting patterns with shared helper functions.",
-    capabilities: ["Added scripts/refactor-app-date-display-helper-b4.mjs.", "Added npm script refactor:app-date-display."],
-    processFlow: ["Run npm run refactor:app-date-display locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with date/time display cleanup."],
   },
 ];
 
