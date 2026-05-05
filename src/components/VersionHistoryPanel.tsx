@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.10";
+const CURRENT_VERSION = "3.1.11";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.11",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Appointment Status Badge Refactor Script",
+    summary: "Added a local-safe Phase B script to prepare App.tsx appointment status badge JSX for shared helper usage.",
+    capabilities: [
+      "Added scripts/refactor-app-appointment-status-badge-b6.mjs.",
+      "Added npm script refactor:app-appointment-status-badge.",
+      "The script adds getAppointmentStatusMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
+      "The script adds a Phase B status badge helper note near App.tsx for careful manual JSX replacement.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before running the appointment status badge script.",
+      "Run npm run refactor:app-appointment-status-badge locally from the repository root.",
+      "Replace one appointment status badge JSX block manually using getAppointmentStatusMeta and getStatusBadgeClassName.",
+      "Run npm run build immediately after the manual replacement.",
+    ],
+    userImpact: [
+      "Keeps current workflows stable.",
+      "Prepares appointment status badge cleanup without broad automatic JSX rewrites.",
+      "Supports safer App.tsx cleanup through a small local build-tested change.",
+    ],
+  },
   {
     version: "3.1.10",
     releaseDate: "2026-04-30",
     title: "App.tsx Status/Badge Helper Audit Script",
     summary: "Added a local audit script to identify safe App.tsx status and badge helper replacement candidates before modifying the large file.",
-    capabilities: [
-      "Added scripts/audit-app-status-badge-helpers.mjs.",
-      "Added npm script audit:app-status-badges.",
-      "The audit prints likely App.tsx line locations for appointment status, transport readiness, service location, round trip, escort, and badge class patterns.",
-      "Kept App.tsx unchanged so replacements can be completed one small group at a time after audit review.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Run npm run audit:app-status-badges locally to identify status/badge replacement candidates.",
-      "Replace only one small status/badge group at a time inside App.tsx.",
-      "Run npm run build after each replacement group.",
-      "Do not combine status/badge helper extraction with UI redesign or D1 schema changes.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Makes status and badge helper extraction easier to review before touching App.tsx.",
-      "Supports safer helper replacement in small build-tested commits.",
-    ],
+    capabilities: ["Added scripts/audit-app-status-badge-helpers.mjs.", "Added npm script audit:app-status-badges."],
+    processFlow: ["Run npm run audit:app-status-badges locally.", "Run npm run build after each replacement group."],
+    userImpact: ["Keeps current workflows stable.", "Makes status and badge helper extraction easier to review."],
   },
   {
     version: "3.1.9",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added src/utils/appHelpers/statusBadgeHelpers.ts.", "Exported the status/badge helper module through src/utils/appHelpers/index.ts."],
     processFlow: ["Use imports from ./utils/appHelpers when replacing App.tsx status or badge logic.", "Run npm run build after each replacement group."],
     userImpact: ["Keeps current workflows stable.", "Starts the next Phase B cleanup group after date/time helper verification."],
-  },
-  {
-    version: "3.1.8",
-    releaseDate: "2026-04-30",
-    title: "Phase B Date Helper Completion Verifier",
-    summary: "Added a local verifier to confirm whether App.tsx date/time helper cleanup is complete before moving to the next helper group.",
-    capabilities: ["Added scripts/verify-app-date-helper-cleanup.mjs.", "Added npm script verify:app-date-helpers."],
-    processFlow: ["Run npm run verify:app-date-helpers locally.", "Run npm run build after the verifier passes."],
-    userImpact: ["Keeps current workflows stable.", "Confirms whether date/time helper cleanup is complete before the next helper group."],
   },
 ];
 
