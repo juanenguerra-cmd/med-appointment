@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.1.11",
+  "version": "3.1.12",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -32,7 +32,8 @@
     "refactor:app-date-comparison": "node scripts/refactor-app-date-comparison-helper-b5.mjs",
     "verify:app-date-helpers": "node scripts/verify-app-date-helper-cleanup.mjs",
     "audit:app-status-badges": "node scripts/audit-app-status-badge-helpers.mjs",
-    "refactor:app-appointment-status-badge": "node scripts/refactor-app-appointment-status-badge-b6.mjs"
+    "refactor:app-appointment-status-badge": "node scripts/refactor-app-appointment-status-badge-b6.mjs",
+    "refactor:app-transport-readiness-badge": "node scripts/refactor-app-transport-readiness-badge-b7.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
