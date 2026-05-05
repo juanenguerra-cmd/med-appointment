@@ -1,17 +1,17 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-appointment-status-badge-b6.mjs to safely prepare App.tsx for appointment status badge helper usage.",
-  "Added npm script refactor:app-appointment-status-badge for the first status/badge helper replacement step.",
-  "The script adds getAppointmentStatusMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
-  "The script adds a Phase B status badge helper note near App.tsx so manual JSX replacement can be done carefully in a small build-tested diff.",
-  "Updated package metadata and visible release notes to identify v3.1.11 as the appointment status badge refactor script baseline.",
+  "Added scripts/refactor-app-transport-readiness-badge-b7.mjs to safely prepare App.tsx for transport readiness badge helper usage.",
+  "Added npm script refactor:app-transport-readiness-badge for the next status/badge helper replacement step.",
+  "The script adds getTransportReadinessMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
+  "The script adds a Phase B transport badge helper note near App.tsx so manual JSX replacement can be done carefully in a small build-tested diff.",
+  "Updated package metadata and visible release notes to identify v3.1.12 as the transport readiness badge refactor script baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the appointment status badge script.",
-  "Run npm run refactor:app-appointment-status-badge locally from the repository root.",
-  "Replace one appointment status badge JSX block manually using getAppointmentStatusMeta and getStatusBadgeClassName.",
+  "Pull the latest main branch before running the transport readiness badge script.",
+  "Run npm run refactor:app-transport-readiness-badge locally from the repository root.",
+  "Replace one transport readiness badge JSX block manually using getTransportReadinessMeta and getStatusBadgeClassName.",
   "Run npm run build immediately after the manual replacement.",
   "No D1 migration is required for this helper refactor release.",
 ];
@@ -25,14 +25,14 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.11 — App.tsx Appointment Status Badge Refactor Script
+            v3.1.12 — App.tsx Transport Readiness Badge Refactor Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe Phase B script to prepare App.tsx appointment status badge JSX for shared helper usage.
+            This release adds a local-safe Phase B script to prepare App.tsx transport readiness badge JSX for shared helper usage.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Status Badge</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Transport Badge</span>
           <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
         </div>
       </div>
