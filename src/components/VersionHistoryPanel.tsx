@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.5";
+const CURRENT_VERSION = "3.1.6";
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: "3.1.5",
+    version: "3.1.6",
     releaseDate: "2026-04-30",
-    title: "App.tsx Date-Time Input Helper Refactor Script",
-    summary: "Added a local-safe Phase B refactor script to replace App.tsx date-time input conversion patterns with the shared helper.",
+    title: "App.tsx Date/Time Display Helper Refactor Script",
+    summary: "Added a local-safe Phase B refactor script to replace App.tsx date/time display formatting patterns with shared helper functions.",
     capabilities: [
-      "Added scripts/refactor-app-date-time-input-helper-b3.mjs.",
-      "Added npm script refactor:app-date-time-input.",
-      "The script replaces new Date(value).toISOString().slice/substring(0, 16) with toDateTimeInputValue(value).",
-      "The script also adds toDateTimeInputValue to the ./utils/appHelpers import when needed.",
+      "Added scripts/refactor-app-date-display-helper-b4.mjs.",
+      "Added npm script refactor:app-date-display.",
+      "The script replaces common new Date(value).toLocaleDateString(), toLocaleString(), and toLocaleTimeString() patterns with shared app helper functions.",
+      "The script also adds formatDateForDisplay, formatDateTimeForDisplay, or formatTimeForDisplay to the ./utils/appHelpers import when needed.",
       "No D1 migration is required.",
     ],
     processFlow: [
-      "Pull the latest main branch before running the date-time input refactor script.",
-      "Run npm run refactor:app-date-time-input locally from the repository root.",
+      "Pull the latest main branch before running the date/time display refactor script.",
+      "Run npm run refactor:app-date-display locally from the repository root.",
       "Run npm run build immediately after the refactor script.",
       "Commit the resulting App.tsx change only if the build passes and the diff is expected.",
     ],
     userImpact: [
       "Keeps current workflows stable.",
-      "Continues Phase B helper replacement with a small date-time input cleanup step.",
+      "Continues Phase B helper replacement with date/time display cleanup.",
       "Supports safer App.tsx cleanup through a local build-tested change.",
     ],
+  },
+  {
+    version: "3.1.5",
+    releaseDate: "2026-04-30",
+    title: "App.tsx Date-Time Input Helper Refactor Script",
+    summary: "Added a local-safe Phase B refactor script to replace App.tsx date-time input conversion patterns with the shared helper.",
+    capabilities: ["Added scripts/refactor-app-date-time-input-helper-b3.mjs.", "Added npm script refactor:app-date-time-input."],
+    processFlow: ["Run npm run refactor:app-date-time-input locally.", "Run npm run build immediately after."],
+    userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with a small date-time input cleanup step."],
   },
   {
     version: "3.1.4",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-date-input-helper-b2.mjs.", "Added npm script refactor:app-date-input."],
     processFlow: ["Run npm run refactor:app-date-input locally.", "Run npm run build immediately after."],
     userImpact: ["Keeps current workflows stable.", "Continues Phase B helper replacement with a small date-input cleanup step."],
-  },
-  {
-    version: "3.1.3",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Today Date Helper Refactor Script",
-    summary: "Added the first local-safe Phase B refactor script to replace low-risk App.tsx today-date input patterns.",
-    capabilities: ["Added scripts/refactor-app-today-date-helper-b1.mjs.", "Added npm script refactor:app-today-date."],
-    processFlow: ["Run npm run refactor:app-today-date locally.", "Run npm run build immediately after."],
-    userImpact: ["Keeps current workflows stable.", "Begins actual Phase B helper replacement with a low-risk date helper."],
   },
 ];
 
