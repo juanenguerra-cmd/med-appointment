@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.13";
+const CURRENT_VERSION = "3.1.14";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.14",
+    releaseDate: "2026-04-30",
+    title: "Census Parser Foundation Verifier",
+    summary: "Added a local verification script to confirm the census parser foundation is complete before wiring it into the Census page.",
+    capabilities: [
+      "Added scripts/verify-census-parser-foundation.mjs.",
+      "Added npm script verify:census-parser.",
+      "The verifier checks required parser files, key exported types/functions, and parser barrel exports.",
+      "Confirms the parser foundation is ready before Census page UI integration begins.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before running the census parser verifier.",
+      "Run npm run verify:census-parser locally from the repository root.",
+      "Run npm run build after the verifier passes.",
+      "Only start Census page wiring after the parser foundation and build both pass.",
+    ],
+    userImpact: [
+      "Keeps census parser work stable and reviewable.",
+      "Reduces risk before connecting raw census parsing to the live Census page.",
+      "Supports safer future import workflow for resident listing cleanup.",
+    ],
+  },
   {
     version: "3.1.13",
     releaseDate: "2026-04-30",
     title: "Census Parser Foundation",
     summary: "Added the foundational census parser structure for extracting resident data from raw census text and preparing a clean reviewable listing.",
-    capabilities: [
-      "Added src/census/parser with schemas, normalization helpers, field extractors, duplicate detection, reconciliation helpers, clean row mapping, and parser barrel export.",
-      "Added parseCensusText and parseResidentBlock to convert raw census text into a structured parsed census result.",
-      "Added schemas for raw import input, parsed residents, clean census rows, duplicates, reconciliation results, and import batch history.",
-      "Supports safe possible-discharge review instead of automatic discharge from a single missing import.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Paste or upload raw census text into the future census import workflow.",
-      "Normalize raw text, split resident blocks, and extract resident fields.",
-      "Review clean listing, warnings, duplicates, new admissions, room transfers, and possible discharges before saving.",
-      "Route missing residents to possible discharge review instead of automatic discharge.",
-    ],
-    userImpact: [
-      "Prepares the app for cleaner census import and review workflows.",
-      "Improves resident matching using MRN first and name/DOB fallback.",
-      "Creates the foundation for cleaner appointment resident selection and census registry updates.",
-    ],
+    capabilities: ["Added src/census/parser foundation files.", "Added parseCensusText and parseResidentBlock."],
+    processFlow: ["Normalize raw text, split resident blocks, and extract resident fields.", "Review clean listing, warnings, duplicates, and possible discharges before saving."],
+    userImpact: ["Prepares the app for cleaner census import and review workflows.", "Improves resident matching using MRN first and name/DOB fallback."],
   },
   {
     version: "3.1.12",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-transport-readiness-badge-b7.mjs.", "Added npm script refactor:app-transport-readiness-badge."],
     processFlow: ["Run npm run refactor:app-transport-readiness-badge locally.", "Run npm run build after manual replacement."],
     userImpact: ["Keeps current workflows stable.", "Prepares transport readiness badge cleanup without broad automatic JSX rewrites."],
-  },
-  {
-    version: "3.1.11",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Appointment Status Badge Refactor Script",
-    summary: "Added a local-safe Phase B script to prepare App.tsx appointment status badge JSX for shared helper usage.",
-    capabilities: ["Added scripts/refactor-app-appointment-status-badge-b6.mjs.", "Added npm script refactor:app-appointment-status-badge."],
-    processFlow: ["Run npm run refactor:app-appointment-status-badge locally.", "Run npm run build after manual replacement."],
-    userImpact: ["Keeps current workflows stable.", "Prepares appointment status badge cleanup without broad automatic JSX rewrites."],
   },
 ];
 
