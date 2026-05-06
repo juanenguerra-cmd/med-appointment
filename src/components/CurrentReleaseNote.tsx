@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added the Census Parser Foundation under src/census/parser for raw census text extraction and clean resident listing support.",
-  "Added census parser schemas for raw import input, parsed residents, clean census rows, duplicates, reconciliation results, and import batch history.",
-  "Added raw text normalization, report date detection, resident block splitting, field extraction helpers, duplicate detection, clean row mapping, and reconciliation helpers.",
-  "Added parseCensusText and parseResidentBlock to convert raw census text into a structured parsed census result.",
-  "Updated package metadata and visible release notes to identify v3.1.13 as the Census Parser Foundation baseline.",
+  "Added scripts/verify-census-parser-foundation.mjs to verify the Census Parser Foundation files and key exports.",
+  "Added npm script verify:census-parser for local census parser foundation checks.",
+  "The verifier checks required parser files, required exported types/functions, and parser barrel exports before wiring parser logic into the Census page.",
+  "This keeps the census parser work build-safe and reviewable before UI integration begins.",
+  "Updated package metadata and visible release notes to identify v3.1.14 as the Census Parser Foundation Verifier baseline.",
 ];
 
 const workflowItems = [
-  "Paste or upload raw census text into the future census import workflow.",
-  "Normalize the raw text, split into resident blocks, and extract resident fields.",
-  "Review clean resident listing, warnings, duplicates, new admissions, room transfers, and possible discharges before saving.",
-  "Do not automatically discharge residents based on one missing census import; route them to possible discharge review first.",
-  "No D1 migration is required for this parser foundation release.",
+  "Pull the latest main branch before running the census parser verifier.",
+  "Run npm run verify:census-parser locally from the repository root.",
+  "Run npm run build after the verifier passes.",
+  "Only start Census page wiring after the parser foundation and build both pass.",
+  "No D1 migration is required for this verifier release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.13 — Census Parser Foundation
+            v3.1.14 — Census Parser Foundation Verifier
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds the foundational census parser structure for extracting resident data from raw census text and preparing a clean reviewable listing.
+            This release adds a local verification script to confirm the census parser foundation is complete before wiring it into the Census page.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Parser</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Foundation</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Verify</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Check</span>
         </div>
       </div>
 
