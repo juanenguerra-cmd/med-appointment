@@ -9,6 +9,7 @@ const requiredFiles = [
   "src/census/parser/cleanCensusRows.ts",
   "src/census/parser/censusReconciliation.ts",
   "src/census/parser/parseCensusText.ts",
+  "src/census/parser/residentAdapter.ts",
   "src/census/parser/index.ts",
 ];
 
@@ -20,6 +21,7 @@ const requiredExports = [
   { file: "src/census/parser/cleanCensusRows.ts", names: ["toCleanCensusRows"] },
   { file: "src/census/parser/censusReconciliation.ts", names: ["reconcileCensusImport"] },
   { file: "src/census/parser/parseCensusText.ts", names: ["parseResidentBlock", "parseCensusText"] },
+  { file: "src/census/parser/residentAdapter.ts", names: ["parsedResidentToResidentPreview", "parsedResidentsToResidentPreview"] },
 ];
 
 const barrelRequiredLines = [
@@ -30,6 +32,7 @@ const barrelRequiredLines = [
   'export * from "./cleanCensusRows";',
   'export * from "./censusReconciliation";',
   'export * from "./parseCensusText";',
+  'export * from "./residentAdapter";',
 ];
 
 let errors = 0;
