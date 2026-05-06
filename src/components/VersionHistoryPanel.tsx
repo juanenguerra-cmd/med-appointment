@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.12";
+const CURRENT_VERSION = "3.1.13";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.13",
+    releaseDate: "2026-04-30",
+    title: "Census Parser Foundation",
+    summary: "Added the foundational census parser structure for extracting resident data from raw census text and preparing a clean reviewable listing.",
+    capabilities: [
+      "Added src/census/parser with schemas, normalization helpers, field extractors, duplicate detection, reconciliation helpers, clean row mapping, and parser barrel export.",
+      "Added parseCensusText and parseResidentBlock to convert raw census text into a structured parsed census result.",
+      "Added schemas for raw import input, parsed residents, clean census rows, duplicates, reconciliation results, and import batch history.",
+      "Supports safe possible-discharge review instead of automatic discharge from a single missing import.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Paste or upload raw census text into the future census import workflow.",
+      "Normalize raw text, split resident blocks, and extract resident fields.",
+      "Review clean listing, warnings, duplicates, new admissions, room transfers, and possible discharges before saving.",
+      "Route missing residents to possible discharge review instead of automatic discharge.",
+    ],
+    userImpact: [
+      "Prepares the app for cleaner census import and review workflows.",
+      "Improves resident matching using MRN first and name/DOB fallback.",
+      "Creates the foundation for cleaner appointment resident selection and census registry updates.",
+    ],
+  },
   {
     version: "3.1.12",
     releaseDate: "2026-04-30",
     title: "App.tsx Transport Readiness Badge Refactor Script",
     summary: "Added a local-safe Phase B script to prepare App.tsx transport readiness badge JSX for shared helper usage.",
-    capabilities: [
-      "Added scripts/refactor-app-transport-readiness-badge-b7.mjs.",
-      "Added npm script refactor:app-transport-readiness-badge.",
-      "The script adds getTransportReadinessMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
-      "The script adds a Phase B transport badge helper note near App.tsx for careful manual JSX replacement.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the transport readiness badge script.",
-      "Run npm run refactor:app-transport-readiness-badge locally from the repository root.",
-      "Replace one transport readiness badge JSX block manually using getTransportReadinessMeta and getStatusBadgeClassName.",
-      "Run npm run build immediately after the manual replacement.",
-    ],
-    userImpact: [
-      "Keeps current workflows stable.",
-      "Prepares transport readiness badge cleanup without broad automatic JSX rewrites.",
-      "Supports safer App.tsx cleanup through a small local build-tested change.",
-    ],
+    capabilities: ["Added scripts/refactor-app-transport-readiness-badge-b7.mjs.", "Added npm script refactor:app-transport-readiness-badge."],
+    processFlow: ["Run npm run refactor:app-transport-readiness-badge locally.", "Run npm run build after manual replacement."],
+    userImpact: ["Keeps current workflows stable.", "Prepares transport readiness badge cleanup without broad automatic JSX rewrites."],
   },
   {
     version: "3.1.11",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-appointment-status-badge-b6.mjs.", "Added npm script refactor:app-appointment-status-badge."],
     processFlow: ["Run npm run refactor:app-appointment-status-badge locally.", "Run npm run build after manual replacement."],
     userImpact: ["Keeps current workflows stable.", "Prepares appointment status badge cleanup without broad automatic JSX rewrites."],
-  },
-  {
-    version: "3.1.10",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Status/Badge Helper Audit Script",
-    summary: "Added a local audit script to identify safe App.tsx status and badge helper replacement candidates before modifying the large file.",
-    capabilities: ["Added scripts/audit-app-status-badge-helpers.mjs.", "Added npm script audit:app-status-badges."],
-    processFlow: ["Run npm run audit:app-status-badges locally.", "Run npm run build after each replacement group."],
-    userImpact: ["Keeps current workflows stable.", "Makes status and badge helper extraction easier to review."],
   },
 ];
 
