@@ -10,33 +10,42 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.15";
+const CURRENT_VERSION = "3.1.16";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.16",
+    releaseDate: "2026-04-30",
+    title: "Census Parser Resident Adapter",
+    summary: "Added the adapter needed to map parsed census residents into the existing Census page preview format without changing the UI.",
+    capabilities: [
+      "Added src/census/parser/residentAdapter.ts.",
+      "Exported the adapter through src/census/parser/index.ts.",
+      "Updated the census parser verifier to check the adapter file and adapter exports.",
+      "Maps ParsedResident records into the existing Omit<Resident, id> preview shape.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Run npm run verify:census-parser locally.",
+      "Run npm run audit:census-page-wiring to review the App.tsx parse handler integration point.",
+      "Use parsedResidentsToResidentPreview when replacing App.tsx handleParseCensus internals.",
+      "Keep handleSaveCensus unchanged during the first parser wiring pass.",
+      "Run npm run build before committing parser wiring changes.",
+    ],
+    userImpact: [
+      "Keeps the existing Census page UI stable.",
+      "Bridges the new parser output to the current preview table format.",
+      "Prepares the next safe step: wiring parseCensusText into App.tsx handleParseCensus.",
+    ],
+  },
   {
     version: "3.1.15",
     releaseDate: "2026-04-30",
     title: "Census Page Parser Wiring Audit",
     summary: "Added a local audit script to identify the safest integration points before wiring the new census parser into the existing Census page workflow.",
-    capabilities: [
-      "Added scripts/audit-census-page-parser-wiring.mjs.",
-      "Added npm script audit:census-page-wiring.",
-      "The audit inspects CensusPage props, App.tsx parse handler, preview state, and Resident type mapping.",
-      "Confirmed the current Census page already has paste, preview, parse, save, and registry display surfaces.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Run npm run audit:census-page-wiring locally.",
-      "Keep the CensusPage UI unchanged during the first parser wiring pass.",
-      "Add an adapter that maps ParsedResident to the existing Resident preview shape.",
-      "Replace only App.tsx handleParseCensus internals with parseCensusText after the adapter is ready.",
-      "Run npm run verify:census-parser and npm run build before committing parser wiring changes.",
-    ],
-    userImpact: [
-      "Keeps the existing Census page workflow stable.",
-      "Prepares safe parser wiring without changing live UI behavior yet.",
-      "Reduces risk before replacing the current census parsing logic.",
-    ],
+    capabilities: ["Added scripts/audit-census-page-parser-wiring.mjs.", "Added npm script audit:census-page-wiring."],
+    processFlow: ["Run npm run audit:census-page-wiring locally.", "Keep the CensusPage UI unchanged during the first parser wiring pass."],
+    userImpact: ["Keeps the existing Census page workflow stable.", "Prepares safe parser wiring without changing live UI behavior yet."],
   },
   {
     version: "3.1.14",
@@ -46,15 +55,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/verify-census-parser-foundation.mjs.", "Added npm script verify:census-parser."],
     processFlow: ["Run npm run verify:census-parser locally.", "Run npm run build after the verifier passes."],
     userImpact: ["Keeps census parser work stable and reviewable.", "Reduces risk before connecting raw census parsing to the live Census page."],
-  },
-  {
-    version: "3.1.13",
-    releaseDate: "2026-04-30",
-    title: "Census Parser Foundation",
-    summary: "Added the foundational census parser structure for extracting resident data from raw census text and preparing a clean reviewable listing.",
-    capabilities: ["Added src/census/parser foundation files.", "Added parseCensusText and parseResidentBlock."],
-    processFlow: ["Normalize raw text, split resident blocks, and extract resident fields.", "Review clean listing, warnings, duplicates, and possible discharges before saving."],
-    userImpact: ["Prepares the app for cleaner census import and review workflows.", "Improves resident matching using MRN first and name/DOB fallback."],
   },
 ];
 
