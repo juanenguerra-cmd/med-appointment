@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-transport-readiness-badge-b7.mjs to safely prepare App.tsx for transport readiness badge helper usage.",
-  "Added npm script refactor:app-transport-readiness-badge for the next status/badge helper replacement step.",
-  "The script adds getTransportReadinessMeta and getStatusBadgeClassName to the ./utils/appHelpers import when needed.",
-  "The script adds a Phase B transport badge helper note near App.tsx so manual JSX replacement can be done carefully in a small build-tested diff.",
-  "Updated package metadata and visible release notes to identify v3.1.12 as the transport readiness badge refactor script baseline.",
+  "Added the Census Parser Foundation under src/census/parser for raw census text extraction and clean resident listing support.",
+  "Added census parser schemas for raw import input, parsed residents, clean census rows, duplicates, reconciliation results, and import batch history.",
+  "Added raw text normalization, report date detection, resident block splitting, field extraction helpers, duplicate detection, clean row mapping, and reconciliation helpers.",
+  "Added parseCensusText and parseResidentBlock to convert raw census text into a structured parsed census result.",
+  "Updated package metadata and visible release notes to identify v3.1.13 as the Census Parser Foundation baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the transport readiness badge script.",
-  "Run npm run refactor:app-transport-readiness-badge locally from the repository root.",
-  "Replace one transport readiness badge JSX block manually using getTransportReadinessMeta and getStatusBadgeClassName.",
-  "Run npm run build immediately after the manual replacement.",
-  "No D1 migration is required for this helper refactor release.",
+  "Paste or upload raw census text into the future census import workflow.",
+  "Normalize the raw text, split into resident blocks, and extract resident fields.",
+  "Review clean resident listing, warnings, duplicates, new admissions, room transfers, and possible discharges before saving.",
+  "Do not automatically discharge residents based on one missing census import; route them to possible discharge review first.",
+  "No D1 migration is required for this parser foundation release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.12 — App.tsx Transport Readiness Badge Refactor Script
+            v3.1.13 — Census Parser Foundation
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe Phase B script to prepare App.tsx transport readiness badge JSX for shared helper usage.
+            This release adds the foundational census parser structure for extracting resident data from raw census text and preparing a clean reviewable listing.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Transport Badge</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Parser</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Foundation</span>
         </div>
       </div>
 
