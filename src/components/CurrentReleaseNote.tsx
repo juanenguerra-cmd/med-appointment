@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/verify-census-parser-foundation.mjs to verify the Census Parser Foundation files and key exports.",
-  "Added npm script verify:census-parser for local census parser foundation checks.",
-  "The verifier checks required parser files, required exported types/functions, and parser barrel exports before wiring parser logic into the Census page.",
-  "This keeps the census parser work build-safe and reviewable before UI integration begins.",
-  "Updated package metadata and visible release notes to identify v3.1.14 as the Census Parser Foundation Verifier baseline.",
+  "Added scripts/audit-census-page-parser-wiring.mjs to inspect the current Census page and App.tsx parser wiring points before UI integration.",
+  "Added npm script audit:census-page-wiring for local review of CensusPage props, App.tsx parse handler, preview state, and Resident type mapping.",
+  "Confirmed the current Census page already has paste, preview, parse, save, and registry display workflow surfaces.",
+  "The audit recommends a safe wiring order: keep CensusPage UI unchanged, add a parser-to-Resident adapter, then replace only App.tsx handleParseCensus internals.",
+  "Updated package metadata and visible release notes to identify v3.1.15 as the Census Page Parser Wiring Audit baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the census parser verifier.",
-  "Run npm run verify:census-parser locally from the repository root.",
-  "Run npm run build after the verifier passes.",
-  "Only start Census page wiring after the parser foundation and build both pass.",
-  "No D1 migration is required for this verifier release.",
+  "Run npm run audit:census-page-wiring locally to review current Census page integration points.",
+  "Keep the CensusPage UI unchanged during the first parser wiring pass.",
+  "Add an adapter that maps ParsedResident to the existing Resident preview shape.",
+  "Replace only App.tsx handleParseCensus internals with parseCensusText after the adapter is ready.",
+  "Run npm run verify:census-parser and npm run build before committing parser wiring changes.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.14 — Census Parser Foundation Verifier
+            v3.1.15 — Census Page Parser Wiring Audit
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local verification script to confirm the census parser foundation is complete before wiring it into the Census page.
+            This release adds a local audit script to identify the safest integration points before wiring the new census parser into the existing Census page workflow.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Verify</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Check</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Wiring</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Audit</span>
         </div>
       </div>
 
