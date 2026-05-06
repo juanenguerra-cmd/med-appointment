@@ -10,32 +10,42 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.14";
+const CURRENT_VERSION = "3.1.15";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.15",
+    releaseDate: "2026-04-30",
+    title: "Census Page Parser Wiring Audit",
+    summary: "Added a local audit script to identify the safest integration points before wiring the new census parser into the existing Census page workflow.",
+    capabilities: [
+      "Added scripts/audit-census-page-parser-wiring.mjs.",
+      "Added npm script audit:census-page-wiring.",
+      "The audit inspects CensusPage props, App.tsx parse handler, preview state, and Resident type mapping.",
+      "Confirmed the current Census page already has paste, preview, parse, save, and registry display surfaces.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Run npm run audit:census-page-wiring locally.",
+      "Keep the CensusPage UI unchanged during the first parser wiring pass.",
+      "Add an adapter that maps ParsedResident to the existing Resident preview shape.",
+      "Replace only App.tsx handleParseCensus internals with parseCensusText after the adapter is ready.",
+      "Run npm run verify:census-parser and npm run build before committing parser wiring changes.",
+    ],
+    userImpact: [
+      "Keeps the existing Census page workflow stable.",
+      "Prepares safe parser wiring without changing live UI behavior yet.",
+      "Reduces risk before replacing the current census parsing logic.",
+    ],
+  },
   {
     version: "3.1.14",
     releaseDate: "2026-04-30",
     title: "Census Parser Foundation Verifier",
     summary: "Added a local verification script to confirm the census parser foundation is complete before wiring it into the Census page.",
-    capabilities: [
-      "Added scripts/verify-census-parser-foundation.mjs.",
-      "Added npm script verify:census-parser.",
-      "The verifier checks required parser files, key exported types/functions, and parser barrel exports.",
-      "Confirms the parser foundation is ready before Census page UI integration begins.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the census parser verifier.",
-      "Run npm run verify:census-parser locally from the repository root.",
-      "Run npm run build after the verifier passes.",
-      "Only start Census page wiring after the parser foundation and build both pass.",
-    ],
-    userImpact: [
-      "Keeps census parser work stable and reviewable.",
-      "Reduces risk before connecting raw census parsing to the live Census page.",
-      "Supports safer future import workflow for resident listing cleanup.",
-    ],
+    capabilities: ["Added scripts/verify-census-parser-foundation.mjs.", "Added npm script verify:census-parser."],
+    processFlow: ["Run npm run verify:census-parser locally.", "Run npm run build after the verifier passes."],
+    userImpact: ["Keeps census parser work stable and reviewable.", "Reduces risk before connecting raw census parsing to the live Census page."],
   },
   {
     version: "3.1.13",
@@ -45,15 +55,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added src/census/parser foundation files.", "Added parseCensusText and parseResidentBlock."],
     processFlow: ["Normalize raw text, split resident blocks, and extract resident fields.", "Review clean listing, warnings, duplicates, and possible discharges before saving."],
     userImpact: ["Prepares the app for cleaner census import and review workflows.", "Improves resident matching using MRN first and name/DOB fallback."],
-  },
-  {
-    version: "3.1.12",
-    releaseDate: "2026-04-30",
-    title: "App.tsx Transport Readiness Badge Refactor Script",
-    summary: "Added a local-safe Phase B script to prepare App.tsx transport readiness badge JSX for shared helper usage.",
-    capabilities: ["Added scripts/refactor-app-transport-readiness-badge-b7.mjs.", "Added npm script refactor:app-transport-readiness-badge."],
-    processFlow: ["Run npm run refactor:app-transport-readiness-badge locally.", "Run npm run build after manual replacement."],
-    userImpact: ["Keeps current workflows stable.", "Prepares transport readiness badge cleanup without broad automatic JSX rewrites."],
   },
 ];
 
