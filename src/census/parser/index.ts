@@ -5,3 +5,4 @@ export * from "./duplicateDetection";
 export * from "./cleanCensusRows";
 export * from "./censusReconciliation";
 export * from "./parseCensusText";
+export * from "./residentAdapter";
