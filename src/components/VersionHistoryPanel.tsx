@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.18";
+const CURRENT_VERSION = "3.1.19";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.19",
+    releaseDate: "2026-04-30",
+    title: "Census Parser Fixture Test Script",
+    summary: "Added local fixture-based parser checks so census parsing behavior can be tested before future import summary and save workflow changes.",
+    capabilities: [
+      "Added census parser fixture files for basic, wrapped-line, missing-field, and duplicate resident listing scenarios.",
+      "Added scripts/test-census-parser-fixtures.mjs.",
+      "Added npm script test:census-parser-fixtures.",
+      "The fixture test validates parsed resident counts, expected MRNs, duplicate groups, and warning detection.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before running fixture tests.",
+      "Run npm run test:census-parser-fixtures locally from the repository root.",
+      "Run npm run verify:census-parser and npm run build after fixture checks.",
+      "Add a new fixture whenever a new census format or parsing edge case is discovered.",
+    ],
+    userImpact: [
+      "Improves confidence before additional census import/save workflow changes.",
+      "Creates repeatable parser regression testing for common census formats.",
+      "Prepares the next hardening phase: import summaries and safe save modes.",
+    ],
+  },
   {
     version: "3.1.18",
     releaseDate: "2026-04-30",
     title: "Census Parser App Wiring Completion",
     summary: "Marked the census parser App.tsx wiring path as completed and preserved the safe verification workflow for the next census import hardening phase.",
-    capabilities: [
-      "Marked the App.tsx census parser wiring workflow as the completed v3.1.18 baseline.",
-      "Confirmed parseCensusText powers the parse step and parsedResidentsToResidentPreview maps parser output into the existing Census preview shape.",
-      "Kept CensusPage.tsx and handleSaveCensus unchanged for first-pass parser integration safety.",
-      "Preserved verify:census-parser, audit:census-page-wiring, and npm run build as required verification steps before future census changes.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before continuing census import work.",
-      "Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.",
-      "Run npm run build after any census parser or App.tsx wiring change.",
-      "Keep handleSaveCensus unchanged until import summary and safe save mode are added.",
-    ],
-    userImpact: [
-      "Keeps the existing Census page UI stable.",
-      "Completes the first parser wiring phase while preserving the existing save workflow.",
-      "Prepares the next hardening phase: import summaries, fixture tests, and safe save modes.",
-    ],
+    capabilities: ["Marked App.tsx census parser wiring workflow as completed.", "Preserved verify:census-parser, audit:census-page-wiring, and build as required checks."],
+    processFlow: ["Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.", "Keep handleSaveCensus unchanged until import summary and safe save mode are added."],
+    userImpact: ["Keeps the existing Census page UI stable.", "Completes the first parser wiring phase while preserving the existing save workflow."],
   },
   {
     version: "3.1.17",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added scripts/refactor-app-census-parser-wiring.mjs.", "Added npm script refactor:app-census-parser-wiring."],
     processFlow: ["Run npm run refactor:app-census-parser-wiring locally.", "Run npm run verify:census-parser, audit:census-page-wiring, and build."],
     userImpact: ["Keeps the existing Census page UI stable.", "Introduces the new parser through a local build-tested App.tsx change."],
-  },
-  {
-    version: "3.1.16",
-    releaseDate: "2026-04-30",
-    title: "Census Parser Resident Adapter",
-    summary: "Added the adapter needed to map parsed census residents into the existing Census page preview format without changing the UI.",
-    capabilities: ["Added src/census/parser/residentAdapter.ts.", "Exported the adapter through src/census/parser/index.ts."],
-    processFlow: ["Run npm run verify:census-parser locally.", "Use parsedResidentsToResidentPreview when replacing App.tsx handleParseCensus internals."],
-    userImpact: ["Keeps the existing Census page UI stable.", "Bridges the new parser output to the current preview table format."],
   },
 ];
 
