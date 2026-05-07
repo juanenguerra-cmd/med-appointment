@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added src/census/parser/residentAdapter.ts to map ParsedResident records into the existing Resident preview shape used by the Census page.",
-  "Exported the resident adapter through src/census/parser/index.ts.",
-  "Updated scripts/verify-census-parser-foundation.mjs to verify the adapter file and adapter exports.",
-  "Kept the CensusPage UI unchanged so parser wiring can be done safely in the next step.",
-  "Updated package metadata and visible release notes to identify v3.1.16 as the Census Parser Resident Adapter baseline.",
+  "Added scripts/refactor-app-census-parser-wiring.mjs to locally prepare App.tsx for the new census parser workflow.",
+  "Added npm script refactor:app-census-parser-wiring for a build-tested local wiring step.",
+  "The script adds parseCensusText and parsedResidentsToResidentPreview imports and replaces only the handleParseCensus internals.",
+  "The script keeps CensusPage.tsx and handleSaveCensus unchanged for the first parser wiring pass.",
+  "Updated package metadata and visible release notes to identify v3.1.17 as the Census Parser App Wiring Script baseline.",
 ];
 
 const workflowItems = [
-  "Run npm run verify:census-parser locally to confirm the parser and adapter exports are present.",
-  "Run npm run audit:census-page-wiring to review the current App.tsx parse handler integration point.",
-  "Use parsedResidentsToResidentPreview when replacing App.tsx handleParseCensus internals.",
-  "Keep handleSaveCensus unchanged during the first parser wiring pass.",
-  "Run npm run build before committing parser wiring changes.",
+  "Pull the latest main branch before running the census parser wiring script.",
+  "Run npm run refactor:app-census-parser-wiring locally from the repository root.",
+  "Run npm run verify:census-parser and npm run audit:census-page-wiring.",
+  "Run npm run build and review git diff src/App.tsx before committing the local App.tsx change.",
+  "No D1 migration is required for this wiring script release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.16 — Census Parser Resident Adapter
+            v3.1.17 — Census Parser App Wiring Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds the adapter needed to map parsed census residents into the existing Census page preview format without changing the UI.
+            This release adds a local-safe script to wire the new census parser into App.tsx while keeping the existing Census page UI and save workflow unchanged.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Adapter</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Bridge</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Wiring</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
         </div>
       </div>
 
