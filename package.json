@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.1.16",
+  "version": "3.1.17",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -35,7 +35,8 @@
     "refactor:app-appointment-status-badge": "node scripts/refactor-app-appointment-status-badge-b6.mjs",
     "refactor:app-transport-readiness-badge": "node scripts/refactor-app-transport-readiness-badge-b7.mjs",
     "verify:census-parser": "node scripts/verify-census-parser-foundation.mjs",
-    "audit:census-page-wiring": "node scripts/audit-census-page-parser-wiring.mjs"
+    "audit:census-page-wiring": "node scripts/audit-census-page-parser-wiring.mjs",
+    "refactor:app-census-parser-wiring": "node scripts/refactor-app-census-parser-wiring.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
