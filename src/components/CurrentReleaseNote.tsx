@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added scripts/refactor-app-census-parser-wiring.mjs to locally prepare App.tsx for the new census parser workflow.",
-  "Added npm script refactor:app-census-parser-wiring for a build-tested local wiring step.",
-  "The script adds parseCensusText and parsedResidentsToResidentPreview imports and replaces only the handleParseCensus internals.",
-  "The script keeps CensusPage.tsx and handleSaveCensus unchanged for the first parser wiring pass.",
-  "Updated package metadata and visible release notes to identify v3.1.17 as the Census Parser App Wiring Script baseline.",
+  "Marked the App.tsx census parser wiring as the completed v3.1.18 baseline after local application of the parser wiring workflow.",
+  "Confirmed the intended workflow: parseCensusText powers the parse step and parsedResidentsToResidentPreview maps parser output into the existing Census preview shape.",
+  "Kept CensusPage.tsx and handleSaveCensus unchanged so the first live parser integration remains limited to the parse handler path.",
+  "Preserved the verification path using verify:census-parser, audit:census-page-wiring, and npm run build before future census save workflow changes.",
+  "Updated package metadata and visible release notes to identify v3.1.18 as the Census Parser App Wiring Completion baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running the census parser wiring script.",
-  "Run npm run refactor:app-census-parser-wiring locally from the repository root.",
-  "Run npm run verify:census-parser and npm run audit:census-page-wiring.",
-  "Run npm run build and review git diff src/App.tsx before committing the local App.tsx change.",
-  "No D1 migration is required for this wiring script release.",
+  "Pull the latest main branch before continuing census import work.",
+  "Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.",
+  "Run npm run build after any census parser or App.tsx wiring change.",
+  "Keep handleSaveCensus unchanged until import summary and safe save mode are added.",
+  "No D1 migration is required for this completion marker release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.17 — Census Parser App Wiring Script
+            v3.1.18 — Census Parser App Wiring Completion
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a local-safe script to wire the new census parser into App.tsx while keeping the existing Census page UI and save workflow unchanged.
+            This release marks the census parser App.tsx wiring path as completed and preserves the safe verification workflow for the next census import hardening phase.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Wiring</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Script</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Wired</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Completion Marker</span>
         </div>
       </div>
 
