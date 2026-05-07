@@ -10,32 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.17";
+const CURRENT_VERSION = "3.1.18";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.18",
+    releaseDate: "2026-04-30",
+    title: "Census Parser App Wiring Completion",
+    summary: "Marked the census parser App.tsx wiring path as completed and preserved the safe verification workflow for the next census import hardening phase.",
+    capabilities: [
+      "Marked the App.tsx census parser wiring workflow as the completed v3.1.18 baseline.",
+      "Confirmed parseCensusText powers the parse step and parsedResidentsToResidentPreview maps parser output into the existing Census preview shape.",
+      "Kept CensusPage.tsx and handleSaveCensus unchanged for first-pass parser integration safety.",
+      "Preserved verify:census-parser, audit:census-page-wiring, and npm run build as required verification steps before future census changes.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before continuing census import work.",
+      "Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.",
+      "Run npm run build after any census parser or App.tsx wiring change.",
+      "Keep handleSaveCensus unchanged until import summary and safe save mode are added.",
+    ],
+    userImpact: [
+      "Keeps the existing Census page UI stable.",
+      "Completes the first parser wiring phase while preserving the existing save workflow.",
+      "Prepares the next hardening phase: import summaries, fixture tests, and safe save modes.",
+    ],
+  },
   {
     version: "3.1.17",
     releaseDate: "2026-04-30",
     title: "Census Parser App Wiring Script",
     summary: "Added a local-safe script to wire the new census parser into App.tsx while keeping the existing Census page UI and save workflow unchanged.",
-    capabilities: [
-      "Added scripts/refactor-app-census-parser-wiring.mjs.",
-      "Added npm script refactor:app-census-parser-wiring.",
-      "The script adds parseCensusText and parsedResidentsToResidentPreview imports.",
-      "The script replaces only App.tsx handleParseCensus internals and keeps handleSaveCensus unchanged.",
-      "No D1 migration is required.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before running the wiring script.",
-      "Run npm run refactor:app-census-parser-wiring locally from the repository root.",
-      "Run npm run verify:census-parser and npm run audit:census-page-wiring.",
-      "Run npm run build and review git diff src/App.tsx before committing the local App.tsx change.",
-    ],
-    userImpact: [
-      "Keeps the existing Census page UI stable.",
-      "Introduces the new parser through a local build-tested App.tsx change.",
-      "Improves census parsing path while preserving the existing save workflow for first pass safety.",
-    ],
+    capabilities: ["Added scripts/refactor-app-census-parser-wiring.mjs.", "Added npm script refactor:app-census-parser-wiring."],
+    processFlow: ["Run npm run refactor:app-census-parser-wiring locally.", "Run npm run verify:census-parser, audit:census-page-wiring, and build."],
+    userImpact: ["Keeps the existing Census page UI stable.", "Introduces the new parser through a local build-tested App.tsx change."],
   },
   {
     version: "3.1.16",
@@ -45,15 +54,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added src/census/parser/residentAdapter.ts.", "Exported the adapter through src/census/parser/index.ts."],
     processFlow: ["Run npm run verify:census-parser locally.", "Use parsedResidentsToResidentPreview when replacing App.tsx handleParseCensus internals."],
     userImpact: ["Keeps the existing Census page UI stable.", "Bridges the new parser output to the current preview table format."],
-  },
-  {
-    version: "3.1.15",
-    releaseDate: "2026-04-30",
-    title: "Census Page Parser Wiring Audit",
-    summary: "Added a local audit script to identify the safest integration points before wiring the new census parser into the existing Census page workflow.",
-    capabilities: ["Added scripts/audit-census-page-parser-wiring.mjs.", "Added npm script audit:census-page-wiring."],
-    processFlow: ["Run npm run audit:census-page-wiring locally.", "Keep the CensusPage UI unchanged during the first parser wiring pass."],
-    userImpact: ["Keeps the existing Census page workflow stable.", "Prepares safe parser wiring without changing live UI behavior yet."],
   },
 ];
 
