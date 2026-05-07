@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Marked the App.tsx census parser wiring as the completed v3.1.18 baseline after local application of the parser wiring workflow.",
-  "Confirmed the intended workflow: parseCensusText powers the parse step and parsedResidentsToResidentPreview maps parser output into the existing Census preview shape.",
-  "Kept CensusPage.tsx and handleSaveCensus unchanged so the first live parser integration remains limited to the parse handler path.",
-  "Preserved the verification path using verify:census-parser, audit:census-page-wiring, and npm run build before future census save workflow changes.",
-  "Updated package metadata and visible release notes to identify v3.1.18 as the Census Parser App Wiring Completion baseline.",
+  "Added census parser fixture files for basic, wrapped-line, missing-field, and duplicate resident listing scenarios.",
+  "Added scripts/test-census-parser-fixtures.mjs to run local parser checks against sample raw census text fixtures.",
+  "Added npm script test:census-parser-fixtures for parser regression testing before future census import/save changes.",
+  "The fixture test validates parsed resident counts, expected MRNs, duplicate groups, and warning detection.",
+  "Updated package metadata and visible release notes to identify v3.1.19 as the Census Parser Fixture Test Script baseline.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before continuing census import work.",
-  "Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.",
-  "Run npm run build after any census parser or App.tsx wiring change.",
-  "Keep handleSaveCensus unchanged until import summary and safe save mode are added.",
-  "No D1 migration is required for this completion marker release.",
+  "Pull the latest main branch before running fixture tests.",
+  "Run npm run test:census-parser-fixtures locally from the repository root.",
+  "Run npm run verify:census-parser and npm run build after fixture checks.",
+  "Add a new fixture whenever a new census format or parsing edge case is discovered.",
+  "No D1 migration is required for this fixture test release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.18 — Census Parser App Wiring Completion
+            v3.1.19 — Census Parser Fixture Test Script
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release marks the census parser App.tsx wiring path as completed and preserves the safe verification workflow for the next census import hardening phase.
+            This release adds local fixture-based parser checks so census parsing behavior can be tested before future import summary and save workflow changes.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Wired</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Completion Marker</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Fixtures</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Regression Check</span>
         </div>
       </div>
 
