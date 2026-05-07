@@ -1,0 +1,7 @@
+Date: May 5, 2026
+Resident Listing Report
+Name Age Birth Date Location Gender Admission Date Allergies Primary Physician Primary Diagnosis
+CRUZ, ELENA (100004) 76 12/01/1949 Unit 2 250 A F 04/01/2025 No Known Allergies
+Dr. Lee J18.9
+GARCIA, PEDRO (100005) 88 09/09/1937 Unit 3 331 B M 01/12/2024 Latex
+Dr. Gomez I50.9
