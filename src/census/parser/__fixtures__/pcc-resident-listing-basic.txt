@@ -1,0 +1,7 @@
+Date: May 5, 2026
+Resident Listing Report
+Resident: All, Unit: All, Status: Current
+Name Age Birth Date Location Gender Admission Date Allergies Primary Physician Primary Diagnosis
+SMITH, JOHN (100001) 82 01/15/1944 Unit 2 214 A M 03/10/2024 No Known Allergies Michael Rosen I10
+SANTOS, MARIA (100002) 79 08/22/1946 Unit 3 312 B F 11/02/2023 NKDA Ramin Hodjati E11.9
+REYES, ANA (100003) 91 02/05/1935 Unit 4 421 A F 07/18/2022 Penicillin Jane Patel M15.0
