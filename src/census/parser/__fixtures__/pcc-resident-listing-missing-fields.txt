@@ -1,0 +1,6 @@
+Date: May 5, 2026
+Resident Listing Report
+Name Age Birth Date Location Gender Admission Date Allergies Primary Physician Primary Diagnosis
+MISSING, MRN 84 03/03/1942 Unit 2 215 A F 10/10/2023 No Known Allergies Dr. Smith I10
+NO DOB (100006) 77 Unit 3 333 B M 02/02/2024 NKDA Dr. Patel E11.9
+NO ROOM (100007) 80 01/01/1946 F 09/09/2022 NKDA Dr. Rosen M62.81
