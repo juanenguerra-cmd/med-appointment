@@ -1,0 +1,6 @@
+Date: May 5, 2026
+Resident Listing Report
+Name Age Birth Date Location Gender Admission Date Allergies Primary Physician Primary Diagnosis
+DUPLICATE, ONE (100008) 81 06/06/1945 Unit 2 240 A F 01/01/2024 NKDA Dr. Stone I10
+DUPLICATE, ONE (100008) 81 06/06/1945 Unit 2 240 A F 01/01/2024 NKDA Dr. Stone I10
+UNIQUE, TWO (100009) 78 07/07/1948 Unit 3 340 B M 02/02/2024 No Known Allergies Dr. Hill E11.9
