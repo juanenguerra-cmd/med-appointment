@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added src/census/parser/censusImportSummary.ts to generate reusable import summary data from ParsedCensusResult.",
-  "Added CensusImportSummary and CensusImportSummaryItem types for future UI summary cards and safe-save review messaging.",
-  "Added createCensusImportSummary to calculate parsed totals, warning counts, duplicate groups, missing field counts, readiness flags, and safe-save recommendation.",
-  "Added getCensusImportSummaryMessage for user-friendly import status messaging.",
-  "Updated parser barrel exports and verifier coverage to include the census import summary mapper.",
+  "Added CensusPage import summary UI support for parsed census review before saving.",
+  "Added optional censusImportSummary and setCensusImportSummary props to CensusPage so App.tsx can wire the summary in a local build-tested step.",
+  "Added summary banner states for ready, review-required, and blocked import recommendations.",
+  "Added summary cards for parsed residents, warnings, duplicate groups, and critical parser errors.",
+  "Added scripts/refactor-app-census-summary-wiring.mjs and npm script refactor:app-census-summary-wiring to safely connect summary state inside App.tsx locally.",
 ];
 
 const workflowItems = [
-  "Run npm run verify:census-parser locally to confirm summary mapper exports are present.",
-  "Run npm run test:census-parser-fixtures to confirm parser output remains stable.",
-  "Use createCensusImportSummary after parseCensusText before showing or saving census preview data.",
-  "Keep handleSaveCensus unchanged until safe save mode and import summary UI are added.",
-  "No D1 migration is required for this summary mapper release.",
+  "Pull the latest main branch before wiring summary state into App.tsx.",
+  "Run npm run refactor:app-census-summary-wiring locally from the repository root.",
+  "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
+  "Review git diff src/App.tsx and src/pages/CensusPage.tsx before committing local App.tsx changes.",
+  "Keep handleSaveCensus unchanged until safe save mode is added.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.20 — Census Import Summary Types and Mapper
+            v3.1.21 — Census Import Summary UI Wiring
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a reusable census import summary mapper so parsed census results can be reviewed for warnings, duplicates, readiness, and safe-save status before saving.
+            This release adds the Census page summary review surface and a local App.tsx wiring script while keeping the save workflow unchanged.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Import Summary</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Save Prep</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Summary UI</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Wiring</span>
         </div>
       </div>
 
