@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
-import { CheckSquare, ClipboardPaste, Save } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CheckSquare, ClipboardPaste, Save } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { PatientCensusUnitList } from "../components/PatientCensusUnitList";
 import type { Appointment, Resident } from "../types";
+import type { CensusImportSummary } from "../census/parser";
 
 type CensusPageProps = {
   residents: Resident[];
@@ -12,6 +13,8 @@ type CensusPageProps = {
   setCensusPasteText: (value: string) => void;
   parsedResidentsPreview: Omit<Resident, "id">[];
   setParsedResidentsPreview: (value: Omit<Resident, "id">[]) => void;
+  censusImportSummary?: CensusImportSummary | null;
+  setCensusImportSummary?: (value: CensusImportSummary | null) => void;
   isParsing: boolean;
   censusSkipDuplicates: boolean;
   setCensusSkipDuplicates: (value: boolean) => void;
@@ -25,6 +28,35 @@ type CensusPageProps = {
   setIsResidentDetailOpen?: (open: boolean) => void;
 };
 
+const summaryToneClassNames: Record<CensusImportSummary["summaryItems"][number]["tone"], string> = {
+  slate: "bg-slate-50 text-slate-700 ring-slate-100",
+  sky: "bg-sky-50 text-sky-700 ring-sky-100",
+  emerald: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  amber: "bg-amber-50 text-amber-700 ring-amber-100",
+  rose: "bg-rose-50 text-rose-700 ring-rose-100",
+};
+
+function getSummaryBanner(summary: CensusImportSummary): { label: string; className: string } {
+  if (summary.safeSaveRecommendation === "blocked") {
+    return {
+      label: "Blocked — review parser errors before saving.",
+      className: "bg-rose-50 text-rose-800 ring-rose-100",
+    };
+  }
+
+  if (summary.safeSaveRecommendation === "review_required") {
+    return {
+      label: "Review Required — warnings or duplicates were detected.",
+      className: "bg-amber-50 text-amber-800 ring-amber-100",
+    };
+  }
+
+  return {
+    label: "Ready — no blocking parser issues detected.",
+    className: "bg-emerald-50 text-emerald-800 ring-emerald-100",
+  };
+}
+
 export function CensusPage({
   residents,
   appointments,
@@ -32,6 +64,8 @@ export function CensusPage({
   setCensusPasteText,
   parsedResidentsPreview,
   setParsedResidentsPreview,
+  censusImportSummary,
+  setCensusImportSummary,
   isParsing,
   censusSkipDuplicates,
   setCensusSkipDuplicates,
@@ -41,6 +75,8 @@ export function CensusPage({
   handleSaveCensus,
   deleteResident,
 }: CensusPageProps) {
+  const summaryBanner = censusImportSummary ? getSummaryBanner(censusImportSummary) : null;
+
   return (
     <motion.section
       key="census"
@@ -125,6 +161,7 @@ export function CensusPage({
                   onClick={() => {
                     setCensusPasteText("");
                     setParsedResidentsPreview([]);
+                    setCensusImportSummary?.(null);
                   }}
                 >
                   Clear
@@ -139,6 +176,41 @@ export function CensusPage({
               subtitle="Review parsed data before final submission."
               className="border-brand-2 ring-2 ring-brand-2/10"
             >
+              {censusImportSummary && summaryBanner && (
+                <div className="mb-4 space-y-3">
+                  <div className={`flex items-start gap-2 rounded-2xl px-4 py-3 text-xs font-bold ring-1 ${summaryBanner.className}`}>
+                    {censusImportSummary.safeSaveRecommendation === "ready" ? (
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                    ) : (
+                      <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                    )}
+                    <div>
+                      <p className="font-black">{summaryBanner.label}</p>
+                      <p className="mt-1 font-semibold opacity-80">
+                        Review the summary below before confirming import.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {censusImportSummary.summaryItems.map((item) => (
+                      <div
+                        key={item.label}
+                        className={`rounded-2xl p-3 ring-1 ${summaryToneClassNames[item.tone]}`}
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-wider opacity-70">
+                          {item.label}
+                        </p>
+                        <p className="mt-1 text-xl font-black">{item.value}</p>
+                        <p className="mt-1 text-[10px] font-semibold leading-snug opacity-75">
+                          {item.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="max-h-[400px] overflow-y-auto page-scrollbar rounded-xl border border-[#d6deeb] mb-4 shadow-inner">
                 <table className="w-full text-left">
                   <thead className="bg-[#f8fbff] text-[10px] font-black uppercase text-[#0b2a6f] sticky top-0 z-10">
