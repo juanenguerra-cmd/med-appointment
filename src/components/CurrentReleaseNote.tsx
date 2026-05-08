@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added census parser fixture files for basic, wrapped-line, missing-field, and duplicate resident listing scenarios.",
-  "Added scripts/test-census-parser-fixtures.mjs to run local parser checks against sample raw census text fixtures.",
-  "Added npm script test:census-parser-fixtures for parser regression testing before future census import/save changes.",
-  "The fixture test validates parsed resident counts, expected MRNs, duplicate groups, and warning detection.",
-  "Updated package metadata and visible release notes to identify v3.1.19 as the Census Parser Fixture Test Script baseline.",
+  "Added src/census/parser/censusImportSummary.ts to generate reusable import summary data from ParsedCensusResult.",
+  "Added CensusImportSummary and CensusImportSummaryItem types for future UI summary cards and safe-save review messaging.",
+  "Added createCensusImportSummary to calculate parsed totals, warning counts, duplicate groups, missing field counts, readiness flags, and safe-save recommendation.",
+  "Added getCensusImportSummaryMessage for user-friendly import status messaging.",
+  "Updated parser barrel exports and verifier coverage to include the census import summary mapper.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before running fixture tests.",
-  "Run npm run test:census-parser-fixtures locally from the repository root.",
-  "Run npm run verify:census-parser and npm run build after fixture checks.",
-  "Add a new fixture whenever a new census format or parsing edge case is discovered.",
-  "No D1 migration is required for this fixture test release.",
+  "Run npm run verify:census-parser locally to confirm summary mapper exports are present.",
+  "Run npm run test:census-parser-fixtures to confirm parser output remains stable.",
+  "Use createCensusImportSummary after parseCensusText before showing or saving census preview data.",
+  "Keep handleSaveCensus unchanged until safe save mode and import summary UI are added.",
+  "No D1 migration is required for this summary mapper release.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.19 — Census Parser Fixture Test Script
+            v3.1.20 — Census Import Summary Types and Mapper
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds local fixture-based parser checks so census parsing behavior can be tested before future import summary and save workflow changes.
+            This release adds a reusable census import summary mapper so parsed census results can be reviewed for warnings, duplicates, readiness, and safe-save status before saving.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Parser Fixtures</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Regression Check</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Import Summary</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Save Prep</span>
         </div>
       </div>
 
