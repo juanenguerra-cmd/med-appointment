@@ -10,32 +10,42 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.20";
+const CURRENT_VERSION = "3.1.21";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.21",
+    releaseDate: "2026-04-30",
+    title: "Census Import Summary UI Wiring",
+    summary: "Added the Census page summary review surface and a local App.tsx wiring script while keeping the save workflow unchanged.",
+    capabilities: [
+      "Added CensusPage import summary UI support for parsed census review before saving.",
+      "Added optional censusImportSummary and setCensusImportSummary props to CensusPage.",
+      "Added summary banner states for ready, review-required, and blocked import recommendations.",
+      "Added summary cards for parsed residents, warnings, duplicate groups, and critical parser errors.",
+      "Added scripts/refactor-app-census-summary-wiring.mjs and npm script refactor:app-census-summary-wiring.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before wiring summary state into App.tsx.",
+      "Run npm run refactor:app-census-summary-wiring locally from the repository root.",
+      "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
+      "Review git diff src/App.tsx and src/pages/CensusPage.tsx before committing local App.tsx changes.",
+      "Keep handleSaveCensus unchanged until safe save mode is added.",
+    ],
+    userImpact: [
+      "Adds visible census import summary review before save.",
+      "Improves safety by clearly showing ready, review-required, or blocked import status.",
+      "Prepares the next phase: safe save mode and duplicate/warning review controls.",
+    ],
+  },
   {
     version: "3.1.20",
     releaseDate: "2026-04-30",
     title: "Census Import Summary Types and Mapper",
     summary: "Added a reusable census import summary mapper so parsed census results can be reviewed for warnings, duplicates, readiness, and safe-save status before saving.",
-    capabilities: [
-      "Added src/census/parser/censusImportSummary.ts.",
-      "Added CensusImportSummary and CensusImportSummaryItem types.",
-      "Added createCensusImportSummary to calculate parsed totals, warning counts, duplicate groups, missing field counts, readiness flags, and safe-save recommendation.",
-      "Added getCensusImportSummaryMessage for user-friendly import status messaging.",
-      "Updated parser barrel exports and verifier coverage to include the census import summary mapper.",
-    ],
-    processFlow: [
-      "Run npm run verify:census-parser locally to confirm summary mapper exports are present.",
-      "Run npm run test:census-parser-fixtures to confirm parser output remains stable.",
-      "Use createCensusImportSummary after parseCensusText before showing or saving census preview data.",
-      "Keep handleSaveCensus unchanged until safe save mode and import summary UI are added.",
-    ],
-    userImpact: [
-      "Prepares the Census page for visible import summary cards.",
-      "Supports safer save decisions by separating ready, review-required, and blocked import states.",
-      "Keeps current save workflow unchanged while preparing the next UI hardening step.",
-    ],
+    capabilities: ["Added src/census/parser/censusImportSummary.ts.", "Added createCensusImportSummary and getCensusImportSummaryMessage."],
+    processFlow: ["Run npm run verify:census-parser locally.", "Use createCensusImportSummary after parseCensusText before showing or saving census preview data."],
+    userImpact: ["Prepares the Census page for visible import summary cards.", "Supports safer save decisions by separating ready, review-required, and blocked import states."],
   },
   {
     version: "3.1.19",
@@ -45,15 +55,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added census parser fixture files.", "Added scripts/test-census-parser-fixtures.mjs.", "Added npm script test:census-parser-fixtures."],
     processFlow: ["Run npm run test:census-parser-fixtures locally.", "Run npm run verify:census-parser and npm run build after fixture checks."],
     userImpact: ["Improves confidence before additional census import/save workflow changes.", "Creates repeatable parser regression testing for common census formats."],
-  },
-  {
-    version: "3.1.18",
-    releaseDate: "2026-04-30",
-    title: "Census Parser App Wiring Completion",
-    summary: "Marked the census parser App.tsx wiring path as completed and preserved the safe verification workflow for the next census import hardening phase.",
-    capabilities: ["Marked App.tsx census parser wiring workflow as completed.", "Preserved verify:census-parser, audit:census-page-wiring, and build as required checks."],
-    processFlow: ["Run npm run verify:census-parser and npm run audit:census-page-wiring before new census changes.", "Keep handleSaveCensus unchanged until import summary and safe save mode are added."],
-    userImpact: ["Keeps the existing Census page UI stable.", "Completes the first parser wiring phase while preserving the existing save workflow."],
   },
 ];
 
