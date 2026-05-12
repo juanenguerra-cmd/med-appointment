@@ -16,6 +16,72 @@ type AdminScreenshotCaptureProps = {
 const isAdminRole = (role: unknown) => String(role || "").trim().toLowerCase() === "admin";
 
 const SENSITIVE_TEXT_PATTERN = /\b(mrn|dob|date of birth|resident|room|diagnosis|allerg(y|ies)|patient)\b/i;
+const UNSUPPORTED_COLOR_FUNCTION_PATTERN = /\b(?:oklch|oklab)\(/i;
+
+function getElementTree(root: HTMLElement): HTMLElement[] {
+  return [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))];
+}
+
+function createStyleValueResolver(sourceDocument: Document) {
+  const resolver = sourceDocument.createElement("div");
+  resolver.setAttribute("aria-hidden", "true");
+  resolver.style.position = "fixed";
+  resolver.style.left = "-9999px";
+  resolver.style.top = "0";
+  resolver.style.pointerEvents = "none";
+  resolver.style.opacity = "0";
+  sourceDocument.body.appendChild(resolver);
+
+  return {
+    resolve(propertyName: string, value: string) {
+      resolver.style.setProperty(propertyName, value);
+      const resolved = sourceDocument.defaultView?.getComputedStyle(resolver).getPropertyValue(propertyName).trim() || "";
+      resolver.style.removeProperty(propertyName);
+      return resolved;
+    },
+    cleanup() {
+      resolver.remove();
+    },
+  };
+}
+
+function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: HTMLElement, clonedDocument: Document) {
+  const sourceNodes = getElementTree(sourceRoot);
+  const clonedNodes = getElementTree(clonedRoot);
+  const resolver = createStyleValueResolver(sourceRoot.ownerDocument);
+
+  try {
+    sourceNodes.forEach((sourceNode, index) => {
+      const clonedNode = clonedNodes[index];
+      if (!clonedNode) return;
+
+      const computedStyle = window.getComputedStyle(sourceNode);
+      Array.from(computedStyle).forEach((propertyName) => {
+        if (propertyName.startsWith("--")) return;
+
+        let value = computedStyle.getPropertyValue(propertyName);
+        if (!value) return;
+
+        if (UNSUPPORTED_COLOR_FUNCTION_PATTERN.test(value)) {
+          const resolvedValue = resolver.resolve(propertyName, value);
+          if (resolvedValue && !UNSUPPORTED_COLOR_FUNCTION_PATTERN.test(resolvedValue)) {
+            value = resolvedValue;
+          } else if (propertyName === "background-image") {
+            value = "none";
+          } else {
+            return;
+          }
+        }
+
+        clonedNode.style.setProperty(propertyName, value);
+      });
+    });
+
+    clonedDocument.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove());
+  } finally {
+    resolver.cleanup();
+  }
+}
 
 function createMaskOverlays(target: HTMLElement): HTMLDivElement[] {
   const overlays: HTMLDivElement[] = [];
@@ -115,14 +181,25 @@ export function AdminScreenshotCapture({
       });
 
       const masks = createMaskOverlays(target);
-      const rawCanvas = await html2canvas(target, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: false,
-        logging: false,
-        ignoreElements: (el) => (el as HTMLElement).dataset?.screenshotIgnore === "true",
-      });
-      masks.forEach((mask) => mask.remove());
+      let rawCanvas: HTMLCanvasElement;
+
+      try {
+        rawCanvas = await html2canvas(target, {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: false,
+          logging: false,
+          ignoreElements: (el) => (el as HTMLElement).dataset?.screenshotIgnore === "true",
+          onclone: (clonedDocument) => {
+            const clonedTarget = clonedDocument.querySelector(targetSelector);
+            if (clonedTarget instanceof HTMLElement) {
+              inlineRenderedStylesForScreenshot(target, clonedTarget, clonedDocument);
+            }
+          },
+        });
+      } finally {
+        masks.forEach((mask) => mask.remove());
+      }
 
       const watermarkCanvas = applyWatermark(rawCanvas, {
         facility: currentFacility.name || currentFacility.id,
