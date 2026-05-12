@@ -22,12 +22,23 @@ import { TAB_META, type Tab } from "../../types/navigation";
 import type { Facility } from "../../types";
 import { UserManagementPage } from "../../pages/UserManagementPage";
 
+const USER_MANAGEMENT_ADMIN_ROLES = [
+  "role-super-admin",
+  "role-org-admin",
+  "role-facility-admin",
+  "admin",
+];
+
 type AppShellProps = {
   activeTab: Tab;
   isMenuOpen: boolean;
   currentUser: {
     role?: string;
+    roleId?: string;
+    roleIds?: string[];
+    roles?: string[];
     fullName?: string;
+    username?: string;
   } | null;
   facilities: Facility[];
   currentFacilityId: string | null | undefined;
@@ -39,6 +50,15 @@ type AppShellProps = {
   onLogout: () => void;
   children: ReactNode;
 };
+
+function getCurrentUserRoleIds(currentUser: AppShellProps["currentUser"]) {
+  return [
+    currentUser?.role,
+    currentUser?.roleId,
+    ...(currentUser?.roleIds || []),
+    ...(currentUser?.roles || []),
+  ].filter(Boolean) as string[];
+}
 
 export function AppShell({
   activeTab,
@@ -55,7 +75,8 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
-  const isAdmin = currentUser?.role === "admin";
+  const currentUserRoleIds = getCurrentUserRoleIds(currentUser);
+  const isAdmin = currentUserRoleIds.some((roleId) => USER_MANAGEMENT_ADMIN_ROLES.includes(roleId));
   const currentPageMeta = isUserManagementOpen
     ? {
         badge: "Admin Console",
@@ -122,7 +143,7 @@ export function AppShell({
           </div>
 
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
-            {currentUser?.role !== "admin" && (
+            {!isAdmin && (
               <NavItem
                 active={!isUserManagementOpen && activeTab === "help"}
                 onClick={() => handleNavigate("help")}
@@ -182,7 +203,7 @@ export function AppShell({
               />
             )}
 
-            {currentUser?.role === "admin" && (
+            {isAdmin && (
               <NavItem
                 active={!isUserManagementOpen && activeTab === "help"}
                 onClick={() => handleNavigate("help")}
@@ -210,10 +231,7 @@ export function AppShell({
                 {currentUser?.fullName}
               </p>
               <p className="text-[10px] text-slate-500 uppercase tracking-tight">
-                {currentUser?.role === "admin"
-                  ? "Administrator"
-                  : "Staff Member"}{" "}
-                Mode • {facilities.length} Fac.
+                {isAdmin ? "Administrator" : "Staff Member"} Mode • {facilities.length} Fac.
               </p>
             </div>
           </div>
@@ -319,7 +337,7 @@ export function AppShell({
                 label="User Management"
               />
             )}
-            {currentUser?.role === "admin" && (
+            {isAdmin && (
               <TopTab
                 active={!isUserManagementOpen && activeTab === "help"}
                 onClick={() => handleNavigate("help")}
@@ -333,8 +351,10 @@ export function AppShell({
           <UserManagementPage
             currentUser={{
               fullName: currentUser?.fullName,
-              username: currentUser?.fullName || "admin",
-              roleIds: ["role-facility-admin"],
+              username: currentUser?.username || currentUser?.fullName || "admin",
+              roleIds: currentUserRoleIds.includes("admin")
+                ? ["role-facility-admin"]
+                : currentUserRoleIds,
             }}
             facilityCount={facilities.length}
           />
