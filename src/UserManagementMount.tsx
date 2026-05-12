@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Building2, ShieldCheck, UserCog, Users } from "lucide-react";
+import { ArrowLeft, Building2, Check, Pencil, Plus, Save, ShieldCheck, Trash2, UserCog, Users, X } from "lucide-react";
 
 import App from "./App";
 import { UserManagementAdminPage } from "./pages/UserManagementAdminPage";
@@ -9,8 +9,14 @@ type FacilityRecord = {
   name: string;
   shortName?: string;
   code?: string;
+  address?: string;
+  phone?: string;
+  administrator?: string;
+  don?: string;
   status?: string;
 };
+
+type FacilityForm = Omit<FacilityRecord, "id"> & { id?: string };
 
 function normalizeFacilities(payload: unknown): FacilityRecord[] {
   const list = Array.isArray(payload) ? payload : (payload as any)?.facilities;
@@ -21,6 +27,10 @@ function normalizeFacilities(payload: unknown): FacilityRecord[] {
       name: String(facility?.name || facility?.shortName || facility?.code || "Unnamed Facility"),
       shortName: facility?.short_name || facility?.shortName || "",
       code: facility?.code || "",
+      address: facility?.address || "",
+      phone: facility?.phone || "",
+      administrator: facility?.administrator || "",
+      don: facility?.don || "",
       status: facility?.status || "active",
     }))
     .filter((facility) => facility.id && facility.status !== "inactive");
@@ -57,11 +67,13 @@ function getInitialView(): AdminView | null {
 function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose: () => void }) {
   const fallbackFacilityId = useMemo(() => readNavigatorSessionFacilityId() || readFacilityFallback(), []);
   const [view, setView] = useState<AdminView>(initialView);
-  const [facilities, setFacilities] = useState<FacilityRecord[]>([{ id: fallbackFacilityId, name: "Current Facility" }]);
+  const [facilities, setFacilities] = useState<FacilityRecord[]>([{ id: fallbackFacilityId, name: "Current Facility", status: "active" }]);
   const [activeFacilityId, setActiveFacilityId] = useState(fallbackFacilityId);
   const [facilitySource, setFacilitySource] = useState("Fallback session facility");
+  const [facilityEditor, setFacilityEditor] = useState<FacilityForm | null>(null);
+  const [facilityNotice, setFacilityNotice] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadFacilities = () => {
     let active = true;
     fetch("/api/facilities")
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error("Facilities endpoint unavailable"))))
@@ -70,7 +82,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
         const loaded = normalizeFacilities(payload);
         if (loaded.length) {
           setFacilities(loaded);
-          const preferred = loaded.find((facility) => facility.id === fallbackFacilityId)?.id || loaded[0].id;
+          const preferred = loaded.find((facility) => facility.id === activeFacilityId || facility.id === fallbackFacilityId)?.id || loaded[0].id;
           setActiveFacilityId(preferred);
           setFacilitySource("Navigator Forms facility registry /api/facilities");
         }
@@ -81,7 +93,9 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
     return () => {
       active = false;
     };
-  }, [fallbackFacilityId]);
+  };
+
+  useEffect(() => loadFacilities(), [fallbackFacilityId]);
 
   const openView = (nextView: AdminView) => {
     setView(nextView);
@@ -91,6 +105,68 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
   const closeAdmin = () => {
     window.location.hash = "";
     onClose();
+  };
+
+  const openNewFacility = () => {
+    setFacilityNotice(null);
+    setFacilityEditor({ name: "", shortName: "", code: "", address: "", phone: "", administrator: "", don: "", status: "active" });
+  };
+
+  const openEditFacility = (facility: FacilityRecord) => {
+    setFacilityNotice(null);
+    setFacilityEditor({ ...facility });
+  };
+
+  const saveFacility = async () => {
+    if (!facilityEditor?.name?.trim()) {
+      setFacilityNotice("Facility name is required.");
+      return;
+    }
+    const isNew = !facilityEditor.id;
+    const payload = {
+      ...facilityEditor,
+      id: facilityEditor.id || `facility-${Date.now()}`,
+      name: facilityEditor.name.trim(),
+      status: facilityEditor.status || "active",
+    };
+    try {
+      const response = await fetch(isNew ? "/api/facilities" : "/api/facilities/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("Facility endpoint unavailable");
+      setFacilityEditor(null);
+      setFacilityNotice("Facility configuration saved.");
+      loadFacilities();
+    } catch {
+      setFacilities((prev) => {
+        const next = isNew ? [...prev, payload as FacilityRecord] : prev.map((facility) => facility.id === payload.id ? payload as FacilityRecord : facility);
+        return next.filter((facility) => facility.status !== "inactive");
+      });
+      setActiveFacilityId(payload.id);
+      setFacilityEditor(null);
+      setFacilityNotice("Facility saved locally in this admin session. Connect /api/facilities to persist permanently.");
+    }
+  };
+
+  const deactivateFacility = async (facility: FacilityRecord) => {
+    const updated = { ...facility, status: "inactive" };
+    try {
+      await fetch("/api/facilities/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+    } catch {
+      // Keep local session fallback if endpoint is unavailable.
+    }
+    setFacilities((prev) => prev.filter((item) => item.id !== facility.id));
+    if (activeFacilityId === facility.id) {
+      const nextFacility = facilities.find((item) => item.id !== facility.id);
+      if (nextFacility) setActiveFacilityId(nextFacility.id);
+    }
+    setFacilityNotice("Facility removed from active admin list. Endpoint persistence depends on /api/facilities/update.");
   };
 
   return (
@@ -110,7 +186,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
               <p className="text-sm opacity-90 mt-1 max-w-3xl leading-relaxed">
                 {view === "user-management"
                   ? "Manage users, staff links, facility scope, roles, password reset, deactivation, and appointment workflow access."
-                  : "Central admin page for Med-Appointment setup, users, roles, access matrix, and audit controls."}
+                  : "Central admin page for Med-Appointment setup, facility configuration, users, roles, access matrix, and audit controls."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -138,7 +214,12 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
             onOpenUserManagement={() => openView("user-management")}
             facilities={facilities}
             activeFacilityId={activeFacilityId}
+            setActiveFacilityId={setActiveFacilityId}
             facilitySource={facilitySource}
+            facilityNotice={facilityNotice}
+            onNewFacility={openNewFacility}
+            onEditFacility={openEditFacility}
+            onDeactivateFacility={deactivateFacility}
           />
         ) : (
           <UserManagementAdminPage
@@ -149,11 +230,58 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
           />
         )}
       </div>
+
+      {facilityEditor && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-lg font-black text-slate-900">{facilityEditor.id ? "Edit Facility Configuration" : "New Facility Configuration"}</h3>
+              <button type="button" onClick={() => setFacilityEditor(null)} className="rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"><X size={18} /></button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <FacilityField label="Facility Name" value={facilityEditor.name || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, name: value })} />
+              <FacilityField label="Short Name" value={facilityEditor.shortName || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, shortName: value })} />
+              <FacilityField label="Facility Code" value={facilityEditor.code || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, code: value })} />
+              <FacilityField label="Phone" value={facilityEditor.phone || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, phone: value })} />
+              <FacilityField label="Administrator" value={facilityEditor.administrator || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, administrator: value })} />
+              <FacilityField label="DON" value={facilityEditor.don || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, don: value })} />
+              <label className="md:col-span-2 text-xs font-black text-slate-700">Address
+                <textarea value={facilityEditor.address || ""} onChange={(event) => setFacilityEditor({ ...facilityEditor, address: event.target.value })} className="mt-1 min-h-24 w-full rounded-2xl border border-slate-200 px-3 py-2 font-semibold outline-none focus:border-sky-500" />
+              </label>
+            </div>
+            {facilityNotice && <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs font-semibold text-amber-800">{facilityNotice}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setFacilityEditor(null)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">Cancel</button>
+              <button type="button" onClick={saveFacility} className="inline-flex items-center gap-2 rounded-full bg-[#0b2a6f] px-4 py-2 text-xs font-black text-white"><Save size={14} /> Save Facility</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function AdminHome({ onOpenUserManagement, facilities, activeFacilityId, facilitySource }: { onOpenUserManagement: () => void; facilities: FacilityRecord[]; activeFacilityId: string; facilitySource: string }) {
+function AdminHome({
+  onOpenUserManagement,
+  facilities,
+  activeFacilityId,
+  setActiveFacilityId,
+  facilitySource,
+  facilityNotice,
+  onNewFacility,
+  onEditFacility,
+  onDeactivateFacility,
+}: {
+  onOpenUserManagement: () => void;
+  facilities: FacilityRecord[];
+  activeFacilityId: string;
+  setActiveFacilityId: (facilityId: string) => void;
+  facilitySource: string;
+  facilityNotice: string | null;
+  onNewFacility: () => void;
+  onEditFacility: (facility: FacilityRecord) => void;
+  onDeactivateFacility: (facility: FacilityRecord) => void;
+}) {
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
       <section className="transport-card p-5">
@@ -176,28 +304,48 @@ function AdminHome({ onOpenUserManagement, facilities, activeFacilityId, facilit
       </section>
 
       <section className="transport-card p-5">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700"><Building2 size={24} /></div>
-          <div>
-            <h2 className="text-xl font-black text-slate-900">Admin Facility Access</h2>
-            <p className="text-sm font-semibold text-slate-600">Facility list populated from Navigator Forms-style facility registry.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700"><Building2 size={24} /></div>
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Facility Configuration</h2>
+              <p className="text-sm font-semibold text-slate-600">Configure facility profiles and active admin access scope.</p>
+            </div>
           </div>
+          <button type="button" onClick={onNewFacility} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0b2a6f] px-4 py-2 text-xs font-black uppercase tracking-wider text-white shadow">
+            <Plus size={14} /> New Facility
+          </button>
         </div>
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 text-xs font-semibold text-slate-600">
           <p><span className="font-black text-slate-900">Source:</span> {facilitySource}</p>
           <p className="mt-1"><span className="font-black text-slate-900">Loaded facilities:</span> {facilities.length}</p>
+          {facilityNotice && <p className="mt-2 rounded-xl bg-amber-50 p-2 text-amber-800">{facilityNotice}</p>}
         </div>
         <div className="mt-4 space-y-2">
           {facilities.map((facility) => (
             <div key={facility.id} className={`rounded-2xl border p-3 text-xs font-semibold ${facility.id === activeFacilityId ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-100 bg-slate-50 text-slate-700"}`}>
-              <p className="font-black">{facility.name}</p>
-              <p className="mt-1 text-[10px] uppercase tracking-wider opacity-70">{facility.id}{facility.id === activeFacilityId ? " • Active" : ""}</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-black">{facility.name}</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-wider opacity-70">{facility.id}{facility.id === activeFacilityId ? " • Active" : ""}</p>
+                  {(facility.address || facility.phone) && <p className="mt-1 text-[11px] opacity-80">{facility.address}{facility.address && facility.phone ? " • " : ""}{facility.phone}</p>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setActiveFacilityId(facility.id)} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-700 ring-1 ring-slate-200"><Check size={12} /> Set</button>
+                  <button type="button" onClick={() => onEditFacility(facility)} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-700 ring-1 ring-slate-200"><Pencil size={12} /> Edit</button>
+                  <button type="button" onClick={() => onDeactivateFacility(facility)} className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-rose-700 ring-1 ring-rose-100"><Trash2 size={12} /> Remove</button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </section>
     </div>
   );
+}
+
+function FacilityField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <label className="text-xs font-black text-slate-700">{label}<input value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-2xl border border-slate-200 px-3 py-2 font-semibold outline-none focus:border-sky-500" /></label>;
 }
 
 function AdminFeature({ title, text }: { title: string; text: string }) {
