@@ -119,11 +119,8 @@ function facilityIdentityKeys(facility: FacilityRegistryRecord) {
 /**
  * Dedupes facilities while preserving the first occurrence.
  *
- * This is intentional because existing appointment/resident data may already be
- * linked to the first facility ID shown in the app. Later duplicates from API
- * overlays or legacy sources are ignored when they match by ID, code, short name,
- * or canonical facility name. Canonical names handle common variations such as
- * "and" vs "&" and extra "Nursing/Rehabilitation Center" wording.
+ * Existing/API facilities must be passed before seeded defaults so old facility
+ * IDs remain visible and old appointment/resident records stay reachable.
  */
 export function dedupeFacilities(facilities: FacilityRegistryRecord[]) {
   const kept: FacilityRegistryRecord[] = [];
@@ -148,5 +145,7 @@ export function dedupeFacilities(facilities: FacilityRegistryRecord[]) {
 export const SEEDED_FACILITY_REGISTRY = dedupeFacilities(normalizeFacilityList({ facilities: DEFAULT_FACILITIES }));
 
 export function mergeWithSeededFacilities(apiFacilities: unknown) {
-  return dedupeFacilities([...SEEDED_FACILITY_REGISTRY, ...normalizeFacilityList(apiFacilities)]);
+  const existingFacilities = normalizeFacilityList(apiFacilities);
+  if (!existingFacilities.length) return SEEDED_FACILITY_REGISTRY;
+  return dedupeFacilities([...existingFacilities, ...SEEDED_FACILITY_REGISTRY]);
 }
