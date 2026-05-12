@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import { registerAdminRestoreRoutes } from "./adminRestoreRoutes";
+import { registerUserAccessMatrixRoutes } from "./userAccessMatrixRoutes";
 
 type WorkerApp = Hono<{ Bindings: { DB: D1Database } }>;
 
@@ -19,6 +20,7 @@ async function isAdminActor(db: D1Database, actorId: string): Promise<boolean> {
 
 export function registerAdminSecurityRoutes(app: WorkerApp) {
   registerAdminRestoreRoutes(app);
+  registerUserAccessMatrixRoutes(app);
 
   app.post("/admin/screenshot-authorize", async (c) => {
     const body = (await c.req.json()) as {
