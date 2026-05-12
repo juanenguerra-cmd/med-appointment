@@ -4,7 +4,7 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
   if (!res.ok) {
     let message = `API error ${res.status}`;
     try {
-      const body = await res.json();
+      const body = (await res.json()) as { error?: string; message?: string };
       message = body?.error || body?.message || JSON.stringify(body);
     } catch {
       const text = await res.text().catch(() => '');

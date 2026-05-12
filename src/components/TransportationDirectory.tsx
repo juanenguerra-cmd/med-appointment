@@ -92,7 +92,7 @@ export function TransportationDirectory() {
       phone: company.phone,
       address: company.address || '',
       notes: company.notes || '',
-      active: company.active !== false && company.active !== 0,
+      active: company.active !== false,
     });
   };
 

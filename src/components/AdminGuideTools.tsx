@@ -64,7 +64,7 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
-const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: any) => void; children: React.ReactNode; ariaLabel: string }) => (
+const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: any) => void; children: any; ariaLabel: string }) => (
   <div className="relative">
     <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
     <select
@@ -216,8 +216,8 @@ export function AdminGuideTools({
             subtitle="Quick counts for facility and user setup."
             actions={
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>New Facility</Button>
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>New User</Button>
+                <Button variant="primary" onClick={openNewFacility}><Plus size={16} /> New Facility</Button>
+                <Button variant="primary" onClick={openNewUser}><Plus size={16} /> New User</Button>
               </div>
             }
           >
@@ -234,8 +234,8 @@ export function AdminGuideTools({
               title="Facility Management"
               subtitle="Configure facility profiles and active facility selection."
               actions={
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                  New Facility
+                <Button variant="primary" onClick={openNewFacility}>
+                  <Plus size={16} /> New Facility
                 </Button>
               }
             >
@@ -244,8 +244,8 @@ export function AdminGuideTools({
                   <p className="text-xs font-black uppercase tracking-wider text-sky-900">Facility Quick Action</p>
                   <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or update an existing facility.</p>
                 </div>
-                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                  New Facility
+                <Button className="w-full sm:w-auto" variant="primary" onClick={openNewFacility}>
+                  <Plus size={16} /> New Facility
                 </Button>
               </div>
 
@@ -303,8 +303,8 @@ export function AdminGuideTools({
               title="User Access Management"
               subtitle="Add users, edit user details, and manage access workflow."
               actions={
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                  New User
+                <Button variant="primary" onClick={openNewUser}>
+                  <Plus size={16} /> New User
                 </Button>
               }
             >
@@ -313,8 +313,8 @@ export function AdminGuideTools({
                   <p className="text-xs font-black uppercase tracking-wider text-sky-900">User Quick Action</p>
                   <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or update an existing user profile.</p>
                 </div>
-                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                  New User
+                <Button className="w-full sm:w-auto" variant="primary" onClick={openNewUser}>
+                  <Plus size={16} /> New User
                 </Button>
               </div>
 

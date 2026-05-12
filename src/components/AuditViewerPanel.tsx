@@ -18,6 +18,7 @@ const ENTITY_LABELS: Record<AuditEntity, string> = {
   resident: 'Resident',
   user: 'User',
   census: 'Census',
+  screenshot: 'Screenshot',
 };
 
 function formatDateTime(value: string) {

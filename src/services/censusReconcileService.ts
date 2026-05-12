@@ -37,7 +37,7 @@ export async function reconcileCensusOnBackend(params: {
   if (!response.ok) {
     let message = `Census reconciliation failed with status ${response.status}`;
     try {
-      const body = await response.json();
+      const body = (await response.json()) as { error?: string; message?: string };
       message = body?.error || body?.message || JSON.stringify(body);
     } catch {
       const text = await response.text().catch(() => '');
