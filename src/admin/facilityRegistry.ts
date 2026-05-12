@@ -1,5 +1,25 @@
 import { DEFAULT_FACILITIES } from "./defaultFacilities";
 
+export type DefaultFacility = {
+  id: string;
+  organization_id: string;
+  organizationId: string;
+  name: string;
+  short_name: string;
+  shortName: string;
+  code: string;
+  address: string;
+  phone: string;
+  administrator: string | null;
+  don: string | null;
+  adon: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type FacilityRegistryRecord = {
   id: string;
   name: string;
@@ -42,11 +62,57 @@ export function normalizeFacilityList(payload: unknown): FacilityRegistryRecord[
 
 const normalizeText = (value: unknown) => String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
 
+const canonicalFacilityName = (value: unknown) => {
+  let text = normalizeText(value)
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  text = text
+    .replace(/\bnursing\b/g, " ")
+    .replace(/\brehabilitation\b/g, " ")
+    .replace(/\brehab\b/g, " ")
+    .replace(/\bcenter\b/g, " ")
+    .replace(/\bcentre\b/g, " ")
+    .replace(/\bcare\b/g, " ")
+    .replace(/\bfor\b/g, " ")
+    .replace(/\band\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const knownNameAliases: Record<string, string> = {
+    "east neck": "east-neck",
+    "peninsula": "peninsula",
+    "carillon": "carillon",
+    "downtown brooklyn": "downtown-brooklyn",
+    "downtown bk": "downtown-brooklyn",
+    "fordham": "fordham",
+    "isabella": "isabella",
+    "long beach": "long-beach",
+    "margaret tietz": "margaret-tietz",
+    "morningside": "morningside",
+    "saints joachim anne": "saints-joachim-anne",
+    "saints j a": "saints-joachim-anne",
+    "sea crest": "sea-crest",
+    "shore view": "shore-view",
+    "upper east side": "upper-east-side",
+    "west village": "west-village",
+    "workmen s circle multicare": "workmens-circle",
+    "workmen s circle": "workmens-circle",
+  };
+
+  return knownNameAliases[text] || text;
+};
+
+const canonicalFacilityCode = (value: unknown) => normalizeText(value).replace(/[^a-z0-9]+/g, "");
+
 function facilityIdentityKeys(facility: FacilityRegistryRecord) {
   return [
     facility.id ? `id:${normalizeText(facility.id)}` : "",
-    facility.code ? `code:${normalizeText(facility.code)}` : "",
-    facility.name ? `name:${normalizeText(facility.name)}` : "",
+    facility.code ? `code:${canonicalFacilityCode(facility.code)}` : "",
+    facility.name ? `name:${canonicalFacilityName(facility.name)}` : "",
+    facility.shortName ? `short:${canonicalFacilityName(facility.shortName)}` : "",
   ].filter(Boolean);
 }
 
@@ -55,7 +121,9 @@ function facilityIdentityKeys(facility: FacilityRegistryRecord) {
  *
  * This is intentional because existing appointment/resident data may already be
  * linked to the first facility ID shown in the app. Later duplicates from API
- * overlays or legacy sources are ignored when they match by ID, code, or name.
+ * overlays or legacy sources are ignored when they match by ID, code, short name,
+ * or canonical facility name. Canonical names handle common variations such as
+ * "and" vs "&" and extra "Nursing/Rehabilitation Center" wording.
  */
 export function dedupeFacilities(facilities: FacilityRegistryRecord[]) {
   const kept: FacilityRegistryRecord[] = [];
