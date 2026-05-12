@@ -1,7 +1,6 @@
 import { motion } from "motion/react";
 import { CurrentReleaseNote } from "../components/CurrentReleaseNote";
 import { VersionHistoryPanel } from "../components/VersionHistoryPanel";
-import { AdminGuideTools } from "../components/AdminGuideTools";
 import type { Facility, User } from "../types";
 
 type HelpPageProps = {
@@ -18,19 +17,7 @@ type HelpPageProps = {
   currentUser?: Pick<User, "id" | "fullName" | "role"> | null;
 };
 
-export function HelpPage({
-  currentUserRole,
-  facilities,
-  currentFacilityId,
-  setCurrentFacilityId,
-  setEditingFac,
-  setIsFacModalOpen,
-  deleteFacility,
-  users,
-  setEditingUser,
-  setIsUserModalOpen,
-  currentUser,
-}: HelpPageProps) {
+export function HelpPage(_props: HelpPageProps) {
   return (
     <motion.div
       key="help"
@@ -42,20 +29,6 @@ export function HelpPage({
     >
       <CurrentReleaseNote />
       <VersionHistoryPanel />
-
-      <AdminGuideTools
-        currentUserRole={currentUserRole}
-        facilities={facilities}
-        currentFacilityId={currentFacilityId}
-        setCurrentFacilityId={setCurrentFacilityId}
-        setEditingFac={setEditingFac}
-        setIsFacModalOpen={setIsFacModalOpen}
-        deleteFacility={deleteFacility}
-        users={users}
-        setEditingUser={setEditingUser}
-        setIsUserModalOpen={setIsUserModalOpen}
-        currentUser={currentUser}
-      />
     </motion.div>
   );
 }
