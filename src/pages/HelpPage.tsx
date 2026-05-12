@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { CurrentReleaseNote } from "../components/CurrentReleaseNote";
 import { VersionHistoryPanel } from "../components/VersionHistoryPanel";
 import { AdminGuideTools } from "../components/AdminGuideTools";
+import { AdminRecoveryPanel } from "../components/AdminRecoveryPanel";
 import type { Facility, User } from "../types";
 
 type HelpPageProps = {
@@ -18,6 +19,11 @@ type HelpPageProps = {
   currentUser?: Pick<User, "id" | "fullName" | "role"> | null;
 };
 
+const isAdminRole = (role: unknown) => {
+  const normalized = String(role || "").trim().toLowerCase();
+  return normalized === "admin" || normalized === "administrator" || normalized === "super admin" || normalized === "superadmin";
+};
+
 export function HelpPage({
   currentUserRole,
   facilities,
@@ -31,6 +37,8 @@ export function HelpPage({
   setIsUserModalOpen,
   currentUser,
 }: HelpPageProps) {
+  const showAdminRecovery = isAdminRole(currentUserRole || currentUser?.role);
+
   return (
     <motion.div
       key="help"
@@ -56,6 +64,13 @@ export function HelpPage({
         setIsUserModalOpen={setIsUserModalOpen}
         currentUser={currentUser}
       />
+
+      {showAdminRecovery && (
+        <AdminRecoveryPanel
+          currentFacilityId={currentFacilityId || null}
+          currentUser={currentUser}
+        />
+      )}
     </motion.div>
   );
 }
