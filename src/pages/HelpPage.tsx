@@ -3,6 +3,7 @@ import { CurrentReleaseNote } from "../components/CurrentReleaseNote";
 import { VersionHistoryPanel } from "../components/VersionHistoryPanel";
 import { AdminGuideTools } from "../components/AdminGuideTools";
 import { AdminRecoveryPanel } from "../components/AdminRecoveryPanel";
+import { UserAccessMatrixPanel } from "../components/UserAccessMatrixPanel";
 import type { Facility, User } from "../types";
 
 type HelpPageProps = {
@@ -37,7 +38,7 @@ export function HelpPage({
   setIsUserModalOpen,
   currentUser,
 }: HelpPageProps) {
-  const showAdminRecovery = isAdminRole(currentUserRole || currentUser?.role);
+  const showAdminTools = isAdminRole(currentUserRole || currentUser?.role);
 
   return (
     <motion.div
@@ -65,11 +66,19 @@ export function HelpPage({
         currentUser={currentUser}
       />
 
-      {showAdminRecovery && (
-        <AdminRecoveryPanel
-          currentFacilityId={currentFacilityId || null}
-          currentUser={currentUser}
-        />
+      {showAdminTools && (
+        <>
+          <UserAccessMatrixPanel
+            users={users}
+            facilities={facilities}
+            currentFacilityId={currentFacilityId || null}
+            currentUser={currentUser}
+          />
+          <AdminRecoveryPanel
+            currentFacilityId={currentFacilityId || null}
+            currentUser={currentUser}
+          />
+        </>
       )}
     </motion.div>
   );
