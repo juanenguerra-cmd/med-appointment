@@ -93,6 +93,40 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
     return c.json(results);
   });
 
+  app.post("/soft-delete/appointments/:id", async (c) => {
+    const id = c.req.param("id");
+    const body = (await c.req.json().catch(() => ({}))) as { actorId?: string; note?: string };
+    const appointment = (await c.env.DB.prepare("SELECT * FROM appointments WHERE id = ?").bind(id).first()) as any;
+    if (!appointment) return c.json({ success: false, error: "Appointment not found" }, 404);
+
+    const deletedAt = new Date().toISOString();
+    const previousStatus = safeString(appointment.status) || "Scheduled";
+    await c.env.DB
+      .prepare(`
+        UPDATE appointments
+        SET deletedAt = ?,
+            deletedBy = ?,
+            previousStatus = ?,
+            status = 'Discontinued',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `)
+      .bind(deletedAt, safeString(body.actorId) || null, previousStatus, id)
+      .run();
+
+    await writeAuditLog(c.env.DB, {
+      facilityId: safeString(appointment.facilityId),
+      actorId: safeString(body.actorId),
+      action: "delete",
+      entity: "appointment",
+      entityId: id,
+      summary: `Appointment moved to deleted records for ${safeString(appointment.residentName) || "resident"}`,
+      metadata: { note: body.note || "", previousStatus, deletedAt },
+    });
+
+    return c.json({ success: true, deletedAt });
+  });
+
   app.post("/restore/residents/:id", async (c) => {
     const id = c.req.param("id");
     const body = (await c.req.json().catch(() => ({}))) as { actorId?: string; note?: string };
