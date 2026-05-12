@@ -1,4 +1,5 @@
 import type { Hono } from "hono";
+import { registerAdminRestoreRoutes } from "./adminRestoreRoutes";
 
 type WorkerApp = Hono<{ Bindings: { DB: D1Database } }>;
 
@@ -17,6 +18,8 @@ async function isAdminActor(db: D1Database, actorId: string): Promise<boolean> {
 }
 
 export function registerAdminSecurityRoutes(app: WorkerApp) {
+  registerAdminRestoreRoutes(app);
+
   app.post("/admin/screenshot-authorize", async (c) => {
     const body = (await c.req.json()) as {
       actorId?: string;
@@ -30,7 +33,7 @@ export function registerAdminSecurityRoutes(app: WorkerApp) {
     if (!body?.consentProvided) return c.json({ success: false, error: "consent is required" }, 400);
 
     if (!(await isAdminActor(c.env.DB, actorId))) {
-      return c.json({ success: false, error: "Admin authorization required" }, 403);
+      return c.json({ success: false, error: "Admin access required" }, 403);
     }
 
     return c.json({ success: true, authorized: true });
@@ -49,7 +52,7 @@ export function registerAdminSecurityRoutes(app: WorkerApp) {
     if (!actorId || !facilityId) return c.json({ success: false, error: "actorId and facilityId are required" }, 400);
 
     if (!(await isAdminActor(c.env.DB, actorId))) {
-      return c.json({ success: false, error: "Admin authorization required" }, 403);
+      return c.json({ success: false, error: "Admin access required" }, 403);
     }
 
     console.info("Screenshot audit event", {
