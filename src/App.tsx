@@ -1205,7 +1205,7 @@ if (!isLoaded) {
           </div>
         </div>
 
-        <div id="app-page-content">
+        <div id="app-page-content" aria-label="Page content" role="region">
         <AnimatePresence mode="wait">
           {activeTab === "dashboard" && (
             <DashboardPage
