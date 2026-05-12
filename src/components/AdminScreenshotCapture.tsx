@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import html2canvas from "html2canvas";
+import { Camera } from "lucide-react";
 import type { Facility, User } from "../types";
 import { apiFetch } from "../api/apiClient";
 import { appendLocalAuditEvent, createAuditEvent } from "../utils/auditLog";
@@ -8,6 +9,8 @@ type AdminScreenshotCaptureProps = {
   currentUser: Pick<User, "id" | "fullName" | "role"> | null | undefined;
   currentFacility: Facility | null | undefined;
   targetSelector?: string;
+  /** Render as a compact icon button suitable for embedding in the top header. */
+  compact?: boolean;
 };
 
 const isAdminRole = (role: unknown) => String(role || "").trim().toLowerCase() === "admin";
@@ -74,6 +77,7 @@ export function AdminScreenshotCapture({
   currentUser,
   currentFacility,
   targetSelector = "#admin-guide-tools-root",
+  compact = false,
 }: AdminScreenshotCaptureProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [message, setMessage] = useState<string>("");
@@ -162,6 +166,28 @@ export function AdminScreenshotCapture({
   };
 
   if (!isAdminRole(currentUser?.role)) return null;
+
+  if (compact) {
+    return (
+      <div data-screenshot-ignore="true" className="relative">
+        <button
+          type="button"
+          onClick={handleCapture}
+          disabled={!canCapture || isCapturing}
+          title="Capture screenshot of current page"
+          className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-black px-3 py-2.5 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+        >
+          <Camera size={15} />
+          {isCapturing ? "Capturing…" : "Screenshot"}
+        </button>
+        {message && (
+          <p className="absolute top-full mt-1 right-0 whitespace-nowrap rounded-lg bg-slate-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-lg">
+            {message}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4" data-screenshot-ignore="true">

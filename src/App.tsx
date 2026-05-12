@@ -45,6 +45,7 @@ import {
   CopyPlus,
 } from "lucide-react";
 import { AppointmentModal, Button, Card, LockScreen } from "./components";
+import { AdminScreenshotCapture } from "./components/AdminScreenshotCapture";
 import { useHealthData } from "./hooks";
 import type { Appointment, Facility, Resident, TransportationCompany } from "./typeExports";
 import { CONSULT_REASONS_BY_SPECIALTY } from "./constants/consultReasons";
@@ -1145,6 +1146,12 @@ if (!isLoaded) {
               >
                 <Plus size={16} /> New Appointment
               </Button>
+              <AdminScreenshotCapture
+                compact
+                currentUser={currentUser}
+                currentFacility={currentFacility}
+                targetSelector="#app-page-content"
+              />
               <button
                 className="lg:hidden transport-pill h-10 w-10 flex items-center justify-center text-brand"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -1198,6 +1205,7 @@ if (!isLoaded) {
           </div>
         </div>
 
+        <div id="app-page-content">
         <AnimatePresence mode="wait">
           {activeTab === "dashboard" && (
             <DashboardPage
@@ -1299,6 +1307,7 @@ if (!isLoaded) {
           )}
 
         </AnimatePresence>
+        </div>
       </main>
 
       <AppointmentModal
