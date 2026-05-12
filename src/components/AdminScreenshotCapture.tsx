@@ -50,6 +50,23 @@ function getScreenshotStyleFallback(propertyName: string) {
   return propertyName.includes("image") ? "none" : "";
 }
 
+function resolveScreenshotStyleValue(
+  propertyName: string,
+  value: string,
+  resolveValue: (propertyName: string, value: string) => string,
+) {
+  if (!UNRESOLVED_STYLE_VALUE_PATTERN.test(value)) {
+    return value;
+  }
+
+  const resolvedValue = resolveValue(propertyName, value);
+  if (resolvedValue && !UNRESOLVED_STYLE_VALUE_PATTERN.test(resolvedValue)) {
+    return resolvedValue;
+  }
+
+  return getScreenshotStyleFallback(propertyName);
+}
+
 function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: HTMLElement, clonedDocument: Document) {
   const sourceNodes = getElementTree(sourceRoot);
   const clonedNodes = getElementTree(clonedRoot);
@@ -72,24 +89,8 @@ function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: 
         let value = computedStyle.getPropertyValue(propertyName);
         if (!value) return;
 
-        if (UNRESOLVED_STYLE_VALUE_PATTERN.test(value)) {
-          const resolvedValue = resolver.resolve(propertyName, value);
-          if (resolvedValue && !UNRESOLVED_STYLE_VALUE_PATTERN.test(resolvedValue)) {
-            value = resolvedValue;
-          } else {
-            value = getScreenshotStyleFallback(propertyName);
-            if (!value) {
-              return;
-            }
-          }
-        }
-
-        if (UNRESOLVED_STYLE_VALUE_PATTERN.test(value)) {
-          value = getScreenshotStyleFallback(propertyName);
-          if (!value) {
-            return;
-          }
-        }
+        value = resolveScreenshotStyleValue(propertyName, value, resolver.resolve);
+        if (!value) return;
 
         clonedNode.style.setProperty(propertyName, value);
       });
