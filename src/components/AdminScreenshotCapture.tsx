@@ -16,7 +16,7 @@ type AdminScreenshotCaptureProps = {
 const isAdminRole = (role: unknown) => String(role || "").trim().toLowerCase() === "admin";
 
 const SENSITIVE_TEXT_PATTERN = /\b(mrn|dob|date of birth|resident|room|diagnosis|allerg(y|ies)|patient)\b/i;
-const UNSUPPORTED_COLOR_FUNCTION_PATTERN = /\b(?:oklch|oklab)\(/i;
+const UNRESOLVED_STYLE_VALUE_PATTERN = /\b(?:oklch|oklab)\(|var\(/i;
 
 function getElementTree(root: HTMLElement): HTMLElement[] {
   return [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))];
@@ -46,13 +46,19 @@ function createStyleValueResolver(sourceDocument: Document) {
   };
 }
 
+function getScreenshotStyleFallback(propertyName: string) {
+  return propertyName.includes("image") ? "none" : "";
+}
+
 function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: HTMLElement, clonedDocument: Document) {
   const sourceNodes = getElementTree(sourceRoot);
   const clonedNodes = getElementTree(clonedRoot);
-  const resolver = createStyleValueResolver(sourceRoot.ownerDocument);
   const sourceWindow = sourceRoot.ownerDocument.defaultView;
+  const canRemoveStylesheets = sourceNodes.length === clonedNodes.length;
 
   if (!sourceWindow) return;
+
+  const resolver = createStyleValueResolver(sourceRoot.ownerDocument);
 
   try {
     sourceNodes.forEach((sourceNode, index) => {
@@ -66,13 +72,21 @@ function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: 
         let value = computedStyle.getPropertyValue(propertyName);
         if (!value) return;
 
-        if (UNSUPPORTED_COLOR_FUNCTION_PATTERN.test(value)) {
+        if (UNRESOLVED_STYLE_VALUE_PATTERN.test(value)) {
           const resolvedValue = resolver.resolve(propertyName, value);
-          if (resolvedValue && !UNSUPPORTED_COLOR_FUNCTION_PATTERN.test(resolvedValue)) {
+          if (resolvedValue && !UNRESOLVED_STYLE_VALUE_PATTERN.test(resolvedValue)) {
             value = resolvedValue;
-          } else if (propertyName === "background-image") {
-            value = "none";
           } else {
+            value = getScreenshotStyleFallback(propertyName);
+            if (!value) {
+              return;
+            }
+          }
+        }
+
+        if (UNRESOLVED_STYLE_VALUE_PATTERN.test(value)) {
+          value = getScreenshotStyleFallback(propertyName);
+          if (!value) {
             return;
           }
         }
@@ -81,7 +95,9 @@ function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: 
       });
     });
 
-    clonedDocument.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove());
+    if (canRemoveStylesheets) {
+      clonedDocument.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove());
+    }
   } finally {
     resolver.cleanup();
   }
