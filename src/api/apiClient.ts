@@ -1,3 +1,9 @@
+function mergeJsonHeaders(headers?: HeadersInit): Headers {
+  const merged = new Headers(headers);
+  if (!merged.has('Content-Type')) merged.set('Content-Type', 'application/json');
+  return merged;
+}
+
 function normalizeSafetyRequest(url: string, options?: RequestInit): { url: string; options?: RequestInit } {
   const method = String(options?.method || 'GET').toUpperCase();
   const appointmentDeleteMatch = url.match(/^\/api\/appointments\/([^/?#]+)$/);
@@ -8,10 +14,7 @@ function normalizeSafetyRequest(url: string, options?: RequestInit): { url: stri
       options: {
         ...options,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options?.headers || {}),
-        },
+        headers: mergeJsonHeaders(options?.headers),
         body: options?.body || JSON.stringify({ note: 'Deleted from appointment log UI' }),
       },
     };
