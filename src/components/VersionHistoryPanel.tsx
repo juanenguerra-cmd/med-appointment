@@ -10,9 +10,41 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.21";
+const CURRENT_VERSION = "3.1.22";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.22",
+    releaseDate: "2026-05-12",
+    title: "User Management Admin Console Foundation",
+    summary: "Added a protected User Management admin console foundation for multi-facility access control, staff-user linking, role-based security, and appointment workflow permission overrides.",
+    capabilities: [
+      "Added src/pages/UserManagementPage.tsx as the User Management admin console page.",
+      "Added admin-only role guard support for role-super-admin, role-org-admin, and role-facility-admin.",
+      "Added Users List surface with search, refresh, create user, staff link, role, status, and user action columns.",
+      "Added Access Matrix surface with view, create, edit, print, export, delete, and admin permission columns.",
+      "Mapped permission groups to Med-Appointment workflows: modules, departments, and appointment workflows.",
+      "Added built-in role and protected-role constants for future backend and modal wiring.",
+      "Added validation helper for username, facility assignment, default facility, role, password, duplicate username/email, and staff-link checks.",
+      "Added docs/USER_MANAGEMENT_ADMIN_CONSOLE.md with workflow, user-guide, endpoint, schema, validation, and safety notes.",
+    ],
+    processFlow: [
+      "Admin opens the future /user-management route or User Management tab.",
+      "System confirms the logged-in user has Super Admin, Org Admin, or Facility Admin access.",
+      "Admin reviews users by staff/user, facility assignment, staff link, email/title, role, and status.",
+      "Admin opens Access Matrix for a selected user and reviews module, department, and appointment workflow permissions.",
+      "Reset Defaults clears customPermissions for the selected user.",
+      "Apply Overrides saves customPermissions for the selected user.",
+      "Deactivate User must keep the record and set status to inactive after DEACTIVATE confirmation.",
+      "Reset Password must call the backend only and must not expose password hashes or store passwords in localStorage.",
+    ],
+    userImpact: [
+      "Prepares Med-Appointment for safer multi-facility user access control.",
+      "Gives administrators a clear console for user review, facility access, roles, and appointment workflow permissions.",
+      "Keeps role templates and audit logs visible as planned next-release placeholders.",
+      "Documents the required backend safety rules before live password reset and deactivation wiring.",
+    ],
+  },
   {
     version: "3.1.21",
     releaseDate: "2026-04-30",
