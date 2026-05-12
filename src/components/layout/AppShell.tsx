@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import {
   Activity,
   BarChart3,
@@ -10,6 +10,7 @@ import {
   Plus,
   ShieldCheck,
   Stethoscope,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { NavItem } from "./NavItem";
 import { TopTab } from "./TopTab";
 import { TAB_META, type Tab } from "../../types/navigation";
 import type { Facility } from "../../types";
+import { UserManagementPage } from "../../pages/UserManagementPage";
 
 type AppShellProps = {
   activeTab: Tab;
@@ -52,6 +54,27 @@ export function AppShell({
   onLogout,
   children,
 }: AppShellProps) {
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const isAdmin = currentUser?.role === "admin";
+  const currentPageMeta = isUserManagementOpen
+    ? {
+        badge: "Admin Console",
+        title: "User Management",
+        subtitle:
+          "Manage system users, staff links, facility scope, roles, and appointment workflow access.",
+      }
+    : TAB_META[activeTab];
+
+  const handleNavigate = (tab: Tab) => {
+    setIsUserManagementOpen(false);
+    onNavigate(tab);
+  };
+
+  const handleOpenUserManagement = () => {
+    setIsUserManagementOpen(true);
+    onCloseMenu();
+  };
+
   return (
     <div className="app-shell min-h-screen flex flex-col lg:flex-row">
       {isMenuOpen && (
@@ -101,59 +124,68 @@ export function AppShell({
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
             {currentUser?.role !== "admin" && (
               <NavItem
-                active={activeTab === "help"}
-                onClick={() => onNavigate("help")}
+                active={!isUserManagementOpen && activeTab === "help"}
+                onClick={() => handleNavigate("help")}
                 icon={<ShieldCheck size={20} />}
                 label="Guide & Info"
               />
             )}
 
             <NavItem
-              active={activeTab === "dashboard"}
-              onClick={() => onNavigate("dashboard")}
+              active={!isUserManagementOpen && activeTab === "dashboard"}
+              onClick={() => handleNavigate("dashboard")}
               icon={<Activity size={20} />}
               label="Dashboard"
             />
 
             <NavItem
-              active={activeTab === "appointments"}
-              onClick={() => onNavigate("appointments")}
+              active={!isUserManagementOpen && activeTab === "appointments"}
+              onClick={() => handleNavigate("appointments")}
               icon={<Calendar size={20} />}
               label="Appointments"
             />
 
             <NavItem
-              active={activeTab === "trends"}
-              onClick={() => onNavigate("trends")}
+              active={!isUserManagementOpen && activeTab === "trends"}
+              onClick={() => handleNavigate("trends")}
               icon={<BarChart3 size={20} />}
               label="Trends"
             />
 
             <NavItem
-              active={activeTab === "reports"}
-              onClick={() => onNavigate("reports")}
+              active={!isUserManagementOpen && activeTab === "reports"}
+              onClick={() => handleNavigate("reports")}
               icon={<FileText size={20} />}
               label="Reports"
             />
 
             <NavItem
-              active={activeTab === "census"}
-              onClick={() => onNavigate("census")}
+              active={!isUserManagementOpen && activeTab === "census"}
+              onClick={() => handleNavigate("census")}
               icon={<Users size={20} />}
               label="Census"
             />
 
             <NavItem
-              active={activeTab === "directory"}
-              onClick={() => onNavigate("directory")}
+              active={!isUserManagementOpen && activeTab === "directory"}
+              onClick={() => handleNavigate("directory")}
               icon={<Phone size={20} />}
               label="Directory"
             />
 
+            {isAdmin && (
+              <NavItem
+                active={isUserManagementOpen}
+                onClick={handleOpenUserManagement}
+                icon={<UserCog size={20} />}
+                label="User Management"
+              />
+            )}
+
             {currentUser?.role === "admin" && (
               <NavItem
-                active={activeTab === "help"}
-                onClick={() => onNavigate("help")}
+                active={!isUserManagementOpen && activeTab === "help"}
+                onClick={() => handleNavigate("help")}
                 icon={<ShieldCheck size={20} />}
                 label="Help & Info"
               />
@@ -196,13 +228,13 @@ export function AppShell({
           <div className="relative flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <span className="inline-flex items-center rounded-full bg-white/15 border border-white/25 px-3 py-1 text-xs font-black mb-3">
-                {TAB_META[activeTab].badge}
+                {currentPageMeta.badge}
               </span>
               <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-                {TAB_META[activeTab].title}
+                {currentPageMeta.title}
               </h2>
               <p className="text-sm opacity-90 mt-1 max-w-3xl leading-relaxed">
-                {TAB_META[activeTab].subtitle}
+                {currentPageMeta.subtitle}
               </p>
             </div>
 
@@ -251,46 +283,64 @@ export function AppShell({
         <div className="mb-6 transport-card p-2 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
             <TopTab
-              active={activeTab === "dashboard"}
-              onClick={() => onNavigate("dashboard")}
+              active={!isUserManagementOpen && activeTab === "dashboard"}
+              onClick={() => handleNavigate("dashboard")}
               label="Dashboard"
             />
             <TopTab
-              active={activeTab === "appointments"}
-              onClick={() => onNavigate("appointments")}
+              active={!isUserManagementOpen && activeTab === "appointments"}
+              onClick={() => handleNavigate("appointments")}
               label="Appointments"
             />
             <TopTab
-              active={activeTab === "trends"}
-              onClick={() => onNavigate("trends")}
+              active={!isUserManagementOpen && activeTab === "trends"}
+              onClick={() => handleNavigate("trends")}
               label="Specialty Trends"
             />
             <TopTab
-              active={activeTab === "reports"}
-              onClick={() => onNavigate("reports")}
+              active={!isUserManagementOpen && activeTab === "reports"}
+              onClick={() => handleNavigate("reports")}
               label="Report Builder"
             />
             <TopTab
-              active={activeTab === "census"}
-              onClick={() => onNavigate("census")}
+              active={!isUserManagementOpen && activeTab === "census"}
+              onClick={() => handleNavigate("census")}
               label="Patient Census"
             />
             <TopTab
-              active={activeTab === "directory"}
-              onClick={() => onNavigate("directory")}
+              active={!isUserManagementOpen && activeTab === "directory"}
+              onClick={() => handleNavigate("directory")}
               label="Directory"
             />
+            {isAdmin && (
+              <TopTab
+                active={isUserManagementOpen}
+                onClick={handleOpenUserManagement}
+                label="User Management"
+              />
+            )}
             {currentUser?.role === "admin" && (
               <TopTab
-                active={activeTab === "help"}
-                onClick={() => onNavigate("help")}
+                active={!isUserManagementOpen && activeTab === "help"}
+                onClick={() => handleNavigate("help")}
                 label="Guide & Info"
               />
             )}
           </div>
         </div>
 
-        {children}
+        {isUserManagementOpen ? (
+          <UserManagementPage
+            currentUser={{
+              fullName: currentUser?.fullName,
+              username: currentUser?.fullName || "admin",
+              roleIds: ["role-facility-admin"],
+            }}
+            facilityCount={facilities.length}
+          />
+        ) : (
+          children
+        )}
       </main>
     </div>
   );
