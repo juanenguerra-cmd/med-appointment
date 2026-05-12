@@ -15,6 +15,7 @@
     "test:baseline": "node --experimental-strip-types scripts/test-baseline.mjs",
     "build:clean": "npm run clean && npm run build",
     "build:verify": "npm run clean && npm run build",
+    "verify": "npm run lint && npm run test:baseline && npm run build:verify && npm run verify:census-parser",
     "predeploy": "npm run build:verify",
     "refactor:app-components": "node scripts/refactor-app-component-imports-a1.mjs",
     "refactor:app-types": "node scripts/refactor-app-type-imports-a2.mjs",
