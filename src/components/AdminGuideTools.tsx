@@ -64,12 +64,22 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
-const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: string) => void; children: ReactNode; ariaLabel: string }) => (
+const SortSelect = <T extends string>({
+  value,
+  onChange,
+  children,
+  ariaLabel,
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  children: ReactNode;
+  ariaLabel: string;
+}) => (
   <div className="relative">
     <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
     <select
       value={value}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={(event) => onChange(event.target.value as T)}
       aria-label={ariaLabel}
       className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-xs font-black uppercase tracking-wider text-slate-600 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
     >
@@ -251,7 +261,11 @@ export function AdminGuideTools({
 
               <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={facilitySearch} onChange={setFacilitySearch} placeholder="Search facilities by name, address, or phone..." />
-                <SortSelect value={facilitySort} onChange={setFacilitySort} ariaLabel="Sort facilities">
+                <SortSelect
+                  value={facilitySort}
+                  onChange={(value) => setFacilitySort(value as FacilitySort)}
+                  ariaLabel="Sort facilities"
+                >
                   <option value="current-first">Current first</option>
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>
@@ -320,7 +334,11 @@ export function AdminGuideTools({
 
               <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={userSearch} onChange={setUserSearch} placeholder="Search users by name, email, or role..." />
-                <SortSelect value={userSort} onChange={setUserSort} ariaLabel="Sort users">
+                <SortSelect
+                  value={userSort}
+                  onChange={(value) => setUserSort(value as UserSort)}
+                  ariaLabel="Sort users"
+                >
                   <option value="admin-first">Admins first</option>
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>

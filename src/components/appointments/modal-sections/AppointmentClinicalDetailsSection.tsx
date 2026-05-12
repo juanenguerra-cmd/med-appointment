@@ -5,7 +5,7 @@ import type { Appointment } from "../../../types";
 type Props = {
   newAppt: Partial<Appointment>;
   setNewAppt: React.Dispatch<React.SetStateAction<Partial<Appointment>>>;
-  FormField: (props: { label: string; info?: string; children: React.ReactNode }) => JSX.Element;
+  FormField: (props: { label: string; info?: string; children: React.ReactNode }) => React.ReactElement;
 };
 
 export function AppointmentClinicalDetailsSection({ newAppt, setNewAppt, FormField }: Props) {

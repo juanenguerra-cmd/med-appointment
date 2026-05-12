@@ -40,7 +40,7 @@ type AppointmentModalProps = {
     label: string;
     info?: string;
     children: React.ReactNode;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function AppointmentModal({

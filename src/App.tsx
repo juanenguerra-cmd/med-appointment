@@ -670,7 +670,7 @@ if (!isLoaded) {
 
   const handleOpenEdit = (apt: Appointment) => {
     setEditingId(apt.id);
-    const isOther = apt.type !== "" && !MEDICAL_SPECIALTIES.includes(apt.type);
+    const isOther = apt.type !== "" && !(MEDICAL_SPECIALTIES as readonly string[]).includes(apt.type);
     setNewAppt({ ...apt });
     setShowOtherSpecialtyInput(isOther);
     setIsAddModalOpen(true);
@@ -1024,7 +1024,6 @@ if (!isLoaded) {
           <nav className="flex-1 px-4 py-5 space-y-2" aria-label="Main pages">
             {currentUser?.role !== "admin" && (
               <NavItem
-                key="nav-help-staff-0"
                 active={activeTab === "help"}
                 onClick={() => goToTab("help")}
                 icon={<ShieldCheck size={20} />}
@@ -1319,6 +1318,7 @@ if (!isLoaded) {
         handleResidentInputChange={handleResidentInputChange}
         handleSelectResident={handleSelectResident}
         handleSaveAppointment={handleSaveAppointment}
+        deleteAppointment={deleteAppointment}
         onClose={() => setIsAddModalOpen(false)}
         transportCompanies={transportCompanies}
         FormField={FormField}

@@ -1,4 +1,4 @@
-import type { Appointment } from "../types";
+import type { Appointment, AppointmentStatus } from "../types";
 import {
   getAppointmentModalSafetyMessages,
   getAppointmentModalSafetySummary,
@@ -29,7 +29,7 @@ export const normalizeAppointmentDraftForSave = (draft: Partial<Appointment>): P
 
   return {
     ...normalized,
-    status: clean(normalized.status) || "Scheduled",
+    status: (clean(normalized.status) || "Scheduled") as AppointmentStatus,
   };
 };
 

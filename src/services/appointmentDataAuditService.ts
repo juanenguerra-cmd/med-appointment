@@ -67,7 +67,9 @@ export function buildAppointmentDataAudit(
   appointments: Appointment[],
   filters: SpecialtyTrendFilters = {},
 ): AppointmentDataAuditSummary {
-  const reviewed = appointments.filter((appointment) => statusMatches(appointment, filters) && dateMatches(appointment, filters));
+  const reviewed = appointments.filter(
+    (appointment) => statusMatches(appointment, filters.status) && dateMatches(appointment, filters),
+  );
   const fieldCountMap = new Map<string, number>();
   const issues: MissingFieldIssue[] = [];
 

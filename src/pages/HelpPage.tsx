@@ -41,7 +41,7 @@ export function HelpPage({
       className="space-y-6"
     >
       <CurrentReleaseNote />
-      <VersionHistoryPanel currentUserRole={currentUserRole} />
+      <VersionHistoryPanel />
 
       <AdminGuideTools
         currentUserRole={currentUserRole}

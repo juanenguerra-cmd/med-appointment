@@ -4,4 +4,5 @@ export type {
   Facility,
   MedicalRecord,
   Resident,
+  TransportationCompany,
 } from "./types";

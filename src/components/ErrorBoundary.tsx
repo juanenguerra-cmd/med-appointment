@@ -51,7 +51,9 @@ export function logRuntimeError(error: unknown, context: Record<string, unknown>
   return eventId;
 }
 
-export class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBoundaryState> {
+type ErrorBoundaryProps = React.PropsWithChildren<{}>;
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: '',

@@ -15,7 +15,7 @@ type AppointmentOriginSectionProps = {
     label: string;
     info?: string;
     children: React.ReactNode;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function AppointmentOriginSection({

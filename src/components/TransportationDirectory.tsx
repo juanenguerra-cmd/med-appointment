@@ -19,7 +19,7 @@ export function TransportationDirectory() {
   const [error, setError] = useState('');
 
   const activeCompanies = useMemo(
-    () => companies.filter((company) => company.active !== false && company.active !== 0),
+    () => companies.filter((company) => company.active !== false),
     [companies],
   );
 

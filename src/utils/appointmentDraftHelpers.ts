@@ -28,7 +28,7 @@ export const createEditAppointmentDraft = (appointment: Appointment): Partial<Ap
 
 export const isOtherSpecialty = (specialty?: string) => {
   const value = String(specialty || "").trim();
-  return value !== "" && !MEDICAL_SPECIALTIES.includes(value);
+  return value !== "" && !(MEDICAL_SPECIALTIES as readonly string[]).includes(value);
 };
 
 export const resolveResidentUnit = (resident: Resident, fallbackUnit = "") => {
