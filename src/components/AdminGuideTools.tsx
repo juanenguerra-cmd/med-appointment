@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Plus, Search, X, ArrowUpDown, RotateCcw, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
@@ -64,7 +64,7 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
-const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: any) => void; children: any; ariaLabel: string }) => (
+const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: string) => void; children: ReactNode; ariaLabel: string }) => (
   <div className="relative">
     <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
     <select
