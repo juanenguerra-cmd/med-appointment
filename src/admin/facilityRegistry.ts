@@ -40,23 +40,41 @@ export function normalizeFacilityList(payload: unknown): FacilityRegistryRecord[
     .filter((facility) => String(facility.status || "active").toLowerCase() !== "inactive");
 }
 
-function facilityDedupeKey(facility: FacilityRegistryRecord) {
-  const id = facility.id.trim().toLowerCase();
-  if (id) return `id:${id}`;
-  const code = String(facility.code || "").trim().toLowerCase();
-  if (code) return `code:${code}`;
-  return `name:${facility.name.trim().toLowerCase().replace(/\s+/g, " ")}`;
+const normalizeText = (value: unknown) => String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+
+function facilityIdentityKeys(facility: FacilityRegistryRecord) {
+  return [
+    facility.id ? `id:${normalizeText(facility.id)}` : "",
+    facility.code ? `code:${normalizeText(facility.code)}` : "",
+    facility.name ? `name:${normalizeText(facility.name)}` : "",
+  ].filter(Boolean);
 }
 
+/**
+ * Dedupes facilities while preserving the first occurrence.
+ *
+ * This is intentional because existing appointment/resident data may already be
+ * linked to the first facility ID shown in the app. Later duplicates from API
+ * overlays or legacy sources are ignored when they match by ID, code, or name.
+ */
 export function dedupeFacilities(facilities: FacilityRegistryRecord[]) {
-  const map = new Map<string, FacilityRegistryRecord>();
+  const kept: FacilityRegistryRecord[] = [];
+  const seenKeys = new Set<string>();
+
   facilities.forEach((facility) => {
     if (String(facility.status || "active").toLowerCase() === "inactive") return;
-    const key = facilityDedupeKey(facility);
-    const existing = map.get(key);
-    map.set(key, existing ? { ...existing, ...facility, id: existing.id || facility.id, name: facility.name || existing.name } : facility);
+
+    const keys = facilityIdentityKeys(facility);
+    if (!keys.length) return;
+
+    const isDuplicate = keys.some((key) => seenKeys.has(key));
+    if (isDuplicate) return;
+
+    kept.push(facility);
+    keys.forEach((key) => seenKeys.add(key));
   });
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  return kept;
 }
 
 export const SEEDED_FACILITY_REGISTRY = dedupeFacilities(normalizeFacilityList({ facilities: DEFAULT_FACILITIES }));
