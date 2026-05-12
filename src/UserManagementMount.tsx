@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Building2, Check, Pencil, Plus, Save, ShieldCheck, Trash2, UserCog, Users, X } from "lucide-react";
 
 import App from "./App";
+import { DEFAULT_FACILITIES } from "./admin/defaultFacilities";
 import { UserManagementAdminPage } from "./pages/UserManagementAdminPage";
 
 type FacilityRecord = {
@@ -11,8 +12,9 @@ type FacilityRecord = {
   code?: string;
   address?: string;
   phone?: string;
-  administrator?: string;
-  don?: string;
+  administrator?: string | null;
+  don?: string | null;
+  adon?: string | null;
   status?: string;
 };
 
@@ -24,23 +26,26 @@ function normalizeFacilities(payload: unknown): FacilityRecord[] {
   return list
     .map((facility: any) => ({
       id: String(facility?.id || ""),
-      name: String(facility?.name || facility?.shortName || facility?.code || "Unnamed Facility"),
+      name: String(facility?.name || facility?.shortName || facility?.short_name || facility?.code || "Unnamed Facility"),
       shortName: facility?.short_name || facility?.shortName || "",
       code: facility?.code || "",
       address: facility?.address || "",
       phone: facility?.phone || "",
-      administrator: facility?.administrator || "",
-      don: facility?.don || "",
+      administrator: facility?.administrator || null,
+      don: facility?.don || null,
+      adon: facility?.adon || null,
       status: facility?.status || "active",
     }))
     .filter((facility) => facility.id && facility.status !== "inactive");
 }
 
+const SEEDED_FACILITIES = normalizeFacilities({ facilities: DEFAULT_FACILITIES });
+
 function readFacilityFallback() {
   try {
-    return String(localStorage.getItem("currentFacilityId") || localStorage.getItem("facilityId") || "facility-main");
+    return String(localStorage.getItem("currentFacilityId") || localStorage.getItem("facilityId") || SEEDED_FACILITIES[0]?.id || "facility-main");
   } catch {
-    return "facility-main";
+    return SEEDED_FACILITIES[0]?.id || "facility-main";
   }
 }
 
@@ -64,12 +69,17 @@ function getInitialView(): AdminView | null {
   return null;
 }
 
+function getInitialFacilityId(preferredId: string) {
+  return SEEDED_FACILITIES.find((facility) => facility.id === preferredId)?.id || SEEDED_FACILITIES[0]?.id || preferredId;
+}
+
 function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose: () => void }) {
-  const fallbackFacilityId = useMemo(() => readNavigatorSessionFacilityId() || readFacilityFallback(), []);
+  const preferredFacilityId = useMemo(() => readNavigatorSessionFacilityId() || readFacilityFallback(), []);
+  const initialFacilityId = useMemo(() => getInitialFacilityId(preferredFacilityId), [preferredFacilityId]);
   const [view, setView] = useState<AdminView>(initialView);
-  const [facilities, setFacilities] = useState<FacilityRecord[]>([{ id: fallbackFacilityId, name: "Current Facility", status: "active" }]);
-  const [activeFacilityId, setActiveFacilityId] = useState(fallbackFacilityId);
-  const [facilitySource, setFacilitySource] = useState("Fallback session facility");
+  const [facilities, setFacilities] = useState<FacilityRecord[]>(SEEDED_FACILITIES);
+  const [activeFacilityId, setActiveFacilityId] = useState(initialFacilityId);
+  const [facilitySource, setFacilitySource] = useState("Seeded facility list from Navigator Forms export");
   const [facilityEditor, setFacilityEditor] = useState<FacilityForm | null>(null);
   const [facilityNotice, setFacilityNotice] = useState<string | null>(null);
 
@@ -82,20 +92,25 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
         const loaded = normalizeFacilities(payload);
         if (loaded.length) {
           setFacilities(loaded);
-          const preferred = loaded.find((facility) => facility.id === activeFacilityId || facility.id === fallbackFacilityId)?.id || loaded[0].id;
+          const preferred = loaded.find((facility) => facility.id === activeFacilityId || facility.id === preferredFacilityId)?.id || loaded[0].id;
           setActiveFacilityId(preferred);
           setFacilitySource("Navigator Forms facility registry /api/facilities");
+          return;
         }
+        setFacilities(SEEDED_FACILITIES);
+        setFacilitySource("Seeded facility list from Navigator Forms export");
       })
       .catch(() => {
-        setFacilitySource("Fallback session facility; /api/facilities not available");
+        setFacilities(SEEDED_FACILITIES);
+        setActiveFacilityId((current) => SEEDED_FACILITIES.find((facility) => facility.id === current)?.id || SEEDED_FACILITIES[0]?.id || current);
+        setFacilitySource("Seeded facility list from Navigator Forms export; /api/facilities not available");
       });
     return () => {
       active = false;
     };
   };
 
-  useEffect(() => loadFacilities(), [fallbackFacilityId]);
+  useEffect(() => loadFacilities(), [preferredFacilityId]);
 
   const openView = (nextView: AdminView) => {
     setView(nextView);
@@ -109,7 +124,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
 
   const openNewFacility = () => {
     setFacilityNotice(null);
-    setFacilityEditor({ name: "", shortName: "", code: "", address: "", phone: "", administrator: "", don: "", status: "active" });
+    setFacilityEditor({ name: "", shortName: "", code: "", address: "", phone: "", administrator: "", don: "", adon: "", status: "active" });
   };
 
   const openEditFacility = (facility: FacilityRecord) => {
@@ -123,7 +138,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
       return;
     }
     const isNew = !facilityEditor.id;
-    const payload = {
+    const payload: FacilityRecord = {
       ...facilityEditor,
       id: facilityEditor.id || `facility-${Date.now()}`,
       name: facilityEditor.name.trim(),
@@ -141,7 +156,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
       loadFacilities();
     } catch {
       setFacilities((prev) => {
-        const next = isNew ? [...prev, payload as FacilityRecord] : prev.map((facility) => facility.id === payload.id ? payload as FacilityRecord : facility);
+        const next = isNew ? [...prev, payload] : prev.map((facility) => (facility.id === payload.id ? payload : facility));
         return next.filter((facility) => facility.status !== "inactive");
       });
       setActiveFacilityId(payload.id);
@@ -243,8 +258,9 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
               <FacilityField label="Short Name" value={facilityEditor.shortName || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, shortName: value })} />
               <FacilityField label="Facility Code" value={facilityEditor.code || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, code: value })} />
               <FacilityField label="Phone" value={facilityEditor.phone || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, phone: value })} />
-              <FacilityField label="Administrator" value={facilityEditor.administrator || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, administrator: value })} />
-              <FacilityField label="DON" value={facilityEditor.don || ""} onChange={(value) => setFacilityEditor({ ...facilityEditor, don: value })} />
+              <FacilityField label="Administrator" value={String(facilityEditor.administrator || "")} onChange={(value) => setFacilityEditor({ ...facilityEditor, administrator: value })} />
+              <FacilityField label="DON" value={String(facilityEditor.don || "")} onChange={(value) => setFacilityEditor({ ...facilityEditor, don: value })} />
+              <FacilityField label="ADON" value={String(facilityEditor.adon || "")} onChange={(value) => setFacilityEditor({ ...facilityEditor, adon: value })} />
               <label className="md:col-span-2 text-xs font-black text-slate-700">Address
                 <textarea value={facilityEditor.address || ""} onChange={(event) => setFacilityEditor({ ...facilityEditor, address: event.target.value })} className="mt-1 min-h-24 w-full rounded-2xl border border-slate-200 px-3 py-2 font-semibold outline-none focus:border-sky-500" />
               </label>
@@ -327,7 +343,7 @@ function AdminHome({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-black">{facility.name}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-wider opacity-70">{facility.id}{facility.id === activeFacilityId ? " • Active" : ""}</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-wider opacity-70">{facility.code || facility.id}{facility.id === activeFacilityId ? " • Active" : ""}</p>
                   {(facility.address || facility.phone) && <p className="mt-1 text-[11px] opacity-80">{facility.address}{facility.address && facility.phone ? " • " : ""}{facility.phone}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2">
