@@ -14,9 +14,41 @@ import { createAuditEvent, appendLocalAuditEvent } from '../utils/auditLog';
 import { reconcileCensusResidents } from '../utils/censusReconciliation';
 import { reconcileCensusOnBackend } from '../services/censusReconcileService';
 import { apiFetch } from '../api/apiClient';
+import { mergeWithSeededFacilities, SEEDED_FACILITY_REGISTRY } from '../admin/facilityRegistry';
 
 const safeJson = (value: unknown): string => JSON.stringify(value ?? null);
 const recordsEqual = (a: unknown, b: unknown): boolean => safeJson(a) === safeJson(b);
+
+const toHealthFacilities = (payload?: unknown): Facility[] => {
+  const merged = payload === undefined ? SEEDED_FACILITY_REGISTRY : mergeWithSeededFacilities(payload);
+  return merged.map((facility) => normalizeFacility({
+    id: facility.id,
+    name: facility.name,
+    shortName: facility.shortName,
+    code: facility.code,
+    address: facility.address,
+    phone: facility.phone,
+    administrator: facility.administrator || '',
+    don: facility.don || '',
+    adon: facility.adon || '',
+    status: facility.status || 'active',
+  } as any)) as Facility[];
+};
+
+const dedupeHealthFacilities = (facilityList: Partial<Facility>[]) => {
+  return mergeWithSeededFacilities({ facilities: facilityList }).map((facility) => normalizeFacility({
+    id: facility.id,
+    name: facility.name,
+    shortName: facility.shortName,
+    code: facility.code,
+    address: facility.address,
+    phone: facility.phone,
+    administrator: facility.administrator || '',
+    don: facility.don || '',
+    adon: facility.adon || '',
+    status: facility.status || 'active',
+  } as any)) as Facility[];
+};
 
 const pickChangedFields = <T extends Record<string, any>>(current: T, next: T): Partial<T> => {
   const changes: Partial<T> = {};
@@ -115,13 +147,14 @@ const buildDemographicResidentPatch = (existing: Resident, next: Resident) => {
 };
 
 export function useHealthData() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const seededFacilities = toHealthFacilities();
+  const [facilities, setFacilities] = useState<Facility[]>(seededFacilities);
   const [users, setUsers] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(() => {
     const saved = localStorage.getItem('currentUser');
     return saved ? JSON.parse(saved) : null;
   });
-  const [currentFacilityId, setCurrentFacilityId] = useState<string | null>(() => localStorage.getItem('currentFacilityId'));
+  const [currentFacilityId, setCurrentFacilityId] = useState<string | null>(() => localStorage.getItem('currentFacilityId') || safeString(seededFacilities[0]?.id) || null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
@@ -147,17 +180,27 @@ export function useHealthData() {
 
   useEffect(() => {
     if (!currentUser) {
+      setFacilities(toHealthFacilities());
+      if (!currentFacilityId && seededFacilities[0]?.id) setCurrentFacilityId(safeString(seededFacilities[0].id));
       setIsLoaded(true);
       return;
     }
 
     async function fetchFacilities() {
       try {
-        const data = await apiFetch<Facility[]>(`/api/facilities?userId=${currentUser.id}`);
-        setFacilities(data.map(normalizeFacility));
-        if (data.length > 0 && !currentFacilityId) setCurrentFacilityId(safeString(data[0].id));
+        const data = await apiFetch<unknown>(`/api/facilities?userId=${currentUser.id}`);
+        const merged = toHealthFacilities(data);
+        setFacilities(merged);
+        if (merged.length > 0 && (!currentFacilityId || !merged.some((f) => f.id === currentFacilityId))) {
+          setCurrentFacilityId(safeString(merged[0].id));
+        }
       } catch (err) {
-        console.error('Failed to fetch facilities', err);
+        console.error('Failed to fetch facilities; using seeded facility registry', err);
+        const fallback = toHealthFacilities();
+        setFacilities(fallback);
+        if (fallback.length > 0 && (!currentFacilityId || !fallback.some((f) => f.id === currentFacilityId))) {
+          setCurrentFacilityId(safeString(fallback[0].id));
+        }
       }
     }
 
@@ -219,7 +262,7 @@ export function useHealthData() {
 
     const previousFacilities = facilities;
     const previousFacilityId = currentFacilityId;
-    setFacilities((prev) => [...prev, newFac]);
+    setFacilities((prev) => dedupeHealthFacilities([...prev, newFac]));
     if (!currentFacilityId) setCurrentFacilityId(id);
 
     try {
@@ -255,7 +298,7 @@ export function useHealthData() {
     if (Object.keys(changes).length === 0) return;
 
     const previousFacilities = facilities;
-    setFacilities((prev) => prev.map((f) => (f.id === id ? nextFacility : f)));
+    setFacilities((prev) => dedupeHealthFacilities(prev.map((f) => (f.id === id ? nextFacility : f))));
 
     try {
       await apiFetch(`/api/facilities/${id}`, {
@@ -691,7 +734,7 @@ export function useHealthData() {
   const logout = () => {
     setCurrentUser(null);
     setCurrentFacilityId(null);
-    setFacilities([]);
+    setFacilities(toHealthFacilities());
     setAppointments([]);
     setResidents([]);
   };
