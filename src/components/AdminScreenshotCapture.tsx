@@ -30,6 +30,7 @@ function createStyleValueResolver(sourceDocument: Document) {
   resolver.style.top = "0";
   resolver.style.pointerEvents = "none";
   resolver.style.opacity = "0";
+  resolver.style.visibility = "hidden";
   sourceDocument.body.appendChild(resolver);
 
   return {
@@ -49,13 +50,16 @@ function inlineRenderedStylesForScreenshot(sourceRoot: HTMLElement, clonedRoot: 
   const sourceNodes = getElementTree(sourceRoot);
   const clonedNodes = getElementTree(clonedRoot);
   const resolver = createStyleValueResolver(sourceRoot.ownerDocument);
+  const sourceWindow = sourceRoot.ownerDocument.defaultView;
+
+  if (!sourceWindow) return;
 
   try {
     sourceNodes.forEach((sourceNode, index) => {
       const clonedNode = clonedNodes[index];
       if (!clonedNode) return;
 
-      const computedStyle = window.getComputedStyle(sourceNode);
+      const computedStyle = sourceWindow.getComputedStyle(sourceNode);
       Array.from(computedStyle).forEach((propertyName) => {
         if (propertyName.startsWith("--")) return;
 
