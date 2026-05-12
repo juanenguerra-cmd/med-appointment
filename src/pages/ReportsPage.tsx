@@ -39,7 +39,7 @@ type ReportsPageProps = {
     label: string;
     info?: string;
     children: React.ReactNode;
-  }) => JSX.Element;
+  }) => React.ReactElement;
   WideAppointmentTable: (props: {
     appointments: Appointment[];
     residents: Resident[];
@@ -49,7 +49,7 @@ type ReportsPageProps = {
     onSaveAll: (updates: Record<string, Partial<Appointment>>) => void;
     onDuplicate: (appointment: Appointment) => void;
     onGenerateForm: (appointment: Appointment, formType: string) => void;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function ReportsPage({

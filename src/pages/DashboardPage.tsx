@@ -21,7 +21,7 @@ type DashboardPageProps = {
     hint: string;
     icon: ReactNode;
     onClick?: () => void;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function DashboardPage({

@@ -1,7 +1,7 @@
 # HealthSync Medical Appointment Tracker
 
-![Version](https://img.shields.io/badge/version-v1.0.0--LOCKED-blue)
-![Status](https://img.shields.io/badge/status-Production%20Baseline-green)
+![Version](https://img.shields.io/badge/version-v3.1.21-blue)
+![Status](https://img.shields.io/badge/status-Active-green)
 
 A production-ready healthcare appointment, resident census, audit, and reporting tracker designed for long-term care operations.
 
@@ -15,14 +15,11 @@ This tracker was developed and built by **Juan Enguerra** to support real-world 
 
 ---
 
-## Current Locked Version
+## Current Version
 
-**v1.0.0 — Production Baseline (LOCKED)**  
-**Lock Date:** April 26, 2026
+**v3.1.21 — Active Release**
 
-This version is locked as the official production baseline. Core workflows for appointments, residents, census handling, validation, audit tracking, reporting, and production readiness review are considered stable for use.
-
-Future enhancements should be developed as a new working version and should not directly modify this locked baseline without creating a new version history entry.
+Core workflows for appointments, residents, census handling, validation, audit tracking, and reporting are active in this release.
 
 ---
 
@@ -55,7 +52,7 @@ Future enhancements should be developed as a new working version and should not 
 
 ---
 
-## Production Baseline Summary — v1.0.0 LOCKED
+## Release Summary — v3.1.21
 
 This release establishes the tracker as a stable production baseline with the following workflow improvements:
 
@@ -149,7 +146,7 @@ The app should prompt for first-time password creation.
 
 ## Version History
 
-### v1.0.0 — Production Baseline (LOCKED)
+### v3.1.21 — Active Release
 
 - Locked the current tracker as the official production baseline
 - Added runtime crash protection and local error logging
@@ -173,7 +170,6 @@ The app should prompt for first-time password creation.
 ## Known Limitations
 
 - Local audit logs are browser-specific and do not yet sync across devices
-- Passwords are not securely hashed yet
+- Passwords are hashed with PBKDF2, but authentication hardening should continue before broader multi-user rollout
 - Doctors and records are not yet persisted in D1
 - Census replacement does not yet fully automate discharge/inactive status workflows
-

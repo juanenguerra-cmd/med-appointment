@@ -6,7 +6,7 @@ type Props = {
   newAppt: Partial<Appointment>;
   setNewAppt: React.Dispatch<React.SetStateAction<Partial<Appointment>>>;
   transportCompanies: TransportationCompany[];
-  FormField: (props: { label: string; info?: string; children: React.ReactNode }) => JSX.Element;
+  FormField: (props: { label: string; info?: string; children: React.ReactNode }) => React.ReactElement;
 };
 
 const inputClass = "w-full px-4 py-3 rounded-2xl border border-[#d6deeb] focus:ring-2 focus:ring-brand-2/20 focus:border-brand outline-none transition-all bg-white";

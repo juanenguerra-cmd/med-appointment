@@ -11,7 +11,7 @@ type AppointmentDateStatusSectionProps = {
     label: string;
     info?: string;
     children: React.ReactNode;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function AppointmentDateStatusSection({

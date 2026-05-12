@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Plus, Search, X, ArrowUpDown, RotateCcw, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
-import { Facility } from "../types";
+import { Facility, User } from "../types";
+import { AdminScreenshotCapture } from "./AdminScreenshotCapture";
 
 interface AdminGuideToolsProps {
   currentUserRole?: string | null;
@@ -15,6 +16,7 @@ interface AdminGuideToolsProps {
   users: any[];
   setEditingUser: (user: any | null) => void;
   setIsUserModalOpen: (open: boolean) => void;
+  currentUser?: Pick<User, "id" | "fullName" | "role"> | null;
 }
 
 type FacilitySort = "name-asc" | "name-desc" | "current-first";
@@ -62,12 +64,22 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
-const SortSelect = ({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: any) => void; children: React.ReactNode; ariaLabel: string }) => (
+const SortSelect = <SortValue extends string>({
+  value,
+  onChange,
+  children,
+  ariaLabel,
+}: {
+  value: SortValue;
+  onChange: (value: SortValue) => void;
+  children: ReactNode;
+  ariaLabel: string;
+}) => (
   <div className="relative">
     <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
     <select
       value={value}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={(event) => onChange(event.target.value as SortValue)}
       aria-label={ariaLabel}
       className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-xs font-black uppercase tracking-wider text-slate-600 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
     >
@@ -98,6 +110,7 @@ export function AdminGuideTools({
   users,
   setEditingUser,
   setIsUserModalOpen,
+  currentUser,
 }: AdminGuideToolsProps) {
   const [facilitySearch, setFacilitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
@@ -172,7 +185,7 @@ export function AdminGuideTools({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="admin-guide-tools-root">
       <Card
         title="Guide & Help (Current Workflow)"
         subtitle="Quick guide on census reconciliation, scheduling review, reporting, and resident appointment history."
@@ -207,13 +220,14 @@ export function AdminGuideTools({
 
       {isAdmin ? (
         <>
+          <AdminScreenshotCapture currentUser={currentUser} currentFacility={currentFacility || null} />
           <Card
             title="Admin Management Snapshot"
             subtitle="Quick counts for facility and user setup."
             actions={
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>New Facility</Button>
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>New User</Button>
+                <Button variant="primary" onClick={openNewFacility}><Plus size={16} /> New Facility</Button>
+                <Button variant="primary" onClick={openNewUser}><Plus size={16} /> New User</Button>
               </div>
             }
           >
@@ -230,8 +244,8 @@ export function AdminGuideTools({
               title="Facility Management"
               subtitle="Configure facility profiles and active facility selection."
               actions={
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                  New Facility
+                <Button variant="primary" onClick={openNewFacility}>
+                  <Plus size={16} /> New Facility
                 </Button>
               }
             >
@@ -240,14 +254,18 @@ export function AdminGuideTools({
                   <p className="text-xs font-black uppercase tracking-wider text-sky-900">Facility Quick Action</p>
                   <p className="mt-1 text-xs font-semibold text-slate-600">Add a facility profile or update an existing facility.</p>
                 </div>
-                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewFacility}>
-                  New Facility
+                <Button className="w-full sm:w-auto" variant="primary" onClick={openNewFacility}>
+                  <Plus size={16} /> New Facility
                 </Button>
               </div>
 
               <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={facilitySearch} onChange={setFacilitySearch} placeholder="Search facilities by name, address, or phone..." />
-                <SortSelect value={facilitySort} onChange={setFacilitySort} ariaLabel="Sort facilities">
+                <SortSelect
+                  value={facilitySort}
+                  onChange={(value) => setFacilitySort(value as FacilitySort)}
+                  ariaLabel="Sort facilities"
+                >
                   <option value="current-first">Current first</option>
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>
@@ -299,8 +317,8 @@ export function AdminGuideTools({
               title="User Access Management"
               subtitle="Add users, edit user details, and manage access workflow."
               actions={
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                  New User
+                <Button variant="primary" onClick={openNewUser}>
+                  <Plus size={16} /> New User
                 </Button>
               }
             >
@@ -309,14 +327,18 @@ export function AdminGuideTools({
                   <p className="text-xs font-black uppercase tracking-wider text-sky-900">User Quick Action</p>
                   <p className="mt-1 text-xs font-semibold text-slate-600">Add a new user or update an existing user profile.</p>
                 </div>
-                <Button className="w-full sm:w-auto" variant="primary" icon={<Plus size={16} />} onClick={openNewUser}>
-                  New User
+                <Button className="w-full sm:w-auto" variant="primary" onClick={openNewUser}>
+                  <Plus size={16} /> New User
                 </Button>
               </div>
 
               <div className="mb-4 grid gap-2 lg:grid-cols-[1fr_180px_88px_auto] lg:items-center">
                 <SearchBox value={userSearch} onChange={setUserSearch} placeholder="Search users by name, email, or role..." />
-                <SortSelect value={userSort} onChange={setUserSort} ariaLabel="Sort users">
+                <SortSelect
+                  value={userSort}
+                  onChange={(value) => setUserSort(value as UserSort)}
+                  ariaLabel="Sort users"
+                >
                   <option value="admin-first">Admins first</option>
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>

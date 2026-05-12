@@ -1,5 +1,5 @@
 export type AuditAction = 'create' | 'update' | 'delete' | 'import' | 'replace';
-export type AuditEntity = 'facility' | 'appointment' | 'resident' | 'user' | 'census';
+export type AuditEntity = 'facility' | 'appointment' | 'resident' | 'user' | 'census' | 'screenshot';
 
 export type AuditEvent = {
   id: string;

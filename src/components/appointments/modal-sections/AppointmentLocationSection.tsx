@@ -9,7 +9,7 @@ type AppointmentLocationSectionProps = {
     label: string;
     info?: string;
     children: React.ReactNode;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 export function AppointmentLocationSection({

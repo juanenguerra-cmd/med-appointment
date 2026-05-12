@@ -27,7 +27,7 @@ type AppointmentsPageProps = {
     icon: React.ReactNode;
     title: string;
     text: string;
-  }) => JSX.Element;
+  }) => React.ReactElement;
   WideAppointmentTable: (props: {
     appointments: Appointment[];
     residents: Resident[];
@@ -37,7 +37,7 @@ type AppointmentsPageProps = {
     onSaveAll: (updates: Record<string, Partial<Appointment>>) => void;
     onDuplicate: (appointment: Appointment) => void;
     onGenerateForm: (appointment: Appointment, formType: string) => void;
-  }) => JSX.Element;
+  }) => React.ReactElement;
 };
 
 const SCHEDULING_QUEUE_STATUS = "Pending Scheduling Review";

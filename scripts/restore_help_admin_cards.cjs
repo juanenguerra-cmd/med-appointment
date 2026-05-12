@@ -179,7 +179,7 @@ const facilityCard = `
                               icon={<Trash2 size={15} />}
                               onClick={() => {
                                 const ok = window.confirm(
-                                  `Delete facility ${facility.name}? This does not delete existing appointment records from the database.`
+                                  \`Delete facility \${facility.name}? This does not delete existing appointment records from the database.\`
                                 );
                                 if (ok) deleteFacility(facility.id);
                               }}
