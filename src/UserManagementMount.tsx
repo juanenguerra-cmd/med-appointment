@@ -14,52 +14,18 @@ import {
 } from "lucide-react";
 
 import App from "./App";
-import { DEFAULT_FACILITIES } from "./admin/defaultFacilities";
+import {
+  mergeWithSeededFacilities,
+  SEEDED_FACILITY_REGISTRY,
+  type FacilityRegistryRecord,
+} from "./admin/facilityRegistry";
 import { UserManagementAdminPage } from "./pages/UserManagementAdminPage";
 
-type FacilityRecord = {
-  id: string;
-  name: string;
-  shortName?: string;
-  code?: string;
-  address?: string;
-  phone?: string;
-  administrator?: string | null;
-  don?: string | null;
-  adon?: string | null;
-  status?: string;
-};
-
+type FacilityRecord = FacilityRegistryRecord;
 type FacilityForm = Omit<FacilityRecord, "id"> & { id?: string };
 type AdminView = "home" | "facilities" | "user-management";
 
-function normalizeFacilities(payload: unknown): FacilityRecord[] {
-  const list = Array.isArray(payload) ? payload : (payload as any)?.facilities;
-  if (!Array.isArray(list)) return [];
-  return list
-    .map((facility: any) => ({
-      id: String(facility?.id || ""),
-      name: String(facility?.name || facility?.shortName || facility?.short_name || facility?.code || "Unnamed Facility"),
-      shortName: facility?.short_name || facility?.shortName || "",
-      code: facility?.code || "",
-      address: facility?.address || "",
-      phone: facility?.phone || "",
-      administrator: facility?.administrator || null,
-      don: facility?.don || null,
-      adon: facility?.adon || null,
-      status: facility?.status || "active",
-    }))
-    .filter((facility) => facility.id && facility.status !== "inactive");
-}
-
-const SEEDED_FACILITIES = normalizeFacilities({ facilities: DEFAULT_FACILITIES });
-
-function mergeFacilities(seed: FacilityRecord[], apiFacilities: FacilityRecord[]) {
-  const map = new Map<string, FacilityRecord>();
-  seed.forEach((facility) => map.set(facility.id, facility));
-  apiFacilities.forEach((facility) => map.set(facility.id, { ...map.get(facility.id), ...facility }));
-  return Array.from(map.values()).filter((facility) => facility.status !== "inactive");
-}
+const SEEDED_FACILITIES = SEEDED_FACILITY_REGISTRY;
 
 function readFacilityFallback() {
   try {
@@ -133,12 +99,11 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error("Facilities endpoint unavailable"))))
       .then((payload) => {
         if (!active) return;
-        const apiFacilities = normalizeFacilities(payload);
-        const merged = mergeFacilities(SEEDED_FACILITIES, apiFacilities);
+        const merged = mergeWithSeededFacilities(payload);
         setFacilities(merged);
         const preferred = merged.find((facility) => facility.id === activeFacilityId || facility.id === preferredFacilityId)?.id || merged[0]?.id || initialFacilityId;
         setActiveFacilityId(preferred);
-        setFacilitySource(apiFacilities.length ? "Seeded Navigator Forms list + /api/facilities overlay" : "Seeded facility list from Navigator Forms export");
+        setFacilitySource("Shared seeded facility registry + /api/facilities overlay");
       })
       .catch(() => {
         if (!active) return;
@@ -182,7 +147,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
       id: facilityEditor.id || `facility-${Date.now()}`,
       name: facilityEditor.name.trim(),
       status: facilityEditor.status || "active",
-    };
+    } as FacilityRecord;
     try {
       const response = await fetch(isNew ? "/api/facilities" : "/api/facilities/update", {
         method: "POST",
@@ -194,10 +159,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
     } catch {
       setFacilityNotice("Facility saved locally in this admin session. Connect /api/facilities to persist permanently.");
     }
-    setFacilities((prev) => {
-      const next = isNew ? [...prev, payload] : prev.map((facility) => (facility.id === payload.id ? payload : facility));
-      return next.filter((facility) => facility.status !== "inactive");
-    });
+    setFacilities((prev) => mergeWithSeededFacilities([...prev, payload]));
     setActiveFacilityId(payload.id);
     setFacilityEditor(null);
   };
