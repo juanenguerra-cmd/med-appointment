@@ -64,14 +64,14 @@ const SearchBox = ({ value, onChange, placeholder }: { value: string; onChange: 
   </div>
 );
 
-const SortSelect = <T extends string>({
+const SortSelect = <SortValue extends string>({
   value,
   onChange,
   children,
   ariaLabel,
 }: {
-  value: T;
-  onChange: (value: T) => void;
+  value: SortValue;
+  onChange: (value: SortValue) => void;
   children: ReactNode;
   ariaLabel: string;
 }) => (
@@ -79,7 +79,7 @@ const SortSelect = <T extends string>({
     <ArrowUpDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
     <select
       value={value}
-      onChange={(event) => onChange(event.target.value as T)}
+      onChange={(event) => onChange(event.target.value as SortValue)}
       aria-label={ariaLabel}
       className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-xs font-black uppercase tracking-wider text-slate-600 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
     >

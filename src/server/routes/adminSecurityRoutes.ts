@@ -62,4 +62,3 @@ export function registerAdminSecurityRoutes(app: WorkerApp) {
     return c.json({ success: true });
   });
 }
-

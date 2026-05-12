@@ -75,4 +75,3 @@ export function registerTransportationRoutes(
     return c.json({ success: true });
   });
 }
-

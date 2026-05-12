@@ -185,4 +185,3 @@ export function AdminScreenshotCapture({
     </div>
   );
 }
-

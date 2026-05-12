@@ -59,4 +59,3 @@ await test("apiFetch throws normalized API errors", async () => {
     globalThis.fetch = originalFetch;
   }
 });
-
