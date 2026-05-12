@@ -15,6 +15,7 @@ import {
 
 import App from "./App";
 import {
+  hideFacilityFromRegistry,
   mergeWithSeededFacilities,
   SEEDED_FACILITY_REGISTRY,
   type FacilityRegistryRecord,
@@ -165,6 +166,7 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
   };
 
   const deactivateFacility = async (facility: FacilityRecord) => {
+    hideFacilityFromRegistry(facility);
     const updated = { ...facility, status: "inactive" };
     try {
       await fetch("/api/facilities/update", {
@@ -173,14 +175,14 @@ function AdminShell({ initialView, onClose }: { initialView: AdminView; onClose:
         body: JSON.stringify(updated),
       });
     } catch {
-      // Keep local session fallback if endpoint is unavailable.
+      // Persistent local hidden registry keeps the facility hidden even if the endpoint is unavailable.
     }
     setFacilities((prev) => {
       const next = prev.filter((item) => item.id !== facility.id);
       if (activeFacilityId === facility.id && next[0]) setActiveFacilityId(next[0].id);
       return next;
     });
-    setFacilityNotice("Facility removed from active admin list. Endpoint persistence depends on /api/facilities/update.");
+    setFacilityNotice("Facility removed and will stay hidden after refresh. Records are not deleted; only the facility is hidden from active lists.");
   };
 
   const headerTitle = view === "user-management" ? "User Management" : view === "facilities" ? "Facility Configuration" : "Administration";
