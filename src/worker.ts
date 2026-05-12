@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { registerTransportationRoutes } from './server/routes/transportationRoutes';
+import { registerAdminSecurityRoutes } from './server/routes/adminSecurityRoutes';
 
 export interface Env {
   DB: D1Database;
@@ -7,7 +9,7 @@ export interface Env {
 const app = new Hono<{ Bindings: Env }>().basePath('/api');
 
 // Helper to convert undefined to null for D1
-const toNull = (val: any) => (val === undefined ? null : val);
+const toNull = (val: unknown) => (val === undefined ? null : val);
 
 const safeString = (value: unknown, fallback = ''): string => {
   if (value === undefined || value === null) return fallback;
@@ -604,74 +606,7 @@ app.delete('/appointments/:id', async (c) => {
 });
 
 
-// Transportation Directory API
-app.get('/transportation-companies', async (c) => {
-  const facilityId = c.req.query('facilityId');
-  if (!facilityId) return c.json({ error: 'facilityId is required' }, 400);
-
-  const { results } = await c.env.DB.prepare(`
-    SELECT * FROM transportation_companies
-    WHERE facilityId = ? AND active != 0
-    ORDER BY name ASC
-  `).bind(facilityId).all();
-
-  return c.json(results);
-});
-
-app.post('/transportation-companies', async (c) => {
-  const item = await c.req.json() as any;
-  if (!item.facilityId) return c.json({ error: 'facilityId is required' }, 400);
-  if (!item.id) return c.json({ error: 'id is required' }, 400);
-  if (!item.name) return c.json({ error: 'name is required' }, 400);
-
-  await c.env.DB.prepare(`
-    INSERT INTO transportation_companies
-    (id, facilityId, name, phone, address, notes, active)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    toNull(item.id),
-    toNull(item.facilityId),
-    toNull(item.name),
-    toNull(item.phone || ''),
-    toNull(item.address || ''),
-    toNull(item.notes || ''),
-    item.active === false ? 0 : 1,
-  ).run();
-
-  return c.json({ success: true, company: item }, 201);
-});
-
-app.patch('/transportation-companies/:id', async (c) => {
-  const id = c.req.param('id');
-  const item = await c.req.json() as any;
-  if (!item.name) return c.json({ error: 'name is required' }, 400);
-
-  await c.env.DB.prepare(`
-    UPDATE transportation_companies
-    SET name = ?, phone = ?, address = ?, notes = ?, active = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).bind(
-    toNull(item.name),
-    toNull(item.phone || ''),
-    toNull(item.address || ''),
-    toNull(item.notes || ''),
-    item.active === false ? 0 : 1,
-    id,
-  ).run();
-
-  return c.json({ success: true });
-});
-
-app.delete('/transportation-companies/:id', async (c) => {
-  const id = c.req.param('id');
-
-  await c.env.DB.prepare(`
-    UPDATE transportation_companies
-    SET active = 0, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).bind(id).run();
-
-  return c.json({ success: true });
-});
+registerTransportationRoutes(app, toNull);
+registerAdminSecurityRoutes(app);
 
 export default app;

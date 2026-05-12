@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Plus, Search, X, ArrowUpDown, RotateCcw, FileText, Calendar, Printer, BarChart3, Users, Link2, Database } from "lucide-react";
 import { Button } from "./Button";
 import { Card } from "./Card";
-import { Facility } from "../types";
+import { Facility, User } from "../types";
+import { AdminScreenshotCapture } from "./AdminScreenshotCapture";
 
 interface AdminGuideToolsProps {
   currentUserRole?: string | null;
@@ -15,6 +16,7 @@ interface AdminGuideToolsProps {
   users: any[];
   setEditingUser: (user: any | null) => void;
   setIsUserModalOpen: (open: boolean) => void;
+  currentUser?: Pick<User, "id" | "fullName" | "role"> | null;
 }
 
 type FacilitySort = "name-asc" | "name-desc" | "current-first";
@@ -98,6 +100,7 @@ export function AdminGuideTools({
   users,
   setEditingUser,
   setIsUserModalOpen,
+  currentUser,
 }: AdminGuideToolsProps) {
   const [facilitySearch, setFacilitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
@@ -172,7 +175,7 @@ export function AdminGuideTools({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="admin-guide-tools-root">
       <Card
         title="Guide & Help (Current Workflow)"
         subtitle="Quick guide on census reconciliation, scheduling review, reporting, and resident appointment history."
@@ -207,6 +210,7 @@ export function AdminGuideTools({
 
       {isAdmin ? (
         <>
+          <AdminScreenshotCapture currentUser={currentUser} currentFacility={currentFacility || null} />
           <Card
             title="Admin Management Snapshot"
             subtitle="Quick counts for facility and user setup."

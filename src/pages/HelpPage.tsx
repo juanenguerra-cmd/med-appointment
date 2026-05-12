@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { CurrentReleaseNote } from "../components/CurrentReleaseNote";
 import { VersionHistoryPanel } from "../components/VersionHistoryPanel";
 import { AdminGuideTools } from "../components/AdminGuideTools";
-import type { Facility } from "../types";
+import type { Facility, User } from "../types";
 
 type HelpPageProps = {
   currentUserRole?: string;
@@ -15,6 +15,7 @@ type HelpPageProps = {
   users: any[];
   setEditingUser: (user: any) => void;
   setIsUserModalOpen: (open: boolean) => void;
+  currentUser?: Pick<User, "id" | "fullName" | "role"> | null;
 };
 
 export function HelpPage({
@@ -28,6 +29,7 @@ export function HelpPage({
   users,
   setEditingUser,
   setIsUserModalOpen,
+  currentUser,
 }: HelpPageProps) {
   return (
     <motion.div
@@ -52,6 +54,7 @@ export function HelpPage({
         users={users}
         setEditingUser={setEditingUser}
         setIsUserModalOpen={setIsUserModalOpen}
+        currentUser={currentUser}
       />
     </motion.div>
   );

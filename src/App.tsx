@@ -60,6 +60,7 @@ import {
   getConsultFormLabel,
   openConsultForm,
 } from "./services/consultForms";
+import { apiFetch } from "./api/apiClient";
 
 type Tab =
   | "dashboard"
@@ -228,8 +229,7 @@ export default function App() {
       return;
     }
 
-    fetch(`/api/transportation-companies?facilityId=${encodeURIComponent(currentFacilityId)}`)
-      .then((res) => (res.ok ? res.json() : []))
+    apiFetch<TransportationCompany[]>(`/api/transportation-companies?facilityId=${encodeURIComponent(currentFacilityId)}`)
       .then((data) => setTransportCompanies(Array.isArray(data) ? data : []))
       .catch((error) => {
         console.error("Failed to load transportation directory", error);
@@ -1295,6 +1295,7 @@ if (!isLoaded) {
               users={users}
               setEditingUser={setEditingUser}
               setIsUserModalOpen={setIsUserModalOpen}
+              currentUser={currentUser}
             />
           )}
 
@@ -2393,4 +2394,3 @@ function formatShortDate(iso: string) {
   if (!d || Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
-
