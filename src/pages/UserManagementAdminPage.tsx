@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw, Save, Search, ShieldCheck, Trash2, UserCog, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardList, KeyRound, RefreshCw, Save, Search, ShieldCheck, Trash2, UserCog, UserPlus, Users, X } from "lucide-react";
 import { apiFetch } from "../api/apiClient";
 import { BUILT_IN_USER_ROLES, PERMISSION_ACTIONS, PROTECTED_USER_ROLES, USER_MANAGEMENT_ADMIN_ROLES, USER_MANAGEMENT_PERMISSION_MATRIX } from "../admin/userManagementSchema";
 
