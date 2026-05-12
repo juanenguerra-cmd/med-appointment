@@ -3,7 +3,6 @@ import { Plus, Search, X, ArrowUpDown, RotateCcw, FileText, Calendar, Printer, B
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Facility, User } from "../types";
-import { AdminScreenshotCapture } from "./AdminScreenshotCapture";
 
 interface AdminGuideToolsProps {
   currentUserRole?: string | null;
@@ -220,7 +219,6 @@ export function AdminGuideTools({
 
       {isAdmin ? (
         <>
-          <AdminScreenshotCapture currentUser={currentUser} currentFacility={currentFacility || null} />
           <Card
             title="Admin Management Snapshot"
             subtitle="Quick counts for facility and user setup."
