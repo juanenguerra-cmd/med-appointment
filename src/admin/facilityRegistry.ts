@@ -1,5 +1,7 @@
 import { DEFAULT_FACILITIES } from "./defaultFacilities";
 
+const HIDDEN_FACILITY_KEYS_STORAGE = "medAppointment.hiddenFacilityKeys.v1";
+
 export type DefaultFacility = {
   id: string;
   organization_id: string;
@@ -116,6 +118,45 @@ function facilityIdentityKeys(facility: FacilityRegistryRecord) {
   ].filter(Boolean);
 }
 
+function readHiddenFacilityKeys() {
+  try {
+    const raw = localStorage.getItem(HIDDEN_FACILITY_KEYS_STORAGE);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.filter((key) => typeof key === "string") : []);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function writeHiddenFacilityKeys(keys: Set<string>) {
+  try {
+    localStorage.setItem(HIDDEN_FACILITY_KEYS_STORAGE, JSON.stringify(Array.from(keys)));
+  } catch {
+    // localStorage may be unavailable in private browsing; UI state will still update for the current session.
+  }
+}
+
+export function hideFacilityFromRegistry(facility: FacilityRegistryRecord) {
+  const hiddenKeys = readHiddenFacilityKeys();
+  facilityIdentityKeys(facility).forEach((key) => hiddenKeys.add(key));
+  writeHiddenFacilityKeys(hiddenKeys);
+}
+
+export function restoreHiddenFacilityToRegistry(facility: FacilityRegistryRecord) {
+  const hiddenKeys = readHiddenFacilityKeys();
+  facilityIdentityKeys(facility).forEach((key) => hiddenKeys.delete(key));
+  writeHiddenFacilityKeys(hiddenKeys);
+}
+
+export function isFacilityHidden(facility: FacilityRegistryRecord) {
+  const hiddenKeys = readHiddenFacilityKeys();
+  return facilityIdentityKeys(facility).some((key) => hiddenKeys.has(key));
+}
+
+export function applyHiddenFacilityFilter(facilities: FacilityRegistryRecord[]) {
+  return facilities.filter((facility) => !isFacilityHidden(facility));
+}
+
 /**
  * Dedupes facilities while preserving the first occurrence.
  *
@@ -128,6 +169,7 @@ export function dedupeFacilities(facilities: FacilityRegistryRecord[]) {
 
   facilities.forEach((facility) => {
     if (String(facility.status || "active").toLowerCase() === "inactive") return;
+    if (isFacilityHidden(facility)) return;
 
     const keys = facilityIdentityKeys(facility);
     if (!keys.length) return;
@@ -147,5 +189,5 @@ export const SEEDED_FACILITY_REGISTRY = dedupeFacilities(normalizeFacilityList({
 export function mergeWithSeededFacilities(apiFacilities: unknown) {
   const existingFacilities = normalizeFacilityList(apiFacilities);
   if (!existingFacilities.length) return SEEDED_FACILITY_REGISTRY;
-  return dedupeFacilities([...existingFacilities, ...SEEDED_FACILITY_REGISTRY]);
+  return dedupeFacilities([...existingFacilities, ...normalizeFacilityList({ facilities: DEFAULT_FACILITIES })]);
 }
