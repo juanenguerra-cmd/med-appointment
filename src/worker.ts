@@ -1,5 +1,6 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { Hono } from 'hono';
+import { MIN_PASSWORD_LENGTH } from './auth/passwordPolicy';
 import { registerCensusReconcileRoute } from './server/censusReconcile';
 import {
   hasAdminAccess,
@@ -870,8 +871,8 @@ app.post('/setup-password', async (c) => {
   if (!setupSession || !setupUser) {
     return c.json({ success: false, error: 'Password setup session is missing or expired' }, 401);
   }
-  if (safeString(password).trim().length < 8) {
-    return c.json({ success: false, error: 'Password must be at least 8 characters' }, 400);
+  if (safeString(password).trim().length < MIN_PASSWORD_LENGTH) {
+    return c.json({ success: false, error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, 400);
   }
   const passwordHash = await hashPassword(safeString(password));
   await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP, forcePasswordReset = 0 WHERE id = ?").bind(passwordHash, setupUser.id).run();
@@ -909,8 +910,8 @@ app.post('/auth/reset-password', async (c) => {
   const body = await c.req.json() as any;
   const userId = safeString(body?.userId).trim();
   const temporaryPassword = safeString(body?.temporaryPassword).trim();
-  if (!userId || temporaryPassword.length < 8) {
-    return c.json({ success: false, error: 'userId and an 8+ character temporaryPassword are required' }, 400);
+  if (!userId || temporaryPassword.length < MIN_PASSWORD_LENGTH) {
+    return c.json({ success: false, error: `userId and a ${MIN_PASSWORD_LENGTH}+ character temporaryPassword are required` }, 400);
   }
   const target = await loadDatabaseUser(c.env.DB, userId);
   if (!target) return c.json({ success: false, error: 'User not found' }, 404);

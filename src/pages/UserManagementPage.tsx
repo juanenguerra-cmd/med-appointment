@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { apiFetch } from "../api/apiClient";
+import { MIN_PASSWORD_LENGTH } from "../auth/passwordPolicy";
 
 export const USER_MANAGEMENT_ADMIN_ROLES = [
   "role-super-admin",
@@ -223,7 +224,7 @@ export function validateUserManagementInput(
   if (!input.roleIds?.length) errors.push("At least one role is required.");
   if (isNew) {
     if (!input.temporaryPassword) errors.push("Temporary password is required for new users.");
-    if (input.temporaryPassword && input.temporaryPassword.length < 8) errors.push("Temporary password must be at least 8 characters.");
+    if (input.temporaryPassword && input.temporaryPassword.length < MIN_PASSWORD_LENGTH) errors.push(`Temporary password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
     if (input.temporaryPassword !== input.confirmPassword) errors.push("Password and confirm password must match.");
   }
   if (existingUsers.some((user) => user.id !== input.id && user.username === username)) errors.push("Duplicate username is blocked.");
@@ -426,8 +427,8 @@ export function UserManagementPage({ currentUser, facilities = [], currentFacili
 
   const submitResetPassword = async () => {
     if (!resetUser) return;
-    if (resetPassword.length < 8 || resetPassword !== resetConfirm) {
-      setNotice({ type: "error", text: "Temporary password must be at least 8 characters and match confirmation." });
+    if (resetPassword.length < MIN_PASSWORD_LENGTH || resetPassword !== resetConfirm) {
+      setNotice({ type: "error", text: `Temporary password must be at least ${MIN_PASSWORD_LENGTH} characters and match confirmation.` });
       return;
     }
     setIsSaving(true);
