@@ -11,7 +11,17 @@ interface LockScreenProps {
 }
 
 const getRequestErrorMessage = (err: unknown) =>
-  err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
+  err instanceof Error
+    && err.message
+    && [
+      /^User not found$/i,
+      /^Invalid password$/i,
+      /^User account is inactive$/i,
+      /^Password setup session is missing or expired$/i,
+      /^Password must be at least \d+ characters$/i,
+    ].some((pattern) => pattern.test(err.message.trim()))
+    ? err.message.trim()
+    : 'Connection error. Please try again.';
 
 export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScreenProps) {
   const [email, setEmail] = useState('');
