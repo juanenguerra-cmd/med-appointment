@@ -337,7 +337,7 @@ const AUTH_SESSION_TTL_SECONDS = 60 * 60 * 12;
 const SETUP_SESSION_TTL_SECONDS = 60 * 30;
 let authSessionSchemaReady: Promise<void> | null = null;
 let authSessionSchemaError: Error | null = null;
-let authSessionSchemaErrorAt = 0;
+let authSessionSchemaErrorTimestamp = 0;
 const AUTH_SESSION_SCHEMA_RETRY_DELAY_MS = 30_000;
 
 type SessionPurpose = 'auth' | 'setup';
@@ -490,7 +490,7 @@ async function readSession(c: any, purpose: SessionPurpose): Promise<{ session: 
 async function ensureAuthSessionSchema(db: D1Database) {
   if (
     authSessionSchemaError &&
-    Date.now() - authSessionSchemaErrorAt < AUTH_SESSION_SCHEMA_RETRY_DELAY_MS
+    Date.now() - authSessionSchemaErrorTimestamp < AUTH_SESSION_SCHEMA_RETRY_DELAY_MS
   ) {
     throw authSessionSchemaError;
   }
@@ -510,11 +510,11 @@ async function ensureAuthSessionSchema(db: D1Database) {
       db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry ON auth_sessions(expiresAt)'),
     ]).then(() => {
       authSessionSchemaError = null;
-      authSessionSchemaErrorAt = 0;
+      authSessionSchemaErrorTimestamp = 0;
       return undefined;
     }).catch((error) => {
-      authSessionSchemaError = error instanceof Error ? error : new Error(String(error));
-      authSessionSchemaErrorAt = Date.now();
+      authSessionSchemaError = toError(error);
+      authSessionSchemaErrorTimestamp = Date.now();
       console.error('Failed to initialize auth session schema:', authSessionSchemaError);
       authSessionSchemaReady = null;
       throw authSessionSchemaError;
@@ -524,8 +524,12 @@ async function ensureAuthSessionSchema(db: D1Database) {
 }
 
 function isMissingTableError(error: unknown, tableName: string): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return new RegExp(`\\bno such table:\\s*${tableName}\\b`, 'i').test(message);
+  const message = toError(error).message.toLowerCase();
+  return message.includes(`no such table: ${tableName.toLowerCase()}`);
+}
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
 }
 
 function requireAuthUser(c: any): AuthenticatedUser {
