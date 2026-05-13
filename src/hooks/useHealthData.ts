@@ -158,7 +158,6 @@ export function useHealthData() {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAuthResolved, setIsAuthResolved] = useState(false);
-  const authUserId = currentUser?.id;
 
   const auditActor = { id: currentUser?.id, role: currentUser?.role };
 
@@ -234,8 +233,9 @@ export function useHealthData() {
 
   useEffect(() => {
     if (!isAuthResolved) return;
-    if (!currentFacilityId || !authUserId) {
-      if (!authUserId) setIsLoaded(true);
+    const userId = currentUser?.id;
+    if (!currentFacilityId || !userId) {
+      if (!userId) setIsLoaded(true);
       return;
     }
 
@@ -267,7 +267,7 @@ export function useHealthData() {
 
     setIsLoaded(false);
     fetchData();
-  }, [currentFacilityId, authUserId, isAuthResolved]);
+  }, [currentFacilityId, currentUser?.id, isAuthResolved]);
 
   useEffect(() => {
     if (isLoaded && currentFacilityId) {
