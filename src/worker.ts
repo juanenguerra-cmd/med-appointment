@@ -376,8 +376,14 @@ function getCookieOptions(c: any, maxAge: number) {
 }
 
 async function loadAssignedFacilityIds(db: D1Database, userId: string): Promise<string[]> {
-  const { results } = await db.prepare('SELECT facilityId FROM user_facilities WHERE userId = ? ORDER BY facilityId ASC').bind(userId).all();
-  return (results || []).map((row: any) => safeString(row?.facilityId)).filter(Boolean);
+  try {
+    const { results } = await db.prepare('SELECT facilityId FROM user_facilities WHERE userId = ? ORDER BY facilityId ASC').bind(userId).all();
+    return (results || []).map((row: any) => safeString(row?.facilityId)).filter(Boolean);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('no such table: user_facilities')) return [];
+    throw error;
+  }
 }
 
 async function loadDatabaseUser(db: D1Database, userId: string): Promise<AuthenticatedUser | null> {
@@ -424,6 +430,7 @@ function sanitizeUserResponse(user: AuthenticatedUser) {
 }
 
 async function createSession(db: D1Database, userId: string, purpose: SessionPurpose, ttlSeconds: number): Promise<SessionRecord> {
+  await ensureAuthSessionSchema(db);
   const session: SessionRecord = {
     id: crypto.randomUUID(),
     userId,
@@ -440,10 +447,12 @@ async function createSession(db: D1Database, userId: string, purpose: SessionPur
 async function deleteSession(db: D1Database, sessionId?: string | null) {
   const value = safeString(sessionId).trim();
   if (!value) return;
+  await ensureAuthSessionSchema(db);
   await db.prepare('DELETE FROM auth_sessions WHERE id = ?').bind(value).run();
 }
 
 async function readSession(c: any, purpose: SessionPurpose): Promise<{ session: SessionRecord; user: AuthenticatedUser } | null> {
+  await ensureAuthSessionSchema(c.env.DB);
   const cookieName = purpose === 'auth' ? AUTH_SESSION_COOKIE : SETUP_SESSION_COOKIE;
   const sessionId = safeString(getCookie(c, cookieName)).trim();
   if (!sessionId) return null;
@@ -473,6 +482,22 @@ async function readSession(c: any, purpose: SessionPurpose): Promise<{ session: 
   }
 
   return { session: row, user };
+}
+
+async function ensureAuthSessionSchema(db: D1Database) {
+  await db.batch([
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS auth_sessions (
+        id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        expiresAt TEXT NOT NULL,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_purpose ON auth_sessions(userId, purpose)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry ON auth_sessions(expiresAt)'),
+  ]);
 }
 
 function requireAuthUser(c: any): AuthenticatedUser {
@@ -824,6 +849,7 @@ app.get('/users', async (c) => {
 });
 
 app.post('/login', async (c) => {
+  await ensureAuthSessionSchema(c.env.DB);
   const { email, password } = await c.req.json() as any;
   const user = await c.env.DB.prepare("SELECT * FROM users WHERE LOWER(email) = ?").bind(safeLower(email)).first() as any;
   
@@ -865,6 +891,7 @@ app.post('/login', async (c) => {
 });
 
 app.post('/setup-password', async (c) => {
+  await ensureAuthSessionSchema(c.env.DB);
   const setupSession = (c as any).get('setupSession') as SessionRecord | undefined;
   const setupUser = (c as any).get('setupUser') as AuthenticatedUser | undefined;
   const { password } = await c.req.json() as any;
@@ -904,6 +931,7 @@ app.post('/users/update', async (c) => {
 });
 
 app.post('/auth/reset-password', async (c) => {
+  await ensureAuthSessionSchema(c.env.DB);
   const authUser = requireAuthUser(c);
   const adminResponse = assertAdmin(c, authUser);
   if (adminResponse) return adminResponse;
@@ -938,6 +966,7 @@ app.post('/auth/reset-password', async (c) => {
 });
 
 app.post('/users/deactivate', async (c) => {
+  await ensureAuthSessionSchema(c.env.DB);
   const authUser = requireAuthUser(c);
   const adminResponse = assertAdmin(c, authUser);
   if (adminResponse) return adminResponse;

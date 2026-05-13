@@ -234,7 +234,7 @@ export default function App() {
   const [transportCompanies, setTransportCompanies] = useState<TransportationCompany[]>([]);
 
   React.useEffect(() => {
-    if (!currentFacilityId) {
+    if (!currentUser || !currentFacilityId) {
       setTransportCompanies([]);
       return;
     }
@@ -245,7 +245,7 @@ export default function App() {
         console.error("Failed to load transportation directory", error);
         setTransportCompanies([]);
       });
-  }, [currentFacilityId]);
+  }, [currentFacilityId, currentUser?.id]);
 
   const [censusPasteText, setCensusPasteText] = useState("");
   const [parsedResidentsPreview, setParsedResidentsPreview] = useState<
