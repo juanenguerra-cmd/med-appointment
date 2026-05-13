@@ -20,7 +20,7 @@ import { NavItem } from "./NavItem";
 import { TopTab } from "./TopTab";
 import { TAB_META, type Tab } from "../../types/navigation";
 import type { Facility } from "../../types";
-import { UserManagementPage } from "../../pages/UserManagementPage";
+import { UserManagementAdminPage } from "../../pages/UserManagementAdminPage";
 
 const USER_MANAGEMENT_ADMIN_ROLES = [
   "role-super-admin",
@@ -84,7 +84,7 @@ export function AppShell({
         badge: "Admin Console",
         title: "User Management",
         subtitle:
-          "Manage system users, staff links, facility scope, roles, and appointment workflow access.",
+          "Manage system users, facility scope, roles, and appointment workflow access.",
       }
     : TAB_META[activeTab];
 
@@ -244,7 +244,7 @@ export function AppShell({
         </div>
 
         {isUserManagementOpen ? (
-          <UserManagementPage
+          <UserManagementAdminPage
             currentUser={{
               fullName: currentUser?.fullName,
               username: currentUser?.username || currentUser?.fullName || "admin",
