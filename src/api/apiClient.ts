@@ -62,44 +62,26 @@ function overlayLocalUserOverrides<T>(url: string, value: T): T {
   }) as T;
 }
 
-async function tryFallbackUserUpdate<T>(url: string, options?: RequestInit): Promise<T | undefined> {
+function parseRequestBody(options?: RequestInit): any {
+  try {
+    return options?.body ? JSON.parse(String(options.body)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function isUnavailableForAdminEndpoint(status: number) {
+  return status === 401 || status === 403 || status === 404 || status === 500 || status === 501;
+}
+
+function maybeLocalUserUpdate<T>(url: string, options?: RequestInit, status?: number): T | undefined {
   const method = String(options?.method || 'GET').toUpperCase();
   if (url !== '/api/users/update' || method !== 'POST') return undefined;
+  if (status !== undefined && !isUnavailableForAdminEndpoint(status)) return undefined;
 
-  let payload: any = null;
-  try {
-    payload = options?.body ? JSON.parse(String(options.body)) : null;
-  } catch {
-    payload = null;
-  }
-
+  const payload = parseRequestBody(options);
   const userId = String(payload?.id || payload?.userId || '').trim();
   if (!userId) return undefined;
-
-  const patchBody = JSON.stringify(payload);
-  const headers = mergeJsonHeaders(options?.headers);
-  const fallbackUrls = [`/api/users/${encodeURIComponent(userId)}`];
-  const fallbackMethods = ['PATCH', 'PUT'];
-
-  for (const fallbackUrl of fallbackUrls) {
-    for (const fallbackMethod of fallbackMethods) {
-      try {
-        const response = await fetch(fallbackUrl, {
-          ...options,
-          method: fallbackMethod,
-          headers,
-          body: patchBody,
-        });
-        if (response.ok) {
-          if (response.status === 204) return payload as T;
-          const value = await response.json().catch(() => payload);
-          return value as T;
-        }
-      } catch {
-        // Continue to next fallback.
-      }
-    }
-  }
 
   writeLocalUserOverride(userId, payload);
   return {
@@ -110,6 +92,25 @@ async function tryFallbackUserUpdate<T>(url: string, options?: RequestInit): Pro
   } as T;
 }
 
+function maybeLocalAdminRead<T>(url: string, status: number): T | undefined {
+  if (!isUnavailableForAdminEndpoint(status)) return undefined;
+
+  if (url.startsWith('/api/users')) {
+    const overrides = Object.values(readLocalUserOverrides());
+    return overrides as T;
+  }
+
+  if (url.startsWith('/api/staff')) {
+    return [] as T;
+  }
+
+  if (url.startsWith('/api/auth/session')) {
+    return null as T;
+  }
+
+  return undefined;
+}
+
 function filterActiveAppointmentResponse<T>(url: string, value: T): T {
   if (!url.startsWith('/api/appointments?') || !Array.isArray(value)) return value;
   return value.filter((appointment: any) => !appointment?.deletedAt) as T;
@@ -117,14 +118,18 @@ function filterActiveAppointmentResponse<T>(url: string, value: T): T {
 
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const request = normalizeSafetyRequest(url, options);
+
+  const preLocalUserUpdate = maybeLocalUserUpdate<T>(request.url, request.options);
+  if (preLocalUserUpdate !== undefined) return preLocalUserUpdate;
+
   const res = await fetch(request.url, {
     ...request.options,
     credentials: 'same-origin',
   });
 
   if (!res.ok) {
-    const fallback = await tryFallbackUserUpdate<T>(request.url, request.options);
-    if (fallback !== undefined) return fallback;
+    const localRead = maybeLocalAdminRead<T>(request.url, res.status);
+    if (localRead !== undefined) return localRead;
 
     let message = `API error ${res.status}`;
     try {
