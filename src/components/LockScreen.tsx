@@ -10,6 +10,9 @@ interface LockScreenProps {
   onLoginSuccess: (user: any) => void;
 }
 
+const getRequestErrorMessage = (err: unknown) =>
+  err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
+
 export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,8 +38,7 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
         setError(result.error || 'Invalid credentials');
       }
     } catch (err) {
-      const message = err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
-      setError(message);
+      setError(getRequestErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -63,8 +65,7 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
         setError(result.error || 'Failed to setup password');
       }
     } catch (err) {
-      const message = err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
-      setError(message);
+      setError(getRequestErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
