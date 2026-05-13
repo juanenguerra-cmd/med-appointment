@@ -232,8 +232,13 @@ export function useHealthData() {
   }, [currentUser?.role, currentUser?.roleIds]);
 
   useEffect(() => {
-    if (!currentFacilityId || !currentUser) {
-      if (!currentUser) setIsLoaded(true);
+    if (!isAuthResolved) return;
+    const userId = currentUser?.id;
+    if (!userId) {
+      setIsLoaded(true);
+      return;
+    }
+    if (!currentFacilityId) {
       return;
     }
 
@@ -265,7 +270,7 @@ export function useHealthData() {
 
     setIsLoaded(false);
     fetchData();
-  }, [currentFacilityId]);
+  }, [currentFacilityId, currentUser?.id, isAuthResolved]);
 
   useEffect(() => {
     if (isLoaded && currentFacilityId) {
