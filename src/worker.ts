@@ -335,6 +335,7 @@ const AUTH_SESSION_COOKIE = 'med_appointment_session';
 const SETUP_SESSION_COOKIE = 'med_appointment_setup';
 const AUTH_SESSION_TTL_SECONDS = 60 * 60 * 12;
 const SETUP_SESSION_TTL_SECONDS = 60 * 30;
+let authSessionSchemaReady: Promise<void> | null = null;
 
 type SessionPurpose = 'auth' | 'setup';
 type SessionRecord = {
@@ -380,8 +381,7 @@ async function loadAssignedFacilityIds(db: D1Database, userId: string): Promise<
     const { results } = await db.prepare('SELECT facilityId FROM user_facilities WHERE userId = ? ORDER BY facilityId ASC').bind(userId).all();
     return (results || []).map((row: any) => safeString(row?.facilityId)).filter(Boolean);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes('no such table: user_facilities')) return [];
+    if (isMissingTableError(error, 'user_facilities')) return [];
     throw error;
   }
 }
@@ -485,19 +485,30 @@ async function readSession(c: any, purpose: SessionPurpose): Promise<{ session: 
 }
 
 async function ensureAuthSessionSchema(db: D1Database) {
-  await db.batch([
-    db.prepare(`
-      CREATE TABLE IF NOT EXISTS auth_sessions (
-        id TEXT PRIMARY KEY,
-        userId TEXT NOT NULL,
-        purpose TEXT NOT NULL,
-        expiresAt TEXT NOT NULL,
-        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `),
-    db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_purpose ON auth_sessions(userId, purpose)'),
-    db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry ON auth_sessions(expiresAt)'),
-  ]);
+  if (!authSessionSchemaReady) {
+    authSessionSchemaReady = db.batch([
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS auth_sessions (
+          id TEXT PRIMARY KEY,
+          userId TEXT NOT NULL,
+          purpose TEXT NOT NULL,
+          expiresAt TEXT NOT NULL,
+          createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_purpose ON auth_sessions(userId, purpose)'),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry ON auth_sessions(expiresAt)'),
+    ]).then(() => undefined).catch((error) => {
+      authSessionSchemaReady = null;
+      throw error;
+    });
+  }
+  await authSessionSchemaReady;
+}
+
+function isMissingTableError(error: unknown, tableName: string): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return new RegExp(`\\bno such table:\\s*${tableName}\\b`, 'i').test(message);
 }
 
 function requireAuthUser(c: any): AuthenticatedUser {
