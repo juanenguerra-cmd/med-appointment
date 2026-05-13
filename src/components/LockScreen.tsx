@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Lock, Mail, ChevronRight, UserPlus, Fingerprint } from 'lucide-react';
+import { MIN_PASSWORD_LENGTH } from '../auth/passwordPolicy';
 import { Button } from './Button';
 
 interface LockScreenProps {
@@ -46,8 +47,8 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
       setError('Passwords do not match');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
       return;
     }
 
@@ -160,7 +161,7 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
                     <input 
                       type="password"
                       required
-                      placeholder="Min 6 characters"
+                       placeholder={`Min ${MIN_PASSWORD_LENGTH} characters`}
                       className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#d6deeb] rounded-2xl focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium text-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

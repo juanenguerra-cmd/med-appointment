@@ -150,16 +150,14 @@ export function useHealthData() {
   const seededFacilities = toHealthFacilities();
   const [facilities, setFacilities] = useState<Facility[]>(seededFacilities);
   const [users, setUsers] = useState<any[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(() => {
-    const saved = localStorage.getItem('currentUser');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentFacilityId, setCurrentFacilityId] = useState<string | null>(() => localStorage.getItem('currentFacilityId') || safeString(seededFacilities[0]?.id) || null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isAuthResolved, setIsAuthResolved] = useState(false);
 
   const auditActor = { id: currentUser?.id, role: currentUser?.role };
 
@@ -170,15 +168,32 @@ export function useHealthData() {
   };
 
   useEffect(() => {
-    if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    else localStorage.removeItem('currentUser');
-  }, [currentUser]);
+    let active = true;
+
+    apiFetch<{ success: boolean; user: any }>('/api/auth/session')
+      .then((response) => {
+        if (!active) return;
+        setCurrentUser(response.user || null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setCurrentUser(null);
+      })
+      .finally(() => {
+        if (active) setIsAuthResolved(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (currentFacilityId) localStorage.setItem('currentFacilityId', currentFacilityId);
   }, [currentFacilityId]);
 
   useEffect(() => {
+    if (!isAuthResolved) return;
     if (!currentUser) {
       setFacilities(toHealthFacilities());
       if (!currentFacilityId && seededFacilities[0]?.id) setCurrentFacilityId(safeString(seededFacilities[0].id));
@@ -188,7 +203,7 @@ export function useHealthData() {
 
     async function fetchFacilities() {
       try {
-        const data = await apiFetch<unknown>(`/api/facilities?userId=${currentUser.id}`);
+        const data = await apiFetch<unknown>('/api/facilities');
         const merged = toHealthFacilities(data);
         setFacilities(merged);
         if (merged.length > 0 && (!currentFacilityId || !merged.some((f) => f.id === currentFacilityId))) {
@@ -205,11 +220,16 @@ export function useHealthData() {
     }
 
     fetchFacilities();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, isAuthResolved]);
 
   useEffect(() => {
-    if (currentUser?.role === 'admin') apiFetch<any[]>('/api/users').then(setUsers).catch(console.error);
-  }, [currentUser?.role]);
+    const roleIds = [currentUser?.role, ...(currentUser?.roleIds || [])].filter(Boolean);
+    if (roleIds.some((roleId) => ['admin', 'role-super-admin', 'role-org-admin', 'role-facility-admin'].includes(roleId))) {
+      apiFetch<{ users?: any[] } | any[]>('/api/users')
+        .then((response) => setUsers(Array.isArray(response) ? response : response?.users || []))
+        .catch(console.error);
+    }
+  }, [currentUser?.role, currentUser?.roleIds]);
 
   useEffect(() => {
     if (!currentFacilityId || !currentUser) {
@@ -732,6 +752,7 @@ export function useHealthData() {
   });
 
   const logout = () => {
+    void apiFetch('/api/auth/logout', { method: 'POST' }).catch(() => null);
     setCurrentUser(null);
     setCurrentFacilityId(null);
     setFacilities(toHealthFacilities());
@@ -777,6 +798,7 @@ export function useHealthData() {
     batchAddResidents,
     replaceResidents,
     isLoaded,
+    isAuthResolved,
   };
 }
 

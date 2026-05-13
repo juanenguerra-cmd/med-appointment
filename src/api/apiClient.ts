@@ -117,7 +117,10 @@ function filterActiveAppointmentResponse<T>(url: string, value: T): T {
 
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const request = normalizeSafetyRequest(url, options);
-  const res = await fetch(request.url, request.options);
+  const res = await fetch(request.url, {
+    ...request.options,
+    credentials: 'same-origin',
+  });
 
   if (!res.ok) {
     const fallback = await tryFallbackUserUpdate<T>(request.url, request.options);

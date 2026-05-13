@@ -27,5 +27,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test
+        run: npm run test
+
+      - name: Verify census parser
+        run: npm run verify:census-parser
+
       - name: Build
         run: npm run build

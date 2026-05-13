@@ -1,3 +1,5 @@
+import { hasFacilityAccess, type AuthenticatedUser } from "./sessionAuth";
+
 const safeString = (value: unknown, fallback = ''): string => {
   if (value === undefined || value === null) return fallback;
   return String(value);
@@ -109,11 +111,15 @@ const buildPatchStatement = (db: D1Database, id: string, patch: Record<string, u
 
 export function registerCensusReconcileRoute(app: any) {
   app.post('/census/reconcile', async (c: any) => {
+    const authUser = (c as any).get('authUser') as AuthenticatedUser | undefined;
     const body = await c.req.json().catch(() => ({}));
     const facilityId = safeString(body?.facilityId).trim();
     const incomingRaw = Array.isArray(body?.residents) ? body.residents : [];
 
     if (!facilityId) return c.json({ success: false, error: 'facilityId is required' }, 400);
+    if (!authUser || !hasFacilityAccess(authUser, facilityId)) {
+      return c.json({ success: false, error: 'Facility access denied' }, 403);
+    }
     if (incomingRaw.length === 0) return c.json({ success: false, error: 'At least one incoming resident is required' }, 400);
 
     const now = new Date().toISOString();
