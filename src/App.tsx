@@ -232,9 +232,10 @@ export default function App() {
 
   const currentFacility = facilities.find((f) => f.id === currentFacilityId);
   const [transportCompanies, setTransportCompanies] = useState<TransportationCompany[]>([]);
+  const authUserId = currentUser?.id;
 
   React.useEffect(() => {
-    if (!currentUser || !currentFacilityId) {
+    if (!authUserId || !currentFacilityId) {
       setTransportCompanies([]);
       return;
     }
@@ -245,7 +246,7 @@ export default function App() {
         console.error("Failed to load transportation directory", error);
         setTransportCompanies([]);
       });
-  }, [currentFacilityId, currentUser?.id]);
+  }, [currentFacilityId, authUserId]);
 
   const [censusPasteText, setCensusPasteText] = useState("");
   const [parsedResidentsPreview, setParsedResidentsPreview] = useState<
