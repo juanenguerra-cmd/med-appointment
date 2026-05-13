@@ -35,7 +35,8 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
         setError(result.error || 'Invalid credentials');
       }
     } catch (err) {
-      setError('Connection error. Please try again.');
+      const message = err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +63,8 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
         setError(result.error || 'Failed to setup password');
       }
     } catch (err) {
-      setError('Connection error. Please try again.');
+      const message = err instanceof Error && err.message ? err.message : 'Connection error. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
