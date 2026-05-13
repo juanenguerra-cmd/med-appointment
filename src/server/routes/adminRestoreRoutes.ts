@@ -39,7 +39,7 @@ async function writeAuditLog(db: D1Database, options: AuditOptions) {
 
 export function registerAdminRestoreRoutes(app: WorkerApp) {
   app.get("/audit-logs", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const facilityId = safeString(c.req.query("facilityId"));
     const entity = safeString(c.req.query("entity"));
     const limit = Math.min(Number(c.req.query("limit") || 100) || 100, 500);
@@ -68,7 +68,7 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
   });
 
   app.get("/deleted/residents", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const facilityId = safeString(c.req.query("facilityId"));
     if (!facilityId) return c.json({ success: false, error: "facilityId is required" }, 400);
     if (!authUser || !hasAdminAccess(authUser)) return c.json({ success: false, error: "Admin access required" }, 403);
@@ -86,7 +86,7 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
   });
 
   app.get("/deleted/appointments", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const facilityId = safeString(c.req.query("facilityId"));
     if (!facilityId) return c.json({ success: false, error: "facilityId is required" }, 400);
     if (!authUser || !hasAdminAccess(authUser)) return c.json({ success: false, error: "Admin access required" }, 403);
@@ -104,7 +104,7 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
   });
 
   app.post("/soft-delete/appointments/:id", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const id = c.req.param("id");
     const body = (await c.req.json().catch(() => ({}))) as { note?: string };
     if (!authUser) return c.json({ success: false, error: "Authentication required" }, 401);
@@ -141,7 +141,7 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
   });
 
   app.post("/restore/residents/:id", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const id = c.req.param("id");
     const body = (await c.req.json().catch(() => ({}))) as { note?: string };
     if (!authUser) return c.json({ success: false, error: "Authentication required" }, 401);
@@ -172,7 +172,7 @@ export function registerAdminRestoreRoutes(app: WorkerApp) {
   });
 
   app.post("/restore/appointments/:id", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const id = c.req.param("id");
     const body = (await c.req.json().catch(() => ({}))) as { note?: string };
     if (!authUser) return c.json({ success: false, error: "Authentication required" }, 401);

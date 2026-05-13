@@ -13,7 +13,7 @@ export function registerAdminSecurityRoutes(app: WorkerApp) {
   registerAdminRestoreRoutes(app);
 
   app.post("/admin/screenshot-authorize", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const body = (await c.req.json()) as {
       facilityId?: string;
       consentProvided?: boolean;
@@ -32,7 +32,7 @@ export function registerAdminSecurityRoutes(app: WorkerApp) {
   });
 
   app.post("/admin/screenshot-audit", async (c) => {
-    const authUser = c.get("authUser") as AuthenticatedUser | undefined;
+    const authUser = (c as any).get("authUser") as AuthenticatedUser | undefined;
     const body = (await c.req.json()) as {
       facilityId?: string;
       summary?: string;

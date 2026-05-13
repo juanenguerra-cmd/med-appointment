@@ -111,7 +111,7 @@ const buildPatchStatement = (db: D1Database, id: string, patch: Record<string, u
 
 export function registerCensusReconcileRoute(app: any) {
   app.post('/census/reconcile', async (c: any) => {
-    const authUser = c.get('authUser') as AuthenticatedUser | undefined;
+    const authUser = (c as any).get('authUser') as AuthenticatedUser | undefined;
     const body = await c.req.json().catch(() => ({}));
     const facilityId = safeString(body?.facilityId).trim();
     const incomingRaw = Array.isArray(body?.residents) ? body.residents : [];

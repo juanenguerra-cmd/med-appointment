@@ -343,8 +343,6 @@ type SessionRecord = {
   expiresAt: string;
 };
 
-type WorkerContext = Parameters<Parameters<typeof app.use>[1]>[0];
-
 const protectedRoutePrefixes = [
   '/api/facilities',
   '/api/users',
@@ -366,7 +364,7 @@ function isProtectedRoute(path: string): boolean {
   return protectedRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }
 
-function getCookieOptions(c: WorkerContext, maxAge: number) {
+function getCookieOptions(c: any, maxAge: number) {
   return {
     path: '/',
     httpOnly: true,
@@ -444,7 +442,7 @@ async function deleteSession(db: D1Database, sessionId?: string | null) {
   await db.prepare('DELETE FROM auth_sessions WHERE id = ?').bind(value).run();
 }
 
-async function readSession(c: WorkerContext, purpose: SessionPurpose): Promise<{ session: SessionRecord; user: AuthenticatedUser } | null> {
+async function readSession(c: any, purpose: SessionPurpose): Promise<{ session: SessionRecord; user: AuthenticatedUser } | null> {
   const cookieName = purpose === 'auth' ? AUTH_SESSION_COOKIE : SETUP_SESSION_COOKIE;
   const sessionId = safeString(getCookie(c, cookieName)).trim();
   if (!sessionId) return null;
@@ -476,7 +474,7 @@ async function readSession(c: WorkerContext, purpose: SessionPurpose): Promise<{
   return { session: row, user };
 }
 
-function requireAuthUser(c: WorkerContext): AuthenticatedUser {
+function requireAuthUser(c: any): AuthenticatedUser {
   const authUser = c.get('authUser') as AuthenticatedUser | undefined;
   if (!authUser) {
     throw new Error('Authenticated user context is missing.');
@@ -484,14 +482,14 @@ function requireAuthUser(c: WorkerContext): AuthenticatedUser {
   return authUser;
 }
 
-function assertAdmin(c: WorkerContext, user = requireAuthUser(c)) {
+function assertAdmin(c: any, user = requireAuthUser(c)) {
   if (!hasAdminAccess(user)) {
     return c.json({ success: false, error: 'Admin access required' }, 403);
   }
   return null;
 }
 
-function assertFacilityAccess(c: WorkerContext, facilityId?: string | null, user = requireAuthUser(c)) {
+function assertFacilityAccess(c: any, facilityId?: string | null, user = requireAuthUser(c)) {
   if (!hasFacilityAccess(user, facilityId)) {
     return c.json({ success: false, error: 'Facility access denied' }, 403);
   }
@@ -528,7 +526,7 @@ async function replaceUserFacilities(db: D1Database, userId: string, facilityIds
 }
 
 async function persistUserRecord(
-  c: WorkerContext,
+  c: any,
   payload: any,
   mode: 'create' | 'update',
   requestedUserId?: string,
@@ -685,15 +683,15 @@ app.use('*', async (c, next) => {
     if (!auth) {
       return c.json({ success: false, error: 'Authentication required' }, 401);
     }
-    c.set('authUser', auth.user);
-    c.set('authSession', auth.session);
+    (c as any).set('authUser', auth.user);
+    (c as any).set('authSession', auth.session);
   } else if (c.req.path === '/api/setup-password') {
     const setup = await readSession(c, 'setup');
     if (!setup) {
       return c.json({ success: false, error: 'Password setup session is missing or expired' }, 401);
     }
-    c.set('setupSession', setup.session);
-    c.set('setupUser', setup.user);
+    (c as any).set('setupSession', setup.session);
+    (c as any).set('setupUser', setup.user);
   }
   await next();
 });
@@ -720,7 +718,7 @@ app.get('/auth/session', async (c) => {
 });
 
 app.post('/auth/logout', async (c) => {
-  const authSession = c.get('authSession') as SessionRecord | undefined;
+  const authSession = (c as any).get('authSession') as SessionRecord | undefined;
   await deleteSession(c.env.DB, authSession?.id);
   deleteCookie(c, AUTH_SESSION_COOKIE, getCookieOptions(c, 0));
   return c.json({ success: true });
@@ -866,8 +864,8 @@ app.post('/login', async (c) => {
 });
 
 app.post('/setup-password', async (c) => {
-  const setupSession = c.get('setupSession') as SessionRecord | undefined;
-  const setupUser = c.get('setupUser') as AuthenticatedUser | undefined;
+  const setupSession = (c as any).get('setupSession') as SessionRecord | undefined;
+  const setupUser = (c as any).get('setupUser') as AuthenticatedUser | undefined;
   const { password } = await c.req.json() as any;
   if (!setupSession || !setupUser) {
     return c.json({ success: false, error: 'Password setup session is missing or expired' }, 401);
