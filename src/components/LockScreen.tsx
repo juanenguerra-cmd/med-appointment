@@ -46,8 +46,8 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
       setError('Passwords do not match');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -160,7 +160,7 @@ export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScr
                     <input 
                       type="password"
                       required
-                      placeholder="Min 6 characters"
+                       placeholder="Min 8 characters"
                       className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#d6deeb] rounded-2xl focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium text-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

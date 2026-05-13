@@ -1,4 +1,21 @@
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { Hono } from 'hono';
+import { registerCensusReconcileRoute } from './server/censusReconcile';
+import {
+  hasAdminAccess,
+  hasFacilityAccess,
+  hasPrivilegedAdminAccess,
+  isProtectedRole,
+  normalizeDatabaseUser,
+  normalizeRoleIds,
+  parseJsonArray,
+  safeLower,
+  safeString,
+  sharesFacilityAccess,
+  toBooleanFlag,
+  type AuthenticatedUser,
+} from './server/sessionAuth';
+import { writeAuditLog } from './server/routes/adminRestoreRoutes';
 import { registerTransportationRoutes } from './server/routes/transportationRoutes';
 import { registerAdminSecurityRoutes } from './server/routes/adminSecurityRoutes';
 
@@ -8,15 +25,7 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>().basePath('/api');
 
-// Helper to convert undefined to null for D1
 const toNull = (val: unknown) => (val === undefined ? null : val);
-
-const safeString = (value: unknown, fallback = ''): string => {
-  if (value === undefined || value === null) return fallback;
-  return String(value);
-};
-
-const safeLower = (value: unknown): string => safeString(value).trim().toLowerCase();
 const isIsoDate = (value: unknown): boolean => /^\d{4}-\d{2}-\d{2}$/.test(safeString(value).trim());
 const isBlank = (value: unknown): boolean => {
   const text = safeString(value).trim();
@@ -303,6 +312,365 @@ function buildSafeUpdate(updates: Record<string, any>, allowedFields: Set<string
   };
 }
 
+const USER_UPDATE_FIELDS = new Set([
+  'email',
+  'fullName',
+  'username',
+  'role',
+  'roleIds',
+  'staffId',
+  'title',
+  'department',
+  'payrollNo',
+  'status',
+  'defaultFacilityId',
+  'customPermissions',
+  'forcePasswordReset',
+  'password',
+  'temporaryPassword',
+]);
+
+const AUTH_SESSION_COOKIE = 'med_appointment_session';
+const SETUP_SESSION_COOKIE = 'med_appointment_setup';
+const AUTH_SESSION_TTL_SECONDS = 60 * 60 * 12;
+const SETUP_SESSION_TTL_SECONDS = 60 * 30;
+
+type SessionPurpose = 'auth' | 'setup';
+type SessionRecord = {
+  id: string;
+  userId: string;
+  purpose: SessionPurpose;
+  expiresAt: string;
+};
+
+type WorkerContext = Parameters<Parameters<typeof app.use>[1]>[0];
+
+const protectedRoutePrefixes = [
+  '/api/facilities',
+  '/api/users',
+  '/api/staff',
+  '/api/residents',
+  '/api/appointments',
+  '/api/transportation-companies',
+  '/api/admin',
+  '/api/audit-logs',
+  '/api/deleted',
+  '/api/restore',
+  '/api/soft-delete',
+  '/api/census',
+  '/api/auth',
+];
+
+function isProtectedRoute(path: string): boolean {
+  if (path === '/api/login' || path === '/api/setup-password' || path === '/api/health') return false;
+  return protectedRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
+function getCookieOptions(c: WorkerContext, maxAge: number) {
+  return {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'Strict' as const,
+    secure: new URL(c.req.url).protocol === 'https:',
+    maxAge,
+  };
+}
+
+async function loadAssignedFacilityIds(db: D1Database, userId: string): Promise<string[]> {
+  const { results } = await db.prepare('SELECT facilityId FROM user_facilities WHERE userId = ? ORDER BY facilityId ASC').bind(userId).all();
+  return (results || []).map((row: any) => safeString(row?.facilityId)).filter(Boolean);
+}
+
+async function loadDatabaseUser(db: D1Database, userId: string): Promise<AuthenticatedUser | null> {
+  const row = await db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first() as any;
+  if (!row) return null;
+  const assignedFacilityIds = await loadAssignedFacilityIds(db, userId);
+  return normalizeDatabaseUser(row, assignedFacilityIds);
+}
+
+async function listNormalizedUsers(db: D1Database): Promise<AuthenticatedUser[]> {
+  const { results } = await db.prepare('SELECT * FROM users ORDER BY COALESCE(fullName, email, id) ASC').all();
+  const facilityRows = await db.prepare('SELECT userId, facilityId FROM user_facilities ORDER BY userId, facilityId').all();
+  const facilityMap = new Map<string, string[]>();
+  for (const row of (facilityRows.results || []) as any[]) {
+    const userId = safeString(row?.userId);
+    const facilityId = safeString(row?.facilityId);
+    if (!userId || !facilityId) continue;
+    const current = facilityMap.get(userId) || [];
+    current.push(facilityId);
+    facilityMap.set(userId, current);
+  }
+  return ((results || []) as any[]).map((row) => normalizeDatabaseUser(row, facilityMap.get(safeString(row?.id)) || []));
+}
+
+function sanitizeUserResponse(user: AuthenticatedUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    role: user.role,
+    roleIds: user.roleIds,
+    staffId: user.staffId,
+    title: user.title,
+    department: user.department,
+    payrollNo: user.payrollNo,
+    status: user.status,
+    defaultFacilityId: user.defaultFacilityId,
+    assignedFacilityIds: user.assignedFacilityIds,
+    customPermissions: user.customPermissions,
+    forcePasswordReset: user.forcePasswordReset,
+    lastLogin: user.lastLogin,
+  };
+}
+
+async function createSession(db: D1Database, userId: string, purpose: SessionPurpose, ttlSeconds: number): Promise<SessionRecord> {
+  const session: SessionRecord = {
+    id: crypto.randomUUID(),
+    userId,
+    purpose,
+    expiresAt: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+  };
+  await db.prepare(`
+    INSERT INTO auth_sessions (id, userId, purpose, expiresAt, createdAt)
+    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+  `).bind(session.id, session.userId, session.purpose, session.expiresAt).run();
+  return session;
+}
+
+async function deleteSession(db: D1Database, sessionId?: string | null) {
+  const value = safeString(sessionId).trim();
+  if (!value) return;
+  await db.prepare('DELETE FROM auth_sessions WHERE id = ?').bind(value).run();
+}
+
+async function readSession(c: WorkerContext, purpose: SessionPurpose): Promise<{ session: SessionRecord; user: AuthenticatedUser } | null> {
+  const cookieName = purpose === 'auth' ? AUTH_SESSION_COOKIE : SETUP_SESSION_COOKIE;
+  const sessionId = safeString(getCookie(c, cookieName)).trim();
+  if (!sessionId) return null;
+
+  const row = await c.env.DB.prepare(`
+    SELECT id, userId, purpose, expiresAt
+    FROM auth_sessions
+    WHERE id = ? AND purpose = ?
+  `).bind(sessionId, purpose).first() as SessionRecord | null;
+
+  if (!row) {
+    deleteCookie(c, cookieName, getCookieOptions(c, 0));
+    return null;
+  }
+
+  if (new Date(row.expiresAt).getTime() <= Date.now()) {
+    await deleteSession(c.env.DB, row.id);
+    deleteCookie(c, cookieName, getCookieOptions(c, 0));
+    return null;
+  }
+
+  const user = await loadDatabaseUser(c.env.DB, row.userId);
+  if (!user || safeLower(user.status) === 'inactive') {
+    await deleteSession(c.env.DB, row.id);
+    deleteCookie(c, cookieName, getCookieOptions(c, 0));
+    return null;
+  }
+
+  return { session: row, user };
+}
+
+function requireAuthUser(c: WorkerContext): AuthenticatedUser {
+  const authUser = c.get('authUser') as AuthenticatedUser | undefined;
+  if (!authUser) {
+    throw new Error('Authenticated user context is missing.');
+  }
+  return authUser;
+}
+
+function assertAdmin(c: WorkerContext, user = requireAuthUser(c)) {
+  if (!hasAdminAccess(user)) {
+    return c.json({ success: false, error: 'Admin access required' }, 403);
+  }
+  return null;
+}
+
+function assertFacilityAccess(c: WorkerContext, facilityId?: string | null, user = requireAuthUser(c)) {
+  if (!hasFacilityAccess(user, facilityId)) {
+    return c.json({ success: false, error: 'Facility access denied' }, 403);
+  }
+  return null;
+}
+
+async function getResidentFacilityId(db: D1Database, id: string): Promise<string> {
+  const row = await db.prepare('SELECT facilityId FROM residents WHERE id = ?').bind(id).first() as { facilityId?: string } | null;
+  return safeString(row?.facilityId);
+}
+
+async function getAppointmentFacilityId(db: D1Database, id: string): Promise<string> {
+  const row = await db.prepare('SELECT facilityId FROM appointments WHERE id = ?').bind(id).first() as { facilityId?: string } | null;
+  return safeString(row?.facilityId);
+}
+
+function getNormalizedRoleIds(payload: any): string[] {
+  const roleIds = normalizeRoleIds(payload).map((roleId) => safeString(roleId)).filter(Boolean);
+  return Array.from(new Set(roleIds));
+}
+
+function getUserPasswordInput(payload: any): string {
+  return safeString(payload?.temporaryPassword || payload?.password).trim();
+}
+
+async function replaceUserFacilities(db: D1Database, userId: string, facilityIds: string[]) {
+  const statements: D1PreparedStatement[] = [
+    db.prepare('DELETE FROM user_facilities WHERE userId = ?').bind(userId),
+  ];
+  for (const facilityId of facilityIds) {
+    statements.push(db.prepare('INSERT INTO user_facilities (userId, facilityId) VALUES (?, ?)').bind(userId, facilityId));
+  }
+  await db.batch(statements);
+}
+
+async function persistUserRecord(
+  c: WorkerContext,
+  payload: any,
+  mode: 'create' | 'update',
+  requestedUserId?: string,
+) {
+  const actor = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, actor);
+  if (adminResponse) return adminResponse;
+
+  const userId = safeString(requestedUserId || payload?.id).trim() || crypto.randomUUID();
+  const existingUser = mode === 'update' ? await loadDatabaseUser(c.env.DB, userId) : null;
+  if (mode === 'update' && !existingUser) {
+    return c.json({ success: false, error: 'User not found' }, 404);
+  }
+
+  const email = safeLower(payload?.email ?? existingUser?.email);
+  const fullName = safeString(payload?.fullName ?? existingUser?.fullName).trim();
+  const username = safeLower((payload?.username ?? existingUser?.username) || email.split('@')[0]);
+  const assignedFacilityIds = Array.from(new Set(
+    (
+      parseJsonArray(payload?.assignedFacilityIds).length
+        ? parseJsonArray(payload?.assignedFacilityIds)
+        : existingUser?.assignedFacilityIds || []
+    ).filter(Boolean),
+  ));
+  if (assignedFacilityIds.length === 0 && actor.defaultFacilityId) {
+    assignedFacilityIds.push(actor.defaultFacilityId);
+  }
+  const defaultFacilityId =
+    safeString(payload?.defaultFacilityId ?? existingUser?.defaultFacilityId).trim() ||
+    assignedFacilityIds[0] ||
+    actor.defaultFacilityId;
+  const roleIds = Array.from(new Set(
+    (
+      getNormalizedRoleIds(payload).length
+        ? getNormalizedRoleIds(payload)
+        : existingUser?.roleIds || []
+    ).filter(Boolean),
+  ));
+  const primaryRole = safeString((payload?.role ?? existingUser?.role ?? roleIds[0]) || 'staff');
+  const status = safeLower((payload?.status ?? existingUser?.status) || 'active') || 'active';
+
+  if (!email || !fullName || !username) {
+    return c.json({ success: false, error: 'email, fullName, and username are required' }, 400);
+  }
+  if (assignedFacilityIds.length === 0 || !defaultFacilityId) {
+    return c.json({ success: false, error: 'At least one assigned facility and a defaultFacilityId are required' }, 400);
+  }
+  if (!sharesFacilityAccess(actor, assignedFacilityIds)) {
+    return c.json({ success: false, error: 'Cannot assign users outside your facility scope' }, 403);
+  }
+  if (!assignedFacilityIds.includes(defaultFacilityId)) {
+    return c.json({ success: false, error: 'defaultFacilityId must be one of assignedFacilityIds' }, 400);
+  }
+  if (roleIds.some((roleId) => isProtectedRole(roleId)) && !hasPrivilegedAdminAccess(actor)) {
+    return c.json({ success: false, error: 'Only org or super admins may assign protected roles' }, 403);
+  }
+
+  const passwordInput = getUserPasswordInput(payload);
+  const passwordHash = passwordInput ? await hashPassword(passwordInput) : null;
+  const customPermissionsValue =
+    payload?.customPermissions !== undefined
+      ? payload.customPermissions
+      : existingUser?.customPermissions;
+  const customPermissions = customPermissionsValue && typeof customPermissionsValue === 'object'
+    ? JSON.stringify(customPermissionsValue)
+    : null;
+  const forcePasswordReset = payload?.forcePasswordReset === undefined
+    ? (existingUser?.forcePasswordReset ? 1 : 0)
+    : (toBooleanFlag(payload.forcePasswordReset) ? 1 : 0);
+  const deactivatedAt = status === 'inactive' ? new Date().toISOString() : null;
+
+  if (mode === 'create') {
+    await c.env.DB.prepare(`
+      INSERT INTO users (
+        id, email, fullName, username, role, roleIds, staffId, title, department, payrollNo,
+        status, defaultFacilityId, customPermissions, forcePasswordReset, password, deactivatedAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      userId,
+      email,
+      fullName,
+      username,
+      primaryRole,
+      JSON.stringify(roleIds),
+      toNull(payload?.staffId ?? existingUser?.staffId),
+      toNull(payload?.title ?? existingUser?.title),
+      toNull(payload?.department ?? existingUser?.department),
+      toNull(payload?.payrollNo ?? existingUser?.payrollNo),
+      status,
+      defaultFacilityId,
+      customPermissions,
+      forcePasswordReset,
+      passwordHash,
+      toNull(deactivatedAt),
+    ).run();
+  } else {
+    const safeUpdate = buildSafeUpdate({
+      email,
+      fullName,
+      username,
+      role: primaryRole,
+      roleIds: JSON.stringify(roleIds),
+      staffId: payload?.staffId ?? existingUser?.staffId,
+      title: payload?.title ?? existingUser?.title,
+      department: payload?.department ?? existingUser?.department,
+      payrollNo: payload?.payrollNo ?? existingUser?.payrollNo,
+      status,
+      defaultFacilityId,
+      customPermissions,
+      forcePasswordReset,
+      deactivatedAt,
+      ...(passwordHash ? { password: passwordHash } : {}),
+    }, new Set([...USER_UPDATE_FIELDS, 'deactivatedAt']));
+
+    if (!safeUpdate) {
+      return c.json({ success: false, error: 'No valid user fields to update' }, 400);
+    }
+
+    await c.env.DB.prepare(`UPDATE users SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+      .bind(...safeUpdate.values, userId)
+      .run();
+  }
+
+  await replaceUserFacilities(c.env.DB, userId, assignedFacilityIds);
+  const stored = await loadDatabaseUser(c.env.DB, userId);
+  await writeAuditLog(c.env.DB, {
+    facilityId: defaultFacilityId,
+    actorId: actor.id,
+    action: mode === 'create' ? 'create' : 'update',
+    entity: 'user',
+    entityId: userId,
+    summary: mode === 'create' ? `User created: ${fullName}` : `User updated: ${fullName}`,
+    metadata: {
+      assignedFacilityIds,
+      roleIds,
+      status,
+    },
+  });
+  return c.json({ success: true, user: stored ? sanitizeUserResponse(stored) : null }, mode === 'create' ? 201 : 200);
+}
+
 // Middleware to check for DB binding
 app.use('*', async (c, next) => {
   if (!c.env.DB) {
@@ -311,6 +679,21 @@ app.use('*', async (c, next) => {
       success: false, 
       error: "Database configuration error. Please check backend bindings." 
     }, 500);
+  }
+  if (isProtectedRoute(c.req.path)) {
+    const auth = await readSession(c, 'auth');
+    if (!auth) {
+      return c.json({ success: false, error: 'Authentication required' }, 401);
+    }
+    c.set('authUser', auth.user);
+    c.set('authSession', auth.session);
+  } else if (c.req.path === '/api/setup-password') {
+    const setup = await readSession(c, 'setup');
+    if (!setup) {
+      return c.json({ success: false, error: 'Password setup session is missing or expired' }, 401);
+    }
+    c.set('setupSession', setup.session);
+    c.set('setupUser', setup.user);
   }
   await next();
 });
@@ -331,24 +714,40 @@ app.get('/health', async (c) => {
   });
 });
 
+app.get('/auth/session', async (c) => {
+  const user = requireAuthUser(c);
+  return c.json({ success: true, user: sanitizeUserResponse(user) });
+});
+
+app.post('/auth/logout', async (c) => {
+  const authSession = c.get('authSession') as SessionRecord | undefined;
+  await deleteSession(c.env.DB, authSession?.id);
+  deleteCookie(c, AUTH_SESSION_COOKIE, getCookieOptions(c, 0));
+  return c.json({ success: true });
+});
+
 // Facilities API
 app.get('/facilities', async (c) => {
-  const userId = c.req.query('userId');
-  if (userId) {
-    // Return facilities the user has access to
-    const { results } = await c.env.DB.prepare(`
-      SELECT f.* FROM facilities f
-      JOIN user_facilities uf ON f.id = uf.facilityId
-      WHERE uf.userId = ?
-      ORDER BY f.name ASC
-    `).bind(userId).all();
+  const authUser = requireAuthUser(c);
+  if (hasPrivilegedAdminAccess(authUser) || (safeLower(authUser.role) === 'admin' && authUser.assignedFacilityIds.length === 0 && !authUser.defaultFacilityId)) {
+    const { results } = await c.env.DB.prepare('SELECT * FROM facilities ORDER BY name ASC').all();
     return c.json(results);
   }
-  const { results } = await c.env.DB.prepare("SELECT * FROM facilities ORDER BY name ASC").all();
+
+  const scopeIds = Array.from(new Set([...authUser.assignedFacilityIds, authUser.defaultFacilityId].filter(Boolean)));
+  if (scopeIds.length === 0) return c.json([]);
+  const placeholders = scopeIds.map(() => '?').join(', ');
+  const { results } = await c.env.DB.prepare(`
+    SELECT * FROM facilities
+    WHERE id IN (${placeholders})
+    ORDER BY name ASC
+  `).bind(...scopeIds).all();
   return c.json(results);
 });
 
 app.post('/facilities', async (c) => {
+  const adminResponse = assertAdmin(c);
+  if (adminResponse) return adminResponse;
   const fac = await c.req.json() as any;
   const validationResponse = rejectIfInvalid(c, validateFacilityPayload(fac, 'create'));
   if (validationResponse) return validationResponse;
@@ -361,7 +760,11 @@ app.post('/facilities', async (c) => {
 });
 
 app.patch('/facilities/:id', async (c) => {
+  const adminResponse = assertAdmin(c);
+  if (adminResponse) return adminResponse;
   const id = c.req.param('id');
+  const accessResponse = assertFacilityAccess(c, id);
+  if (accessResponse) return accessResponse;
   const updates = await c.req.json() as any;
   const safeUpdate = buildSafeUpdate(updates, FACILITY_UPDATE_FIELDS);
 
@@ -379,28 +782,66 @@ app.patch('/facilities/:id', async (c) => {
   return c.json({ success: true, rejectedFields: safeUpdate.rejectedKeys });
 });
 
+app.post('/facilities/update', async (c) => {
+  const adminResponse = assertAdmin(c);
+  if (adminResponse) return adminResponse;
+  const body = await c.req.json() as any;
+  const id = safeString(body?.id).trim();
+  if (!id) return c.json({ success: false, error: 'Facility id is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, id);
+  if (accessResponse) return accessResponse;
+  const safeUpdate = buildSafeUpdate(body, FACILITY_UPDATE_FIELDS);
+  if (!safeUpdate) return c.json({ success: false, error: 'No valid facility fields to update' }, 400);
+  const validationPayload = Object.fromEntries(safeUpdate.keys.map((key) => [key, body[key]]));
+  const validationResponse = rejectIfInvalid(c, validateFacilityPayload(validationPayload, 'patch'));
+  if (validationResponse) return validationResponse;
+
+  await c.env.DB.prepare(`UPDATE facilities SET ${safeUpdate.setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    .bind(...safeUpdate.values, id)
+    .run();
+  return c.json({ success: true, rejectedFields: safeUpdate.rejectedKeys });
+});
+
 app.delete('/facilities/:id', async (c) => {
+  const adminResponse = assertAdmin(c);
+  if (adminResponse) return adminResponse;
   const id = c.req.param('id');
+  const accessResponse = assertFacilityAccess(c, id);
+  if (accessResponse) return accessResponse;
   await c.env.DB.prepare("DELETE FROM facilities WHERE id = ?").bind(id).run();
   return new Response(null, { status: 204 });
 });
 
 // Users and Permissions API
 app.get('/users', async (c) => {
-  const { results } = await c.env.DB.prepare("SELECT id, email, fullName, role, lastLogin FROM users ORDER BY fullName ASC").all();
-  return c.json(results);
+  const authUser = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, authUser);
+  if (adminResponse) return adminResponse;
+  const users = await listNormalizedUsers(c.env.DB);
+  const visibleUsers = hasPrivilegedAdminAccess(authUser) || safeLower(authUser.role) === 'admin' && authUser.assignedFacilityIds.length === 0
+    ? users
+    : users.filter((user) => user.assignedFacilityIds.some((facilityId) => hasFacilityAccess(authUser, facilityId)));
+  return c.json({ users: visibleUsers.map(sanitizeUserResponse) });
 });
 
 app.post('/login', async (c) => {
   const { email, password } = await c.req.json() as any;
-  const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first() as any;
+  const user = await c.env.DB.prepare("SELECT * FROM users WHERE LOWER(email) = ?").bind(safeLower(email)).first() as any;
   
   if (!user) {
     return c.json({ success: false, error: "User not found" }, 404);
   }
 
+  const normalizedUser = await loadDatabaseUser(c.env.DB, safeString(user.id));
+  if (!normalizedUser || safeLower(normalizedUser.status) === 'inactive') {
+    return c.json({ success: false, error: 'User account is inactive' }, 403);
+  }
+
   // If password is not set yet, they need to create one (first time login)
   if (!user.password) {
+    const setupSession = await createSession(c.env.DB, user.id, 'setup', SETUP_SESSION_TTL_SECONDS);
+    setCookie(c, SETUP_SESSION_COOKIE, setupSession.id, getCookieOptions(c, SETUP_SESSION_TTL_SECONDS));
+    deleteCookie(c, AUTH_SESSION_COOKIE, getCookieOptions(c, 0));
     return c.json({ success: false, needsPasswordSetup: true, userId: user.id }, 200);
   }
 
@@ -416,78 +857,166 @@ app.post('/login', async (c) => {
     await c.env.DB.prepare("UPDATE users SET lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(user.id).run();
   }
 
-  const { password: _, ...safeUser } = user;
-  return c.json({ success: true, user: safeUser });
+  await c.env.DB.prepare("DELETE FROM auth_sessions WHERE userId = ? AND purpose = 'auth'").bind(user.id).run();
+  const session = await createSession(c.env.DB, user.id, 'auth', AUTH_SESSION_TTL_SECONDS);
+  setCookie(c, AUTH_SESSION_COOKIE, session.id, getCookieOptions(c, AUTH_SESSION_TTL_SECONDS));
+  deleteCookie(c, SETUP_SESSION_COOKIE, getCookieOptions(c, 0));
+  const refreshedUser = await loadDatabaseUser(c.env.DB, user.id);
+  return c.json({ success: true, user: refreshedUser ? sanitizeUserResponse(refreshedUser) : null });
 });
 
 app.post('/setup-password', async (c) => {
-  const { userId, password } = await c.req.json() as any;
+  const setupSession = c.get('setupSession') as SessionRecord | undefined;
+  const setupUser = c.get('setupUser') as AuthenticatedUser | undefined;
+  const { password } = await c.req.json() as any;
+  if (!setupSession || !setupUser) {
+    return c.json({ success: false, error: 'Password setup session is missing or expired' }, 401);
+  }
+  if (safeString(password).trim().length < 8) {
+    return c.json({ success: false, error: 'Password must be at least 8 characters' }, 400);
+  }
   const passwordHash = await hashPassword(safeString(password));
-  await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP WHERE id = ?").bind(passwordHash, userId).run();
-  
-  const user = await c.env.DB.prepare("SELECT id, email, fullName, role, lastLogin FROM users WHERE id = ?").bind(userId).first();
-  return c.json({ success: true, user });
+  await c.env.DB.prepare("UPDATE users SET password = ?, lastLogin = CURRENT_TIMESTAMP, forcePasswordReset = 0 WHERE id = ?").bind(passwordHash, setupUser.id).run();
+  await deleteSession(c.env.DB, setupSession.id);
+  deleteCookie(c, SETUP_SESSION_COOKIE, getCookieOptions(c, 0));
+  await c.env.DB.prepare("DELETE FROM auth_sessions WHERE userId = ? AND purpose = 'auth'").bind(setupUser.id).run();
+  const authSession = await createSession(c.env.DB, setupUser.id, 'auth', AUTH_SESSION_TTL_SECONDS);
+  setCookie(c, AUTH_SESSION_COOKIE, authSession.id, getCookieOptions(c, AUTH_SESSION_TTL_SECONDS));
+  const user = await loadDatabaseUser(c.env.DB, setupUser.id);
+  return c.json({ success: true, user: user ? sanitizeUserResponse(user) : null });
 });
 
 app.post('/users', async (c) => {
   const user = await c.req.json() as any;
-  const passwordValue = user.password ? await hashPassword(safeString(user.password)) : null;
-
-  await c.env.DB.prepare(`
-    INSERT INTO users (id, email, fullName, role, password)
-    VALUES (?, ?, ?, ?, ?)
-  `).bind(toNull(user.id), toNull(user.email), toNull(user.fullName), toNull(user.role), passwordValue).run();
-  
-  const { password: _, ...safeUser } = user;
-  return c.json({ success: true, user: safeUser }, 201);
+  return persistUserRecord(c, user, 'create');
 });
 
 app.put('/users/:id', async (c) => {
   const userId = c.req.param('id');
   const user = await c.req.json() as any;
-  
-  if (user.password !== undefined) {
-    if (user.password === null) {
-      await c.env.DB.prepare(`
-        UPDATE users SET email = ?, fullName = ?, role = ?, password = NULL WHERE id = ?
-      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), userId).run();
-    } else {
-      const passwordHash = await hashPassword(safeString(user.password));
-      await c.env.DB.prepare(`
-        UPDATE users SET email = ?, fullName = ?, role = ?, password = ? WHERE id = ?
-      `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), passwordHash, userId).run();
-    }
-  } else {
-    await c.env.DB.prepare(`
-      UPDATE users SET email = ?, fullName = ?, role = ? WHERE id = ?
-    `).bind(toNull(user.email), toNull(user.fullName), toNull(user.role), userId).run();
-  }
+  return persistUserRecord(c, user, 'update', userId);
+});
 
+app.post('/users/update', async (c) => {
+  const body = await c.req.json() as any;
+  const userId = safeString(body?.id).trim();
+  if (!userId) return c.json({ success: false, error: 'User id is required' }, 400);
+  return persistUserRecord(c, body, 'update', userId);
+});
+
+app.post('/auth/reset-password', async (c) => {
+  const authUser = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, authUser);
+  if (adminResponse) return adminResponse;
+  const body = await c.req.json() as any;
+  const userId = safeString(body?.userId).trim();
+  const temporaryPassword = safeString(body?.temporaryPassword).trim();
+  if (!userId || temporaryPassword.length < 8) {
+    return c.json({ success: false, error: 'userId and an 8+ character temporaryPassword are required' }, 400);
+  }
+  const target = await loadDatabaseUser(c.env.DB, userId);
+  if (!target) return c.json({ success: false, error: 'User not found' }, 404);
+  if (!sharesFacilityAccess(authUser, target.assignedFacilityIds)) {
+    return c.json({ success: false, error: 'Cannot reset a user outside your facility scope' }, 403);
+  }
+  const passwordHash = await hashPassword(temporaryPassword);
+  await c.env.DB.prepare(`
+    UPDATE users
+    SET password = ?, forcePasswordReset = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(passwordHash, 1, userId).run();
+  await c.env.DB.prepare("DELETE FROM auth_sessions WHERE userId = ? AND purpose = 'auth'").bind(userId).run();
+  await writeAuditLog(c.env.DB, {
+    facilityId: target.defaultFacilityId,
+    actorId: authUser.id,
+    action: 'reset-password',
+    entity: 'user',
+    entityId: userId,
+    summary: `Temporary password reset for ${target.fullName || target.email || userId}`,
+    metadata: { forcePasswordReset: true },
+  });
   return c.json({ success: true });
 });
 
+app.post('/users/deactivate', async (c) => {
+  const authUser = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, authUser);
+  if (adminResponse) return adminResponse;
+  const body = await c.req.json() as any;
+  const userId = safeString(body?.userId).trim();
+  if (!userId) return c.json({ success: false, error: 'userId is required' }, 400);
+  if (safeString(body?.confirmationText).trim().toUpperCase() !== 'DEACTIVATE') {
+    return c.json({ success: false, error: 'Type DEACTIVATE to confirm user deactivation' }, 400);
+  }
+  const target = await loadDatabaseUser(c.env.DB, userId);
+  if (!target) return c.json({ success: false, error: 'User not found' }, 404);
+  if (!sharesFacilityAccess(authUser, target.assignedFacilityIds)) {
+    return c.json({ success: false, error: 'Cannot deactivate a user outside your facility scope' }, 403);
+  }
+  await c.env.DB.prepare(`
+    UPDATE users
+    SET status = 'inactive', deactivatedAt = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(new Date().toISOString(), userId).run();
+  await c.env.DB.prepare("DELETE FROM auth_sessions WHERE userId = ?").bind(userId).run();
+  await writeAuditLog(c.env.DB, {
+    facilityId: target.defaultFacilityId,
+    actorId: authUser.id,
+    action: 'deactivate',
+    entity: 'user',
+    entityId: userId,
+    summary: `User deactivated: ${target.fullName || target.email || userId}`,
+  });
+  return c.json({ success: true });
+});
+
+app.get('/staff', async (c) => {
+  const authUser = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, authUser);
+  if (adminResponse) return adminResponse;
+  const facilityId = safeString(c.req.query('facilityId')).trim();
+  if (!facilityId) return c.json({ success: false, error: 'facilityId is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, facilityId, authUser);
+  if (accessResponse) return accessResponse;
+  const users = await listNormalizedUsers(c.env.DB);
+  const staff = users
+    .filter((user) => safeLower(user.status) === 'active' && user.assignedFacilityIds.includes(facilityId))
+    .map((user) => ({
+      id: user.staffId || user.id,
+      fullName: user.fullName,
+      email: user.email,
+      title: user.title,
+      department: user.department,
+      facilityId,
+    }));
+  return c.json({ staff });
+});
+
 app.get('/users/:id/facilities', async (c) => {
+  const authUser = requireAuthUser(c);
   const userId = c.req.param('id');
-  const { results } = await c.env.DB.prepare(`
-    SELECT facilityId FROM user_facilities WHERE userId = ?
-  `).bind(userId).all();
-  return c.json(results.map((r: any) => r.facilityId));
+  const targetUser = await loadDatabaseUser(c.env.DB, userId);
+  if (!targetUser) return c.json({ success: false, error: 'User not found' }, 404);
+  if (authUser.id !== userId && !hasAdminAccess(authUser)) {
+    return c.json({ success: false, error: 'Admin access required' }, 403);
+  }
+  if (!sharesFacilityAccess(authUser, targetUser.assignedFacilityIds)) {
+    return c.json({ success: false, error: 'Cannot view facilities outside your scope' }, 403);
+  }
+  return c.json(targetUser.assignedFacilityIds);
 });
 
 app.post('/users/:id/facilities', async (c) => {
+  const authUser = requireAuthUser(c);
+  const adminResponse = assertAdmin(c, authUser);
+  if (adminResponse) return adminResponse;
   const userId = c.req.param('id');
   const { facilityIds } = await c.req.json() as any;
-  
-  // Batch updates for permissions
-  const statements = [
-    c.env.DB.prepare("DELETE FROM user_facilities WHERE userId = ?").bind(userId)
-  ];
-  
-  for (const fId of facilityIds) {
-    statements.push(c.env.DB.prepare("INSERT INTO user_facilities (userId, facilityId) VALUES (?, ?)").bind(userId, fId));
+  const normalizedFacilityIds = parseJsonArray(facilityIds);
+  if (!sharesFacilityAccess(authUser, normalizedFacilityIds)) {
+    return c.json({ success: false, error: 'Cannot assign facilities outside your scope' }, 403);
   }
-  
-  await c.env.DB.batch(statements);
+  await replaceUserFacilities(c.env.DB, userId, normalizedFacilityIds);
   return c.json({ success: true });
 });
 
@@ -495,6 +1024,8 @@ app.post('/users/:id/facilities', async (c) => {
 app.get('/residents', async (c) => {
   const facilityId = c.req.query('facilityId');
   if (!facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
   
   const { results } = await c.env.DB.prepare("SELECT * FROM residents WHERE facilityId = ? ORDER BY name ASC").bind(facilityId).all();
   return c.json(results);
@@ -503,6 +1034,8 @@ app.get('/residents', async (c) => {
 app.post('/residents', async (c) => {
   const res = await c.req.json() as any;
   if (!res.facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, res.facilityId);
+  if (accessResponse) return accessResponse;
   const validationResponse = rejectIfInvalid(c, validateResidentPayload(res, 'create'));
   if (validationResponse) return validationResponse;
 
@@ -518,6 +1051,10 @@ app.post('/residents', async (c) => {
 
 app.patch('/residents/:id', async (c) => {
   const id = c.req.param('id');
+  const facilityId = await getResidentFacilityId(c.env.DB, id);
+  if (!facilityId) return c.json({ success: false, error: 'Resident not found' }, 404);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
   const updates = await c.req.json() as any;
   const safeUpdate = buildSafeUpdate(updates, RESIDENT_UPDATE_FIELDS);
 
@@ -537,6 +1074,10 @@ app.patch('/residents/:id', async (c) => {
 
 app.delete('/residents/:id', async (c) => {
   const id = c.req.param('id');
+  const facilityId = await getResidentFacilityId(c.env.DB, id);
+  if (!facilityId) return c.json({ success: false, error: 'Resident not found' }, 404);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
   await c.env.DB.prepare("DELETE FROM residents WHERE id = ?").bind(id).run();
   return new Response(null, { status: 204 });
 });
@@ -545,6 +1086,8 @@ app.delete('/residents/:id', async (c) => {
 app.get('/appointments', async (c) => {
   const facilityId = c.req.query('facilityId');
   if (!facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
 
   const { results } = await c.env.DB.prepare("SELECT * FROM appointments WHERE facilityId = ? ORDER BY date DESC, time DESC").bind(facilityId).all();
   return c.json(results);
@@ -553,6 +1096,8 @@ app.get('/appointments', async (c) => {
 app.post('/appointments', async (c) => {
   const apt = await c.req.json() as any;
   if (!apt.facilityId) return c.json({ error: 'facilityId is required' }, 400);
+  const accessResponse = assertFacilityAccess(c, apt.facilityId);
+  if (accessResponse) return accessResponse;
   const validationResponse = rejectIfInvalid(c, validateAppointmentPayload(apt, 'create'));
   if (validationResponse) return validationResponse;
 
@@ -582,6 +1127,10 @@ app.post('/appointments', async (c) => {
 
 app.patch('/appointments/:id', async (c) => {
   const id = c.req.param('id');
+  const facilityId = await getAppointmentFacilityId(c.env.DB, id);
+  if (!facilityId) return c.json({ success: false, error: 'Appointment not found' }, 404);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
   const updates = await c.req.json() as any;
   const safeUpdate = buildSafeUpdate(updates, APPOINTMENT_UPDATE_FIELDS);
 
@@ -601,12 +1150,17 @@ app.patch('/appointments/:id', async (c) => {
 
 app.delete('/appointments/:id', async (c) => {
   const id = c.req.param('id');
+  const facilityId = await getAppointmentFacilityId(c.env.DB, id);
+  if (!facilityId) return c.json({ success: false, error: 'Appointment not found' }, 404);
+  const accessResponse = assertFacilityAccess(c, facilityId);
+  if (accessResponse) return accessResponse;
   await c.env.DB.prepare("DELETE FROM appointments WHERE id = ?").bind(id).run();
   return new Response(null, { status: 204 });
 });
 
 
 registerTransportationRoutes(app, toNull);
+registerCensusReconcileRoute(app);
 registerAdminSecurityRoutes(app);
 
 export default app;

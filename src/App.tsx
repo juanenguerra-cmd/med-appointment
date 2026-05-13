@@ -58,6 +58,14 @@ import { ReportsPage } from "./pages/ReportsPage";
 import { CensusPage } from "./pages/CensusPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import {
+  createCensusImportSummary,
+  getCensusSafeSaveDecision,
+  getDefaultCensusSafeSaveMode,
+  parseCensusText,
+  parsedResidentsToResidentPreview,
+  type CensusImportSummary,
+} from "./census/parser";
+import {
   getConsultFormLabel,
   openConsultForm,
 } from "./services/consultForms";
@@ -213,6 +221,7 @@ export default function App() {
     replaceResidents,
     deleteResident,
     isLoaded,
+    isAuthResolved,
   } = useHealthData();
 
   const [isFacModalOpen, setIsFacModalOpen] = useState(false);
@@ -242,6 +251,7 @@ export default function App() {
   const [parsedResidentsPreview, setParsedResidentsPreview] = useState<
     Omit<Resident, "id">[]
   >([]);
+  const [censusImportSummary, setCensusImportSummary] = useState<CensusImportSummary | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [censusSkipDuplicates, setCensusSkipDuplicates] = useState(false);
 
@@ -275,6 +285,14 @@ export default function App() {
   const [isResidentDetailOpen, setIsResidentDetailOpen] = useState(false);
   const printIframeRef = React.useRef<HTMLIFrameElement>(null);
 
+  if (!isAuthResolved) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-soft-bg text-brand font-black">
+        Loading HealthSync...
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <LockScreen 
@@ -288,265 +306,54 @@ export default function App() {
   const handleParseCensus = () => {
     if (!censusPasteText.trim()) return;
     setIsParsing(true);
-
-    const lines = censusPasteText.split("\n");
-    const residentMap = new Map<string, any>();
-
-    // Pre-process lines to aggregate wrapped content (e.g., long allergy lists on new lines)
-    const aggregatedLines: string[] = [];
-    let currentBuffer = "";
-
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-
-      // Detect if this line looks like the start of a resident record: "Name (MRN)"
-      const isNewRecord = /^[A-Z0-9\s,.-]+?\s*[\(\[]([A-Z0-9-]+)[\)\]]/i.test(trimmed);
-      
-      if (isNewRecord) {
-        if (currentBuffer) aggregatedLines.push(currentBuffer);
-        currentBuffer = trimmed;
-      } else {
-        // Check if it's a header line to skip
-        const lower = trimmed.toLowerCase();
-        const isHeader = lower.includes("resident listing report") || 
-                         lower.includes("facility #") || 
-                         lower.includes("floor") || 
-                         lower.includes("unit") || 
-                         lower.includes("gender") ||
-                         lower.includes("admission date") ||
-                         lower.includes("birth date") || 
-                         lower.includes("primary physician");
-
-        if (isHeader) {
-          if (currentBuffer) aggregatedLines.push(currentBuffer);
-          currentBuffer = ""; // Reset buffer
-          aggregatedLines.push(trimmed); // Push header for standard filter to catch
-        } else if (currentBuffer) {
-          // Append to current record buffer with a delimiter or space
-          // If the line has tabs, it might be a partial columnar wrap
-          currentBuffer += " " + trimmed;
-        } else {
-          aggregatedLines.push(trimmed);
-        }
-      }
-    });
-    if (currentBuffer) aggregatedLines.push(currentBuffer);
-
-    aggregatedLines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.length < 10) return;
-
-      // Skip common header noise
-      const lower = trimmed.toLowerCase();
-      if (
-        lower.includes("resident listing report") ||
-        lower.includes("facility #") ||
-        lower.includes("page #") ||
-        lower.startsWith("date:") ||
-        lower.startsWith("time:") ||
-        lower.startsWith("user:") ||
-        lower.startsWith("resident:") ||
-        lower.includes("status: current") ||
-        lower === "name" ||
-        lower === "age" ||
-        lower === "location" ||
-        lower.includes("(fl un rm bd)") ||
-        lower.includes("gender") ||
-        lower.includes("admission date") ||
-        lower.includes("birth date") || 
-        lower.includes("primary diagnosis") ||
-        lower.includes("resident listing")
-      ) {
-        return;
-      }
-
-      // The format is column-based, typically separated by tabs (\t) or multiple spaces (\s{2,})
-      // Use a more robust split that prioritizes tabs if they exist
-      let columns: string[] = [];
-      if (trimmed.includes("\t")) {
-        columns = trimmed.split("\t").map(c => c.trim());
-      } else {
-        columns = trimmed.split(/\s{2,}/).map(c => c.trim());
-      }
-      columns = columns.filter(Boolean);
-
-      // If we don't have enough columns, it's probably not a data line
-      if (columns.length < 4) return;
-
-      let name = "—";
-      let mrn = "—";
-      let age = "—";
-      let birthDate = "—";
-      let location = "—";
-      let sex = "—";
-      let admissionDate = "—";
-      let allergies = "No Known Allergies";
-      let doctor = "—";
-      let diagnosis = "—";
-
-      // 1. Name and MRN (Column 0)
-      const nameMrnPart = columns[0] || "";
-      const nameMrnMatch = nameMrnPart.match(/^(.+?)\s*[\(\[]([A-Z0-9-]+)[\)\]]/i);
-      if (nameMrnMatch) {
-        name = nameMrnMatch[1].trim();
-        mrn = nameMrnMatch[2].trim();
-      } else {
-        name = nameMrnPart;
-        // Search for MRN in other parts if missing
-        const fallbackMrn = trimmed.match(/[\(\[]([A-Z0-9-]+)[\)\]]/i);
-        if (fallbackMrn) mrn = fallbackMrn[1];
-      }
-      name = name.replace(/,/g, ", ").replace(/\s+/g, " ").trim();
-      if (name.toLowerCase() === "name") return;
-
-      // Map columns based on anchored pattern (robust to fragmented columns)
-      // Standard: [Name/MRN, Age, BirthDate, ...Location..., Sex, AdmissionDate, Allergies, Doctor, Diagnosis]
-      
-      const dobIdx = columns.findIndex((c, i) => i > 0 && i < 5 && /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c));
-      const sexIdx = columns.findIndex((c, i) => i > 1 && i < 9 && /^(M|F|Male|Female)$/i.test(c));
-      // Admission date is the FIRST date AFTER birthDate (or first date if birthDate missing)
-      const admIdx = columns.findIndex((c, i) => i > (dobIdx !== -1 ? dobIdx : 2) && /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c));
-
-      if (dobIdx !== -1) birthDate = columns[dobIdx];
-      if (sexIdx !== -1) sex = columns[sexIdx];
-      if (admIdx !== -1) admissionDate = columns[admIdx];
-
-      const ageCol = columns.find((c, i) => i > 0 && i < 3 && /^\d{1,3}$/.test(c));
-      if (ageCol) age = ageCol;
-
-      // Location is everything between DOB and Sex (or between DOB and AdmDate if sex missing)
-      const locStart = dobIdx !== -1 ? dobIdx + 1 : 3;
-      const locEnd = sexIdx !== -1 ? sexIdx : (admIdx !== -1 ? admIdx : columns.length);
-      
-      if (locEnd > locStart) {
-        location = columns.slice(locStart, locEnd).join(" ").trim();
-      }
-
-      // Fields after Admission Date
-      if (admIdx !== -1 && admIdx < columns.length - 1) {
-        const remaining = columns.slice(admIdx + 1);
-        
-        // Identify which is which in the remaining tail
-        remaining.forEach((col, idx) => {
-          const c = col.trim();
-          if (/dr\.?\s|physician|\bmd\b|doctor/i.test(c)) {
-            doctor = c;
-          } else if (/nka|nkda|no\s+known|allerg|pcn|sulfa|latex/i.test(c) || (c.includes(",") && doctor === "—")) {
-            allergies = c;
-          } else if (/^[A-Z]\d{2}(?:\.\d+)?$/i.test(c)) {
-            diagnosis = c;
-          } else if (idx === remaining.length - 1 && diagnosis === "—") {
-            diagnosis = c;
-          } else if (idx === remaining.length - 2 && doctor === "—") {
-            doctor = c;
-          }
-        });
-
-        // Positional fallback if heuristics failed for tail
-        if (doctor === "—" && remaining.length >= 2) doctor = remaining[remaining.length - 2];
-        if (diagnosis === "—" && remaining.length >= 1) diagnosis = remaining[remaining.length - 1];
-        if (allergies === "No Known Allergies" && remaining.length >= 3) allergies = remaining[0];
-      }
-
-      // Parse Location into Floor/Unit/Room
-      let floor = "—";
-      let unit = "—";
-      let room = "—";
-
-      if (location !== "—") {
-        // Floor: "3rd Floor" or "Floor 3"
-        const fMatch = location.match(/(\d+(?:st|nd|rd|th)?\sFloor|Floor\s+\d+)/i);
-        if (fMatch) {
-          floor = fMatch[1].trim();
-          location = location.replace(fMatch[0], "").trim();
-        }
-
-        // Unit: "Unit 3", "Unit 4", etc.
-        const uMatch = location.match(/(Unit\s+\d+|Unit\s+\w+|\bUNIT\s+[A-Z]\b)/i);
-        if (uMatch) {
-          unit = uMatch[1].trim();
-          location = location.replace(uMatch[0], "").trim();
-        }
-        
-        // Final cleaning of remaining location to get Room
-        // Room often looks like "359 B" or "470 A" or "101"
-        room = location.replace(/[,;]/g, "").trim();
-        
-        // If room is empty or just gender/noise, skip record
-        if (!room || room.length > 15) {
-            // Try to find a standalone room number pattern in the original location if extraction failed
-            const roomMatch = location.match(/\b\d{2,4}\s?[A-Z]?\b/);
-            if (roomMatch) room = roomMatch[0];
-            else return; 
-        }
-      } else {
-        return; // Skip if no location
-      }
-
-      // Final cleanup
-      if (doctor !== "—" && !doctor.toLowerCase().startsWith("dr.")) {
-        doctor = "Dr. " + doctor;
-      }
-      
-      // Final cleanup of diagnosis
-      if (diagnosis !== "—") {
-        diagnosis = diagnosis.replace(/^(Diagnosis|Dx|Primary Diagnosis):?\s*/i, "").trim();
-      }
-
-      // Final cleanup of allergies
-      if (allergies !== "No Known Allergies") {
-        allergies = allergies.replace(/^(Allergies|Allg|Allergy):?\s*/i, "").trim();
-      }
-
-      // Final Assembly
-      const nameParts = name.split(",").map((n) => n.trim());
-      const lastName = nameParts[0] || name;
-      const firstName = nameParts.slice(1).join(" ") || "—";
-
-      const resData = {
-        name,
-        lastName,
-        firstName,
-        mrn,
-        age,
-        floor,
-        unit,
-        roomNumber: room,
-        sex: sex.toUpperCase().startsWith("M")
-          ? "Male"
-          : sex.toUpperCase().startsWith("F")
-            ? "Female"
-            : "—",
-        admissionDate,
-        allergies,
-        doctor,
-        diagnosis,
-        notes: birthDate !== "—" ? `DOB: ${birthDate}` : "",
-      };
-
-      const uniqueKey = mrn !== "—" ? mrn : `${name}-${room}`.toLowerCase();
-
-      // Duplicate detection
-      const alreadyInSystem = residents.some(
-        (r) =>
-          (resData.mrn !== "—" && r.mrn === resData.mrn) ||
-          `${r.name}|${r.roomNumber}`.toLowerCase() ===
-            `${resData.name}|${resData.roomNumber}`.toLowerCase(),
+    setCensusImportSummary(null);
+    try {
+      const importedAt = new Date().toISOString();
+      const parsed = parseCensusText({
+        importId: `census_${Date.now()}`,
+        sourceType: "paste",
+        rawText: censusPasteText,
+        importedAt,
+        importedBy: currentUser?.id || currentUser?.email || "current-user",
+        facilityId: currentFacilityId || undefined,
+      });
+      const summary = createCensusImportSummary(parsed);
+      const previewRows = parsedResidentsToResidentPreview(
+        parsed.residents,
+        currentFacilityId || "default",
+        importedAt,
       );
-
-      // If skipping duplicates, we don't even add to the map for preview
-      if (censusSkipDuplicates && alreadyInSystem) return;
-
-      residentMap.set(uniqueKey, resData);
-    });
-
-    setParsedResidentsPreview(Array.from(residentMap.values()));
-    setIsParsing(false);
+      const filteredRows = censusSkipDuplicates
+        ? previewRows.filter(
+            (newRes) =>
+              !residents.some(
+                (resident) =>
+                  (newRes.mrn && newRes.mrn !== "—" && resident.mrn === newRes.mrn) ||
+                  `${resident.name}|${resident.roomNumber}`.toLowerCase() ===
+                    `${newRes.name}|${newRes.roomNumber}`.toLowerCase(),
+              ),
+          )
+        : previewRows;
+      setParsedResidentsPreview(filteredRows);
+      setCensusImportSummary(summary);
+    } catch (error) {
+      console.error("Failed to parse census", error);
+      alert("Unable to parse census. Please review the pasted text and try again.");
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   const handleSaveCensus = () => {
     if (parsedResidentsPreview.length > 0) {
+      const safeSaveDecision = getCensusSafeSaveDecision(
+        getDefaultCensusSafeSaveMode(censusImportSummary),
+        censusImportSummary,
+      );
+      if (!safeSaveDecision.canSave) {
+        alert(safeSaveDecision.blockedReason || "Review the census import summary before saving.");
+        return;
+      }
       if (censusSkipDuplicates) {
         // Only append truly new ones
         const trulyNew = parsedResidentsPreview.filter(
@@ -564,6 +371,7 @@ export default function App() {
         replaceResidents(parsedResidentsPreview);
       }
       setParsedResidentsPreview([]);
+      setCensusImportSummary(null);
       setCensusPasteText("");
     }
   };
@@ -1276,6 +1084,8 @@ if (!isLoaded) {
               setCensusPasteText={setCensusPasteText}
               parsedResidentsPreview={parsedResidentsPreview}
               setParsedResidentsPreview={setParsedResidentsPreview}
+              censusImportSummary={censusImportSummary}
+              setCensusImportSummary={setCensusImportSummary}
               isParsing={isParsing}
               censusSkipDuplicates={censusSkipDuplicates}
               setCensusSkipDuplicates={setCensusSkipDuplicates}
