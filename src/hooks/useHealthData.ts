@@ -234,8 +234,11 @@ export function useHealthData() {
   useEffect(() => {
     if (!isAuthResolved) return;
     const userId = currentUser?.id;
-    if (!currentFacilityId || !userId) {
-      if (!userId) setIsLoaded(true);
+    if (!userId) {
+      setIsLoaded(true);
+      return;
+    }
+    if (!currentFacilityId) {
       return;
     }
 
