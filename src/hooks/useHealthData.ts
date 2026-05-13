@@ -232,6 +232,7 @@ export function useHealthData() {
   }, [currentUser?.role, currentUser?.roleIds]);
 
   useEffect(() => {
+    if (!isAuthResolved) return;
     if (!currentFacilityId || !currentUser) {
       if (!currentUser) setIsLoaded(true);
       return;
@@ -265,7 +266,7 @@ export function useHealthData() {
 
     setIsLoaded(false);
     fetchData();
-  }, [currentFacilityId]);
+  }, [currentFacilityId, currentUser?.id, isAuthResolved]);
 
   useEffect(() => {
     if (isLoaded && currentFacilityId) {

@@ -119,7 +119,7 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
   const request = normalizeSafetyRequest(url, options);
   const res = await fetch(request.url, {
     ...request.options,
-    credentials: 'include',
+    credentials: 'same-origin',
   });
 
   if (!res.ok) {
