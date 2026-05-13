@@ -19,6 +19,11 @@ import { mergeWithSeededFacilities, SEEDED_FACILITY_REGISTRY } from '../admin/fa
 const safeJson = (value: unknown): string => JSON.stringify(value ?? null);
 const recordsEqual = (a: unknown, b: unknown): boolean => safeJson(a) === safeJson(b);
 
+const isFacilityAccessDenied = (error: unknown) => {
+  const message = error instanceof Error ? error.message : safeString(error);
+  return /facility access denied|api error 403|403|forbidden/i.test(message);
+};
+
 const toHealthFacilities = (payload?: unknown): Facility[] => {
   const merged = payload === undefined ? SEEDED_FACILITY_REGISTRY : mergeWithSeededFacilities(payload);
   return merged.map((facility) => normalizeFacility({
@@ -173,7 +178,7 @@ export function useHealthData() {
     apiFetch<{ success: boolean; user: any }>('/api/auth/session')
       .then((response) => {
         if (!active) return;
-        setCurrentUser(response.user || null);
+        setCurrentUser(response?.user || null);
       })
       .catch(() => {
         if (!active) return;
@@ -258,6 +263,25 @@ export function useHealthData() {
         setRecords(savedRecords ? JSON.parse(savedRecords) : []);
         setIsLoaded(true);
       } catch (error) {
+        if (isFacilityAccessDenied(error)) {
+          console.warn(`Facility access denied for ${currentFacilityId}. Stopping retry loop and clearing protected view.`, error);
+          setResidents([]);
+          setAppointments([]);
+          setDoctors([]);
+          setRecords([]);
+          setIsLoaded(true);
+
+          const allowedFacilityIds = new Set<string>([
+            ...(Array.isArray(currentUser?.assignedFacilityIds) ? currentUser.assignedFacilityIds : []),
+            currentUser?.defaultFacilityId,
+          ].filter(Boolean));
+          const nextAllowedFacility = facilities.find((facility) => facility.id !== currentFacilityId && (!allowedFacilityIds.size || allowedFacilityIds.has(facility.id)));
+          if (nextAllowedFacility) {
+            setCurrentFacilityId(nextAllowedFacility.id);
+          }
+          return;
+        }
+
         if (retries > 0) {
           console.warn(`Fetch failed, retrying... (${retries} left)`, error);
           setTimeout(() => fetchData(retries - 1), 2000);
@@ -270,7 +294,7 @@ export function useHealthData() {
 
     setIsLoaded(false);
     fetchData();
-  }, [currentFacilityId, currentUser?.id, isAuthResolved]);
+  }, [currentFacilityId, currentUser?.id, isAuthResolved, facilities.length]);
 
   useEffect(() => {
     if (isLoaded && currentFacilityId) {
