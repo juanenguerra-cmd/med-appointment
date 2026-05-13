@@ -10,18 +10,27 @@ interface LockScreenProps {
   onLoginSuccess: (user: any) => void;
 }
 
-const getRequestErrorMessage = (err: unknown) =>
-  err instanceof Error
-    && err.message
-    && [
-      /^User not found$/i,
-      /^Invalid password$/i,
+const CONNECTION_ERROR_MESSAGE = 'Connection error. Please try again.';
+const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
+
+const getRequestErrorMessage = (err: unknown) => {
+  if (!(err instanceof Error)) return CONNECTION_ERROR_MESSAGE;
+  const message = err.message.trim();
+  if (!message) return CONNECTION_ERROR_MESSAGE;
+  if (/^User not found$/i.test(message) || /^Invalid password$/i.test(message)) {
+    return INVALID_CREDENTIALS_MESSAGE;
+  }
+  if (
+    [
       /^User account is inactive$/i,
       /^Password setup session is missing or expired$/i,
       /^Password must be at least \d+ characters$/i,
-    ].some((pattern) => pattern.test(err.message.trim()))
-    ? err.message.trim()
-    : 'Connection error. Please try again.';
+    ].some((pattern) => pattern.test(message))
+  ) {
+    return message;
+  }
+  return CONNECTION_ERROR_MESSAGE;
+};
 
 export function LockScreen({ onLogin, onSetupPassword, onLoginSuccess }: LockScreenProps) {
   const [email, setEmail] = useState('');
