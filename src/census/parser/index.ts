@@ -4,6 +4,7 @@ export * from "./fieldExtractors";
 export * from "./duplicateDetection";
 export * from "./cleanCensusRows";
 export * from "./censusReconciliation";
+export * from "./pccResidentListingParser";
 export * from "./parseCensusText";
 export * from "./residentAdapter";
 export * from "./censusImportSummary";
