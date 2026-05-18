@@ -18,6 +18,9 @@ export interface ParsedResident {
   fullName: string;
   mrn?: string;
   dob?: string;
+  age?: string;
+  sex?: string;
+  floor?: string;
   unit?: string;
   room?: string;
   bed?: string;
@@ -25,7 +28,9 @@ export interface ParsedResident {
   admitDate?: string;
   payerPrimary?: string;
   payerSecondary?: string;
+  allergies?: string;
   attendingPhysician?: string;
+  primaryDiagnosis?: string;
   status: "active" | "discharged" | "unknown";
   sourceBlock: string;
   warnings: string[];
