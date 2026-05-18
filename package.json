@@ -1,7 +1,7 @@
 {
   "name": "med-appointment",
   "private": true,
-  "version": "3.1.25",
+  "version": "3.1.26",
   "type": "module",
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && concurrently \"wrangler dev --port 3001 --local --persist-to .wrangler/state\" \"vite --port 3000 --host\"",
@@ -41,6 +41,7 @@
     "audit:census-page-wiring": "node scripts/audit-census-page-parser-wiring.mjs",
     "refactor:app-census-parser-wiring": "node scripts/refactor-app-census-parser-wiring.mjs",
     "refactor:app-census-summary-wiring": "node scripts/refactor-app-census-summary-wiring.mjs",
+    "refactor:app-smart-census-flow": "node scripts/restore-smart-census-reconciliation-flow.mjs",
     "test:census-parser-fixtures": "node --experimental-strip-types scripts/test-census-parser-fixtures.mjs"
   },
   "dependencies": {
