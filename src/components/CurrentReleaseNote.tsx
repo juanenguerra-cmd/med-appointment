@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added CensusPage import summary UI support for parsed census review before saving.",
-  "Added optional censusImportSummary and setCensusImportSummary props to CensusPage so App.tsx can wire the summary in a local build-tested step.",
-  "Added summary banner states for ready, review-required, and blocked import recommendations.",
-  "Added summary cards for parsed residents, warnings, duplicate groups, and critical parser errors.",
-  "Added scripts/refactor-app-census-summary-wiring.mjs and npm script refactor:app-census-summary-wiring to safely connect summary state inside App.tsx locally.",
+  "Added src/census/parser/pccResidentListingParser.ts for the real PCC Resident Listing Report column format.",
+  "Added support for MRNs with letters inside parentheses, direct Age extraction, Birth Date as DOB, and Location splitting into floor, unit, room, and bed.",
+  "Added support for wrapped allergy lines and correct separation of Allergies, Primary Physician, and Primary Diagnosis.",
+  "Updated parseCensusText to route detected PCC Resident Listing reports to the dedicated column parser.",
+  "Updated resident preview mapping and fixture tests so Age, Sex, Floor, Physician, and Diagnosis populate correctly.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before wiring summary state into App.tsx.",
-  "Run npm run refactor:app-census-summary-wiring locally from the repository root.",
-  "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
-  "Review git diff src/App.tsx and src/pages/CensusPage.tsx before committing local App.tsx changes.",
-  "Keep handleSaveCensus unchanged until safe save mode is added.",
+  "Pull the latest main branch before testing the PCC parser hardening.",
+  "Run npm run verify:census-parser to confirm PCC parser exports and barrel exports are present.",
+  "Run npm run test:census-parser-fixtures to validate the real-format PCC fixture and wrapped allergy handling.",
+  "Run npm run build after parser testing before using the census import workflow.",
+  "Do not import production census data until the local fixture test and build both pass.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.21 — Census Import Summary UI Wiring
+            v3.1.23 — PCC Resident Listing Column Parser Hardening
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds the Census page summary review surface and a local App.tsx wiring script while keeping the save workflow unchanged.
+            This release adds a dedicated parser for the real PCC-style Resident Listing Report so census rows map MRN, age, DOB, location, physician, and diagnosis correctly.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Summary UI</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Safe Wiring</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> PCC Parser</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Format Hardened</span>
         </div>
       </div>
 
