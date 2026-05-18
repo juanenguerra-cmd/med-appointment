@@ -8,9 +8,11 @@ const requiredFiles = [
   "src/census/parser/duplicateDetection.ts",
   "src/census/parser/cleanCensusRows.ts",
   "src/census/parser/censusReconciliation.ts",
+  "src/census/parser/pccResidentListingParser.ts",
   "src/census/parser/parseCensusText.ts",
   "src/census/parser/residentAdapter.ts",
   "src/census/parser/censusImportSummary.ts",
+  "src/census/parser/censusSafeSaveMode.ts",
   "src/census/parser/index.ts",
 ];
 
@@ -21,9 +23,11 @@ const requiredExports = [
   { file: "src/census/parser/duplicateDetection.ts", names: ["detectDuplicates"] },
   { file: "src/census/parser/cleanCensusRows.ts", names: ["toCleanCensusRows"] },
   { file: "src/census/parser/censusReconciliation.ts", names: ["reconcileCensusImport"] },
+  { file: "src/census/parser/pccResidentListingParser.ts", names: ["isPccResidentListingFormat", "normalizePccResidentRows", "parsePccResidentListingRow", "parsePccResidentListingText"] },
   { file: "src/census/parser/parseCensusText.ts", names: ["parseResidentBlock", "parseCensusText"] },
   { file: "src/census/parser/residentAdapter.ts", names: ["parsedResidentToResidentPreview", "parsedResidentsToResidentPreview"] },
   { file: "src/census/parser/censusImportSummary.ts", names: ["CensusImportSummary", "CensusImportSummaryItem", "createCensusImportSummary", "getCensusImportSummaryMessage"] },
+  { file: "src/census/parser/censusSafeSaveMode.ts", names: ["CensusSafeSaveMode", "CensusSafeSaveModeOption", "CensusSafeSaveDecision", "CENSUS_SAFE_SAVE_MODE_OPTIONS", "getCensusSafeSaveModeOption", "getDefaultCensusSafeSaveMode", "getCensusSafeSaveDecision", "getCensusSafeSaveModeMessage"] },
 ];
 
 const barrelRequiredLines = [
@@ -33,9 +37,11 @@ const barrelRequiredLines = [
   'export * from "./duplicateDetection";',
   'export * from "./cleanCensusRows";',
   'export * from "./censusReconciliation";',
+  'export * from "./pccResidentListingParser";',
   'export * from "./parseCensusText";',
   'export * from "./residentAdapter";',
   'export * from "./censusImportSummary";',
+  'export * from "./censusSafeSaveMode";',
 ];
 
 let errors = 0;
