@@ -38,6 +38,20 @@ const fixtures = [
       duplicateResidents: 1,
     },
   },
+  {
+    file: "pcc-resident-listing-real-format.txt",
+    expected: {
+      minResidents: 5,
+      mrns: ["LON202419", "LON202072", "200690", "LON202440", "200854"],
+      duplicateResidents: 0,
+      maxWarnings: 0,
+      fieldChecks: [
+        { mrn: "LON202419", age: "68", unit: "Unit 2", roomBed: "253-A", sex: "M", physician: "Dinesh Sethi", diagnosis: "S98.122D" },
+        { mrn: "LON202440", unit: "Unit 2", roomBed: "265-B", physician: "Dinesh Sethi", diagnosis: "J18.9" },
+        { mrn: "200854", unit: "Unit 4", roomBed: "470-A", physician: "Dr. Nenad Grlic", diagnosis: "E11.40" },
+      ],
+    },
+  },
 ];
 
 async function loadParser() {
@@ -57,7 +71,7 @@ function assert(condition, message) {
 }
 
 function summarizeResidents(residents) {
-  return residents.map((resident) => `${resident.fullName || resident.name || "Unknown"} | ${resident.mrn || "No MRN"} | ${resident.unit || "No Unit"} | ${resident.roomBed || resident.room || "No Room"}`);
+  return residents.map((resident) => `${resident.fullName || resident.name || "Unknown"} | ${resident.mrn || "No MRN"} | ${resident.age || "No Age"} | ${resident.unit || "No Unit"} | ${resident.roomBed || resident.room || "No Room"} | ${resident.attendingPhysician || "No Physician"} | ${resident.primaryDiagnosis || "No Diagnosis"}`);
 }
 
 const { parseCensusText } = await loadParser();
@@ -86,12 +100,26 @@ for (const fixture of fixtures) {
       assert(result.residents.some((resident) => resident.mrn === mrn), `Expected MRN ${mrn} was not parsed.`);
     }
 
+    for (const check of fixture.expected.fieldChecks || []) {
+      const resident = result.residents.find((item) => item.mrn === check.mrn);
+      assert(Boolean(resident), `Expected field check resident MRN ${check.mrn} was not parsed.`);
+      for (const [field, expectedValue] of Object.entries(check)) {
+        if (field === "mrn") continue;
+        const actualValue = field === "physician" ? resident.attendingPhysician : field === "diagnosis" ? resident.primaryDiagnosis : resident[field];
+        assert(actualValue === expectedValue, `Expected ${field} for MRN ${check.mrn} to be ${expectedValue}, got ${actualValue || "blank"}`);
+      }
+    }
+
     if (typeof fixture.expected.duplicateResidents === "number") {
       assert(result.summary.duplicateResidents === fixture.expected.duplicateResidents, `Expected ${fixture.expected.duplicateResidents} duplicate group(s), got ${result.summary.duplicateResidents}`);
     }
 
     if (typeof fixture.expected.minWarnings === "number") {
       assert(result.summary.residentsWithWarnings >= fixture.expected.minWarnings, `Expected at least ${fixture.expected.minWarnings} resident(s) with warnings, got ${result.summary.residentsWithWarnings}`);
+    }
+
+    if (typeof fixture.expected.maxWarnings === "number") {
+      assert(result.summary.residentsWithWarnings <= fixture.expected.maxWarnings, `Expected at most ${fixture.expected.maxWarnings} resident(s) with warnings, got ${result.summary.residentsWithWarnings}`);
     }
 
     console.log(`✅ Passed: ${fixture.file}`);
