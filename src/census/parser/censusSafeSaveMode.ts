@@ -61,7 +61,6 @@ export function getCensusSafeSaveModeOption(mode: CensusSafeSaveMode): CensusSaf
 export function getDefaultCensusSafeSaveMode(summary?: CensusImportSummary | null): CensusSafeSaveMode {
   if (!summary) return "review_only";
   if (summary.safeSaveRecommendation === "blocked") return "review_only";
-  if (summary.safeSaveRecommendation === "review_required") return "review_only";
   return "append_new_only";
 }
 
