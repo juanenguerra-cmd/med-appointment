@@ -223,9 +223,13 @@ export function validateFacility(input: Partial<Facility> | any): ValidationResu
 
 export function normalizeResidentKey(resident: Partial<Resident>) {
   const mrn = safeString(resident.mrn).trim();
-  if (mrn && mrn !== '—') return `mrn:${safeLower(mrn)}`;
-
   const name = safeString(resident.name).trim().replace(/\s+/g, ' ');
   const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ');
+
+  // Census reconciliation should never silently collapse two different visible rows.
+  // MRN remains the strongest identity anchor, but pairing it with name prevents one bad
+  // or reused MRN value from reducing a 125-row census to 124 active residents.
+  if (mrn && mrn !== '—') return `mrn-name:${safeLower(mrn)}|${safeLower(name)}`;
+
   return `name-room:${safeLower(name)}|${safeLower(room)}`;
 }
