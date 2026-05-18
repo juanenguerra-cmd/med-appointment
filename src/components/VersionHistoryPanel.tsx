@@ -10,65 +10,55 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.22";
+const CURRENT_VERSION = "3.1.23";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.23",
+    releaseDate: "2026-05-17",
+    title: "PCC Resident Listing Column Parser Hardening",
+    summary: "Added a dedicated parser for the real PCC-style Resident Listing Report so census rows map MRN, age, DOB, location, physician, and diagnosis correctly.",
+    capabilities: [
+      "Added src/census/parser/pccResidentListingParser.ts for real Resident Listing Report column parsing.",
+      "Supports MRNs with letters inside parentheses, such as LON202419.",
+      "Extracts Age directly from the Age column and Birth Date as DOB.",
+      "Splits location into floor, unit, room, and bed from values such as 2nd Floor Unit 2 253 A.",
+      "Joins wrapped allergy lines until the next resident row starts.",
+      "Separates Allergies, Primary Physician, and Primary Diagnosis into the correct parsed fields.",
+      "Routes detected PCC Resident Listing reports through the dedicated parser inside parseCensusText.",
+      "Updates resident preview mapping so age, sex, floor, physician, and diagnosis display correctly.",
+    ],
+    processFlow: [
+      "Paste the PCC Resident Listing Report raw text into the Census import box.",
+      "The parser detects the Resident Listing Report header and uses the PCC column parser.",
+      "Rows are normalized, wrapped allergy lines are joined, and resident fields are mapped column-by-column.",
+      "Review the import summary and preview table before saving.",
+      "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build before production use.",
+    ],
+    userImpact: [
+      "Fixes the issue where 114 residents were parsed with 114 warnings because MRN, DOB, age, and physician were not detected correctly.",
+      "Reduces false warnings for complete PCC resident rows.",
+      "Prevents Primary Diagnosis from being displayed under the Physician column.",
+      "Makes the parsed census preview safer to review before import.",
+    ],
+  },
   {
     version: "3.1.22",
     releaseDate: "2026-05-12",
     title: "User Management Admin Console Foundation",
     summary: "Added a protected User Management admin console foundation for multi-facility access control, staff-user linking, role-based security, and appointment workflow permission overrides.",
-    capabilities: [
-      "Added src/pages/UserManagementPage.tsx as the User Management admin console page.",
-      "Added admin-only role guard support for role-super-admin, role-org-admin, and role-facility-admin.",
-      "Added Users List surface with search, refresh, create user, staff link, role, status, and user action columns.",
-      "Added Access Matrix surface with view, create, edit, print, export, delete, and admin permission columns.",
-      "Mapped permission groups to Med-Appointment workflows: modules, departments, and appointment workflows.",
-      "Added built-in role and protected-role constants for future backend and modal wiring.",
-      "Added validation helper for username, facility assignment, default facility, role, password, duplicate username/email, and staff-link checks.",
-      "Added docs/USER_MANAGEMENT_ADMIN_CONSOLE.md with workflow, user-guide, endpoint, schema, validation, and safety notes.",
-    ],
-    processFlow: [
-      "Admin opens the future /user-management route or User Management tab.",
-      "System confirms the logged-in user has Super Admin, Org Admin, or Facility Admin access.",
-      "Admin reviews users by staff/user, facility assignment, staff link, email/title, role, and status.",
-      "Admin opens Access Matrix for a selected user and reviews module, department, and appointment workflow permissions.",
-      "Reset Defaults clears customPermissions for the selected user.",
-      "Apply Overrides saves customPermissions for the selected user.",
-      "Deactivate User must keep the record and set status to inactive after DEACTIVATE confirmation.",
-      "Reset Password must call the backend only and must not expose password hashes or store passwords in localStorage.",
-    ],
-    userImpact: [
-      "Prepares Med-Appointment for safer multi-facility user access control.",
-      "Gives administrators a clear console for user review, facility access, roles, and appointment workflow permissions.",
-      "Keeps role templates and audit logs visible as planned next-release placeholders.",
-      "Documents the required backend safety rules before live password reset and deactivation wiring.",
-    ],
+    capabilities: ["Added src/pages/UserManagementPage.tsx.", "Added admin-only role guard support.", "Added Users List and Access Matrix surfaces."],
+    processFlow: ["Admin opens the future /user-management route or User Management tab.", "System confirms admin access.", "Admin reviews user roles and access matrix."],
+    userImpact: ["Prepares Med-Appointment for safer multi-facility user access control.", "Gives administrators a clear console for user review and permission management."],
   },
   {
     version: "3.1.21",
     releaseDate: "2026-04-30",
     title: "Census Import Summary UI Wiring",
     summary: "Added the Census page summary review surface and a local App.tsx wiring script while keeping the save workflow unchanged.",
-    capabilities: [
-      "Added CensusPage import summary UI support for parsed census review before saving.",
-      "Added optional censusImportSummary and setCensusImportSummary props to CensusPage.",
-      "Added summary banner states for ready, review-required, and blocked import recommendations.",
-      "Added summary cards for parsed residents, warnings, duplicate groups, and critical parser errors.",
-      "Added scripts/refactor-app-census-summary-wiring.mjs and npm script refactor:app-census-summary-wiring.",
-    ],
-    processFlow: [
-      "Pull the latest main branch before wiring summary state into App.tsx.",
-      "Run npm run refactor:app-census-summary-wiring locally from the repository root.",
-      "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
-      "Review git diff src/App.tsx and src/pages/CensusPage.tsx before committing local App.tsx changes.",
-      "Keep handleSaveCensus unchanged until safe save mode is added.",
-    ],
-    userImpact: [
-      "Adds visible census import summary review before save.",
-      "Improves safety by clearly showing ready, review-required, or blocked import status.",
-      "Prepares the next phase: safe save mode and duplicate/warning review controls.",
-    ],
+    capabilities: ["Added CensusPage import summary UI support.", "Added summary banner states and summary cards.", "Added App.tsx summary wiring script."],
+    processFlow: ["Run npm run refactor:app-census-summary-wiring locally.", "Run parser verification, fixture tests, and build."],
+    userImpact: ["Adds visible census import summary review before save.", "Improves safety by showing ready, review-required, or blocked import status."],
   },
   {
     version: "3.1.20",
@@ -78,15 +68,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added src/census/parser/censusImportSummary.ts.", "Added createCensusImportSummary and getCensusImportSummaryMessage."],
     processFlow: ["Run npm run verify:census-parser locally.", "Use createCensusImportSummary after parseCensusText before showing or saving census preview data."],
     userImpact: ["Prepares the Census page for visible import summary cards.", "Supports safer save decisions by separating ready, review-required, and blocked import states."],
-  },
-  {
-    version: "3.1.19",
-    releaseDate: "2026-04-30",
-    title: "Census Parser Fixture Test Script",
-    summary: "Added local fixture-based parser checks so census parsing behavior can be tested before future import summary and save workflow changes.",
-    capabilities: ["Added census parser fixture files.", "Added scripts/test-census-parser-fixtures.mjs.", "Added npm script test:census-parser-fixtures."],
-    processFlow: ["Run npm run test:census-parser-fixtures locally.", "Run npm run verify:census-parser and npm run build after fixture checks."],
-    userImpact: ["Improves confidence before additional census import/save workflow changes.", "Creates repeatable parser regression testing for common census formats."],
   },
 ];
 
