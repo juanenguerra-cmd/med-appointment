@@ -67,8 +67,6 @@ export function CensusPage({
   censusImportSummary,
   setCensusImportSummary,
   isParsing,
-  censusSkipDuplicates,
-  setCensusSkipDuplicates,
   censusSearchQuery,
   setCensusSearchQuery,
   handleParseCensus,
@@ -115,31 +113,13 @@ export function CensusPage({
                 />
               </div>
 
-              <div className="flex items-center gap-3 px-1">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                      censusSkipDuplicates
-                        ? "bg-brand border-brand"
-                        : "bg-white border-slate-300 group-hover:border-brand"
-                    }`}
-                  >
-                    {censusSkipDuplicates && (
-                      <CheckSquare size={14} className="text-white" />
-                    )}
-                    <input
-                      type="checkbox"
-                      className="hidden"
-                      checked={censusSkipDuplicates}
-                      onChange={() =>
-                        setCensusSkipDuplicates(!censusSkipDuplicates)
-                      }
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-slate-600">
-                    Skip Existing Residents
-                  </span>
-                </label>
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs font-semibold leading-relaxed text-sky-800">
+                <p className="font-black uppercase tracking-wider text-[10px] text-sky-900">
+                  Smart Census Reconciliation Active
+                </p>
+                <p className="mt-1">
+                  Saving a parsed census now compares the new listing against the current registry to identify existing residents, updated information, new residents, reactivated residents, and possible discharges. Existing records are not skipped or hard-deleted.
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -269,12 +249,12 @@ export function CensusPage({
               </div>
 
               <div className="flex items-center justify-between p-2 bg-brand-light/30 rounded-xl mb-4 text-xs font-bold text-brand">
-                <span>{parsedResidentsPreview.length} records ready for import</span>
+                <span>{parsedResidentsPreview.length} records ready for smart reconciliation</span>
                 <CheckSquare size={16} />
               </div>
 
               <Button className="w-full gap-2" onClick={handleSaveCensus}>
-                <Save size={18} /> Confirm & Save to Registry
+                <Save size={18} /> Confirm & Reconcile Registry
               </Button>
             </Card>
           )}
