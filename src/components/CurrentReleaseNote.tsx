@@ -1,11 +1,11 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Fixed PCC Resident Listing parser row detection so mixed-case resident names are recognized as valid resident rows.",
-  "Updated the resident row start pattern from uppercase-only matching to mixed-case compatible matching.",
-  "Resolved the issue where the uploaded census showed 126 residents but the app parsed only 113 residents.",
-  "Added extra filtering for page/header lines so report headers do not get appended into resident allergy or diagnosis text.",
-  "Kept the existing PCC column parser mapping for MRN, Age, Birth Date, Location, Gender, Admission Date, Allergies, Primary Physician, and Primary Diagnosis.",
+  "Improved PCC Primary Physician detection so the parser can separate Allergies, Primary Physician, and Primary Diagnosis more reliably.",
+  "Added known physician matching and a broader physician fallback for PCC Resident Listing rows.",
+  "Updated safe-save default behavior so review-required census imports default to Append New Only instead of Review Only when there are no parser-blocking errors.",
+  "Resolved the blocking popup that said Review Only mode does not save changes to the resident registry for review-required but usable census imports.",
+  "Kept parser-blocked imports protected when critical parser errors are present.",
 ];
 
 const workflowItems = [
@@ -13,7 +13,7 @@ const workflowItems = [
   "Run npm run verify:census-parser to confirm parser exports remain intact.",
   "Run npm run test:census-parser-fixtures to validate parser fixture coverage.",
   "Run npm run build before using the updated census import workflow.",
-  "Paste the same raw census again and confirm Parsed Residents shows 126 instead of 113.",
+  "Paste the same raw census again and confirm physician values populate and the save alert no longer appears for usable imports.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.24 — PCC Mixed-Case Resident Row Detection Fix
+            v3.1.25 — Census Save Alert + Physician Detection Fix
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release fixes the PCC census parser so mixed-case resident names are counted, resolving the 113 parsed vs 126 expected resident count issue.
+            This release improves PCC physician detection and prevents usable review-required census imports from being blocked by Review Only mode.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Count Fix</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> PCC Hardened</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Physician Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Save Alert Fix</span>
         </div>
       </div>
 
