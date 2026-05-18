@@ -14,9 +14,13 @@ const activeStatus = (status: unknown): 'Active' | 'Discharged' => {
 
 const normalizeKey = (resident: any): string => {
   const mrn = safeString(resident?.mrn).trim().toLowerCase();
-  if (mrn && mrn !== '—') return `mrn:${mrn}`;
-  const name = safeString(resident?.name).trim().toLowerCase();
-  const room = safeString(resident?.roomNumber).trim().toLowerCase();
+  const name = safeString(resident?.name).trim().replace(/\s+/g, ' ').toLowerCase();
+  const room = safeString(resident?.roomNumber).trim().replace(/\s+/g, ' ').toLowerCase();
+
+  // MRN remains the strongest identity anchor, but pairing it with name prevents one bad
+  // or reused MRN value from collapsing two visible census rows during reconciliation.
+  if (mrn && mrn !== '—') return `mrn-name:${mrn}|${name}`;
+
   return `name-room:${name}|${room}`;
 };
 
