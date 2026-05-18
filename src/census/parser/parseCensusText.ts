@@ -14,6 +14,7 @@ import {
   extractUnit,
   splitResidentBlocks,
 } from "./fieldExtractors";
+import { isPccResidentListingFormat, parsePccResidentListingText } from "./pccResidentListingParser";
 import { createResidentKey, normalizeRawCensusText } from "./normalizeRawCensusText";
 
 export function parseResidentBlock(
@@ -63,6 +64,11 @@ export function parseResidentBlock(
 
 export function parseCensusText(input: RawCensusImportInput): ParsedCensusResult {
   const normalizedText = normalizeRawCensusText(input.rawText);
+
+  if (isPccResidentListingFormat(normalizedText)) {
+    return parsePccResidentListingText({ ...input, rawText: normalizedText });
+  }
+
   const reportDate = input.reportDate || detectReportDate(normalizedText);
   const blocks = splitResidentBlocks(normalizedText);
   const residents: ParsedResident[] = [];
