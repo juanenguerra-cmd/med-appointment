@@ -1,0 +1,11 @@
+Date: May 5, 2026
+Resident Listing Report
+Resident: All, Unit: All, Status: Current
+Name Age Birth Date Location (Fl Un Rm Bd) Gender Admission Date Allergies Primary Physician Primary Diagnosis
+ACOSTA, ROBERT (LON202419) 68 4/1/1958 2nd Floor Unit 2 253 A M 4/20/2026 No Known Allergies Dinesh Sethi S98.122D
+ALBANI-MARIN, ELIZABETH (LON202072) 89 5/2/1937 4th Floor Unit 4 473 B F 9/1/2024 NKDA Nenad Grlic I10
+ALTUZ, DIANE (200690) 82 1/1/1944 4th Floor Unit 4 472 A F 2/12/2025 Penicillin Dr. Nenad Grlic E11.9
+ALVARADO, ANTOINETTE (LON202440) 80 7/7/1946 2nd Floor Unit 2 265 B F 1/5/2024 Ciprofloxacin, oxyCODONE, Sulfa
+Antibiotics Dinesh Sethi J18.9
+ANDON, CHRISTINE (200854) 77 9/3/1948 4th Floor Unit 4 470 A F 5/18/2024 Erythromycin, Meropenem,
+Teflaro Dr. Nenad Grlic E11.40
