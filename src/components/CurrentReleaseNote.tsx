@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Added src/census/parser/pccResidentListingParser.ts for the real PCC Resident Listing Report column format.",
-  "Added support for MRNs with letters inside parentheses, direct Age extraction, Birth Date as DOB, and Location splitting into floor, unit, room, and bed.",
-  "Added support for wrapped allergy lines and correct separation of Allergies, Primary Physician, and Primary Diagnosis.",
-  "Updated parseCensusText to route detected PCC Resident Listing reports to the dedicated column parser.",
-  "Updated resident preview mapping and fixture tests so Age, Sex, Floor, Physician, and Diagnosis populate correctly.",
+  "Fixed PCC Resident Listing parser row detection so mixed-case resident names are recognized as valid resident rows.",
+  "Updated the resident row start pattern from uppercase-only matching to mixed-case compatible matching.",
+  "Resolved the issue where the uploaded census showed 126 residents but the app parsed only 113 residents.",
+  "Added extra filtering for page/header lines so report headers do not get appended into resident allergy or diagnosis text.",
+  "Kept the existing PCC column parser mapping for MRN, Age, Birth Date, Location, Gender, Admission Date, Allergies, Primary Physician, and Primary Diagnosis.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before testing the PCC parser hardening.",
-  "Run npm run verify:census-parser to confirm PCC parser exports and barrel exports are present.",
-  "Run npm run test:census-parser-fixtures to validate the real-format PCC fixture and wrapped allergy handling.",
-  "Run npm run build after parser testing before using the census import workflow.",
-  "Do not import production census data until the local fixture test and build both pass.",
+  "Pull the latest main branch before retesting the same raw census text.",
+  "Run npm run verify:census-parser to confirm parser exports remain intact.",
+  "Run npm run test:census-parser-fixtures to validate parser fixture coverage.",
+  "Run npm run build before using the updated census import workflow.",
+  "Paste the same raw census again and confirm Parsed Residents shows 126 instead of 113.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.23 — PCC Resident Listing Column Parser Hardening
+            v3.1.24 — PCC Mixed-Case Resident Row Detection Fix
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release adds a dedicated parser for the real PCC-style Resident Listing Report so census rows map MRN, age, DOB, location, physician, and diagnosis correctly.
+            This release fixes the PCC census parser so mixed-case resident names are counted, resolving the 113 parsed vs 126 expected resident count issue.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> PCC Parser</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Format Hardened</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Census Count Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> PCC Hardened</span>
         </div>
       </div>
 
