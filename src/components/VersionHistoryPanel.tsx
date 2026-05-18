@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.23";
+const CURRENT_VERSION = "3.1.24";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.24",
+    releaseDate: "2026-05-18",
+    title: "PCC Mixed-Case Resident Row Detection Fix",
+    summary: "Fixed PCC census parser row detection so mixed-case resident names are counted, resolving the 113 parsed versus 126 expected resident count issue.",
+    capabilities: [
+      "Updated the PCC resident row start pattern from uppercase-only matching to mixed-case compatible matching.",
+      "Recognizes mixed-case resident names such as Anderson, Floyd; Dwyer, Angela; Holmes, Jamila T; and Woo, Kaitsen.",
+      "Added extra filtering for page/header lines so report headers are not appended into resident allergy or diagnosis text.",
+      "Preserved the existing PCC column parser mapping for MRN, Age, Birth Date, Location, Gender, Admission Date, Allergies, Primary Physician, and Primary Diagnosis.",
+      "No D1 migration is required.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before retesting the same raw census text.",
+      "Run npm run verify:census-parser to confirm parser exports remain intact.",
+      "Run npm run test:census-parser-fixtures to validate parser fixture coverage.",
+      "Run npm run build before using the updated census import workflow.",
+      "Paste the same raw census again and confirm Parsed Residents shows 126 instead of 113.",
+    ],
+    userImpact: [
+      "Fixes missed resident rows caused by mixed-case names in PCC census exports.",
+      "Expected parsed resident count now matches the 126 resident(s) footer from the raw census.",
+      "Improves confidence before using the census preview/import workflow.",
+    ],
+  },
   {
     version: "3.1.23",
     releaseDate: "2026-05-17",
@@ -36,7 +61,7 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build before production use.",
     ],
     userImpact: [
-      "Fixes the issue where 114 residents were parsed with 114 warnings because MRN, DOB, age, and physician were not detected correctly.",
+      "Fixes the earlier issue where residents were parsed with broad warnings because MRN, DOB, age, and physician were not detected correctly.",
       "Reduces false warnings for complete PCC resident rows.",
       "Prevents Primary Diagnosis from being displayed under the Physician column.",
       "Makes the parsed census preview safer to review before import.",
@@ -59,15 +84,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added CensusPage import summary UI support.", "Added summary banner states and summary cards.", "Added App.tsx summary wiring script."],
     processFlow: ["Run npm run refactor:app-census-summary-wiring locally.", "Run parser verification, fixture tests, and build."],
     userImpact: ["Adds visible census import summary review before save.", "Improves safety by showing ready, review-required, or blocked import status."],
-  },
-  {
-    version: "3.1.20",
-    releaseDate: "2026-04-30",
-    title: "Census Import Summary Types and Mapper",
-    summary: "Added a reusable census import summary mapper so parsed census results can be reviewed for warnings, duplicates, readiness, and safe-save status before saving.",
-    capabilities: ["Added src/census/parser/censusImportSummary.ts.", "Added createCensusImportSummary and getCensusImportSummaryMessage."],
-    processFlow: ["Run npm run verify:census-parser locally.", "Use createCensusImportSummary after parseCensusText before showing or saving census preview data."],
-    userImpact: ["Prepares the Census page for visible import summary cards.", "Supports safer save decisions by separating ready, review-required, and blocked import states."],
   },
 ];
 
