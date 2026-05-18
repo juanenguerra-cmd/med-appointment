@@ -5,6 +5,14 @@ import { detectReportDate } from "./fieldExtractors";
 
 const RESIDENT_ROW_START = /^([A-Za-z][A-Za-z' .-]+),\s+([A-Za-z][A-Za-z' .-]+)\s+\(([^)]+)\)\s+\d{1,3}\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/;
 const DIAGNOSIS_CODE_PATTERN = /^[A-Z][A-Z0-9]*(?:\.[A-Z0-9]+)?$/;
+const KNOWN_PHYSICIANS = [
+  "Dinesh Sethi",
+  "Nenad Grlic",
+  "Dr. Nenad Grlic",
+  "Ramin Hodjati",
+  "Dr. Ramin Hodjati",
+  "Dr. Dinesh Sethi",
+];
 
 export function isPccResidentListingFormat(text: string): boolean {
   const lower = text.toLowerCase();
@@ -67,6 +75,23 @@ function extractLocationParts(location: string): Pick<ParsedResident, "floor" | 
   };
 }
 
+function splitKnownPhysician(remaining: string, diagnosis?: string): { allergies?: string; physician?: string; diagnosis?: string } | null {
+  const lower = remaining.toLowerCase();
+
+  for (const physician of KNOWN_PHYSICIANS.sort((a, b) => b.length - a.length)) {
+    const index = lower.lastIndexOf(physician.toLowerCase());
+    if (index >= 0) {
+      return {
+        allergies: remaining.slice(0, index).trim(),
+        physician: remaining.slice(index, index + physician.length).trim(),
+        diagnosis,
+      };
+    }
+  }
+
+  return null;
+}
+
 function splitPhysicianDiagnosis(tail: string): { allergies?: string; physician?: string; diagnosis?: string } {
   const tokens = tail.trim().split(/\s+/).filter(Boolean);
   let diagnosis: string | undefined;
@@ -76,11 +101,12 @@ function splitPhysicianDiagnosis(tail: string): { allergies?: string; physician?
   }
 
   const remaining = tokens.join(" ").trim();
+  const knownPhysicianSplit = splitKnownPhysician(remaining, diagnosis);
+  if (knownPhysicianSplit) return knownPhysicianSplit;
+
   const physicianPatterns = [
-    /\b(Dr\.\s+[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)*)$/,
-    /\b(Dinesh\s+Sethi)$/i,
-    /\b(Nenad\s+Grlic)$/i,
-    /\b(Ramin\s+Hodjati)$/i,
+    /\b(Dr\.?\s+[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+){0,3})$/,
+    /\b([A-Z][A-Za-z'.-]+\s+[A-Z][A-Za-z'.-]+(?:\s+[A-Z][A-Za-z'.-]+)?)$/,
   ];
 
   for (const pattern of physicianPatterns) {
@@ -90,15 +116,6 @@ function splitPhysicianDiagnosis(tail: string): { allergies?: string; physician?
       const allergies = remaining.slice(0, match.index).trim();
       return { allergies, physician, diagnosis };
     }
-  }
-
-  const fallback = remaining.match(/^(.*?)([A-Z][A-Za-z'.-]+\s+[A-Z][A-Za-z'.-]+)$/);
-  if (fallback) {
-    return {
-      allergies: fallback[1].trim(),
-      physician: fallback[2].trim(),
-      diagnosis,
-    };
   }
 
   return { allergies: remaining, diagnosis };
