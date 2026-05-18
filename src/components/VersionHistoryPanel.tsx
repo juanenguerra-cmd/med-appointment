@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.24";
+const CURRENT_VERSION = "3.1.25";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.25",
+    releaseDate: "2026-05-18",
+    title: "Census Save Alert + Physician Detection Fix",
+    summary: "Improved PCC physician detection and prevented usable review-required census imports from being blocked by Review Only mode.",
+    capabilities: [
+      "Improved PCC Primary Physician detection so the parser can separate Allergies, Primary Physician, and Primary Diagnosis more reliably.",
+      "Added known physician matching and a broader physician fallback for PCC Resident Listing rows.",
+      "Updated safe-save default behavior so review-required census imports default to Append New Only instead of Review Only when there are no parser-blocking errors.",
+      "Resolved the blocking popup that said Review Only mode does not save changes to the resident registry for review-required but usable census imports.",
+      "Kept parser-blocked imports protected when critical parser errors are present.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before retesting the same raw census text.",
+      "Run npm run verify:census-parser to confirm parser exports remain intact.",
+      "Run npm run test:census-parser-fixtures to validate parser fixture coverage.",
+      "Run npm run build before using the updated census import workflow.",
+      "Paste the same raw census again and confirm physician values populate and the save alert no longer appears for usable imports.",
+    ],
+    userImpact: [
+      "Reduces false missing-physician warnings in PCC census previews.",
+      "Allows usable census imports to proceed with append behavior instead of being blocked by Review Only mode.",
+      "Keeps critical parser errors blocked for safety.",
+    ],
+  },
   {
     version: "3.1.24",
     releaseDate: "2026-05-18",
@@ -75,15 +100,6 @@ const VERSION_HISTORY: VersionEntry[] = [
     capabilities: ["Added src/pages/UserManagementPage.tsx.", "Added admin-only role guard support.", "Added Users List and Access Matrix surfaces."],
     processFlow: ["Admin opens the future /user-management route or User Management tab.", "System confirms admin access.", "Admin reviews user roles and access matrix."],
     userImpact: ["Prepares Med-Appointment for safer multi-facility user access control.", "Gives administrators a clear console for user review and permission management."],
-  },
-  {
-    version: "3.1.21",
-    releaseDate: "2026-04-30",
-    title: "Census Import Summary UI Wiring",
-    summary: "Added the Census page summary review surface and a local App.tsx wiring script while keeping the save workflow unchanged.",
-    capabilities: ["Added CensusPage import summary UI support.", "Added summary banner states and summary cards.", "Added App.tsx summary wiring script."],
-    processFlow: ["Run npm run refactor:app-census-summary-wiring locally.", "Run parser verification, fixture tests, and build."],
-    userImpact: ["Adds visible census import summary review before save.", "Improves safety by showing ready, review-required, or blocked import status."],
   },
 ];
 
