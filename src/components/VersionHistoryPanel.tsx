@@ -10,9 +10,34 @@ interface VersionEntry {
   userImpact: string[];
 }
 
-const CURRENT_VERSION = "3.1.25";
+const CURRENT_VERSION = "3.1.26";
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "3.1.26",
+    releaseDate: "2026-05-18",
+    title: "Restore Smart Census Reconciliation Flow",
+    summary: "Restored the required census import save workflow so new census data is compared against the existing registry before saving changes.",
+    capabilities: [
+      "Added scripts/restore-smart-census-reconciliation-flow.mjs to restore the intended census save path locally against App.tsx.",
+      "Added npm script refactor:app-smart-census-flow for a build-tested local App.tsx reconciliation patch.",
+      "Reinstates the required smart reconciliation workflow: created, updated, reactivated, discharged, and unchanged residents.",
+      "Prevents append-only census saving from bypassing update detection and discharge detection.",
+      "Preserves the existing backend reconciliation and frontend fallback flow already present in useHealthData.ts.",
+    ],
+    processFlow: [
+      "Pull the latest main branch before applying the App.tsx smart census flow patch.",
+      "Run npm run refactor:app-smart-census-flow locally from the repository root.",
+      "Review git diff src/App.tsx to confirm the save path uses replaceResidents(parsedResidentsPreview).",
+      "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
+      "Retest census import and confirm existing residents update, new residents are created, reappearing residents reactivate, and missing residents are marked discharged without hard deletion.",
+    ],
+    userImpact: [
+      "Restores the previous intended census update flow.",
+      "Prevents duplicate resident accumulation from append-only imports.",
+      "Protects resident history by marking missing residents discharged instead of deleting them.",
+    ],
+  },
   {
     version: "3.1.25",
     releaseDate: "2026-05-18",
@@ -91,15 +116,6 @@ const VERSION_HISTORY: VersionEntry[] = [
       "Prevents Primary Diagnosis from being displayed under the Physician column.",
       "Makes the parsed census preview safer to review before import.",
     ],
-  },
-  {
-    version: "3.1.22",
-    releaseDate: "2026-05-12",
-    title: "User Management Admin Console Foundation",
-    summary: "Added a protected User Management admin console foundation for multi-facility access control, staff-user linking, role-based security, and appointment workflow permission overrides.",
-    capabilities: ["Added src/pages/UserManagementPage.tsx.", "Added admin-only role guard support.", "Added Users List and Access Matrix surfaces."],
-    processFlow: ["Admin opens the future /user-management route or User Management tab.", "System confirms admin access.", "Admin reviews user roles and access matrix."],
-    userImpact: ["Prepares Med-Appointment for safer multi-facility user access control.", "Gives administrators a clear console for user review and permission management."],
   },
 ];
 
