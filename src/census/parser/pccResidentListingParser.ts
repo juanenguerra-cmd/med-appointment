@@ -3,7 +3,7 @@ import { detectDuplicates } from "./duplicateDetection";
 import { createResidentKey, normalizeDate, normalizeRawCensusText, titleCase } from "./normalizeRawCensusText";
 import { detectReportDate } from "./fieldExtractors";
 
-const RESIDENT_ROW_START = /^([A-Z][A-Z' .-]+),\s+([A-Z][A-Z' .-]+)\s+\(([^)]+)\)\s+\d{1,3}\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/;
+const RESIDENT_ROW_START = /^([A-Za-z][A-Za-z' .-]+),\s+([A-Za-z][A-Za-z' .-]+)\s+\(([^)]+)\)\s+\d{1,3}\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/;
 const DIAGNOSIS_CODE_PATTERN = /^[A-Z][A-Z0-9]*(?:\.[A-Z0-9]+)?$/;
 
 export function isPccResidentListingFormat(text: string): boolean {
@@ -22,7 +22,12 @@ function normalizePccLines(text: string): string[] {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
+    .filter((line) => !/^date:\s*/i.test(line))
+    .filter((line) => !/^time:\s*/i.test(line))
+    .filter((line) => !/^user:\s*/i.test(line))
+    .filter((line) => !/^page\s*#/i.test(line))
     .filter((line) => !/^name\s+age\s+birth date\s+location/i.test(line))
+    .filter((line) => !/^\(fl\s+un\s+rm\s+bd\)/i.test(line))
     .filter((line) => !/^resident:\s*/i.test(line))
     .filter((line) => !/^resident listing report/i.test(line));
 }
@@ -100,7 +105,7 @@ function splitPhysicianDiagnosis(tail: string): { allergies?: string; physician?
 }
 
 export function parsePccResidentListingRow(row: string): ParsedResident {
-  const pattern = /^([A-Z][A-Z' .-]+),\s+([A-Z][A-Z' .-]+)\s+\(([^)]+)\)\s+(\d{1,3})\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+?Unit\s+\d+\s+\d{2,4}\s+[A-Z])\s+([MF])\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+)$/i;
+  const pattern = /^([A-Za-z][A-Za-z' .-]+),\s+([A-Za-z][A-Za-z' .-]+)\s+\(([^)]+)\)\s+(\d{1,3})\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+?Unit\s+\d+\s+\d{2,4}\s+[A-Z])\s+([MF])\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+)$/i;
   const match = row.match(pattern);
 
   if (!match) {
