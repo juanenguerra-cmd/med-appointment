@@ -1,19 +1,19 @@
 import { CheckCircle2, History, Layers, ShieldCheck } from "lucide-react";
 
 const releaseItems = [
-  "Improved PCC Primary Physician detection so the parser can separate Allergies, Primary Physician, and Primary Diagnosis more reliably.",
-  "Added known physician matching and a broader physician fallback for PCC Resident Listing rows.",
-  "Updated safe-save default behavior so review-required census imports default to Append New Only instead of Review Only when there are no parser-blocking errors.",
-  "Resolved the blocking popup that said Review Only mode does not save changes to the resident registry for review-required but usable census imports.",
-  "Kept parser-blocked imports protected when critical parser errors are present.",
+  "Added scripts/restore-smart-census-reconciliation-flow.mjs to restore the intended census save path locally against App.tsx.",
+  "Added npm script refactor:app-smart-census-flow for a build-tested local App.tsx reconciliation patch.",
+  "Reinstates the required smart reconciliation workflow: created, updated, reactivated, discharged, and unchanged residents.",
+  "Prevents append-only census saving from bypassing update detection and discharge detection.",
+  "Preserves the existing backend reconciliation and frontend fallback flow already present in useHealthData.ts.",
 ];
 
 const workflowItems = [
-  "Pull the latest main branch before retesting the same raw census text.",
-  "Run npm run verify:census-parser to confirm parser exports remain intact.",
-  "Run npm run test:census-parser-fixtures to validate parser fixture coverage.",
-  "Run npm run build before using the updated census import workflow.",
-  "Paste the same raw census again and confirm physician values populate and the save alert no longer appears for usable imports.",
+  "Pull the latest main branch before applying the App.tsx smart census flow patch.",
+  "Run npm run refactor:app-smart-census-flow locally from the repository root.",
+  "Review git diff src/App.tsx to confirm the save path uses replaceResidents(parsedResidentsPreview).",
+  "Run npm run verify:census-parser, npm run test:census-parser-fixtures, and npm run build.",
+  "Retest census import and confirm existing residents update, new residents are created, reappearing residents reactivate, and missing residents are marked discharged without hard deletion.",
 ];
 
 export function CurrentReleaseNote() {
@@ -25,15 +25,15 @@ export function CurrentReleaseNote() {
             <History size={18} /> Current Release Note
           </div>
           <h2 className="mt-2 text-lg font-black text-slate-900">
-            v3.1.25 — Census Save Alert + Physician Detection Fix
+            v3.1.26 — Restore Smart Census Reconciliation Flow
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600">
-            This release improves PCC physician detection and prevents usable review-required census imports from being blocked by Review Only mode.
+            This release restores the required census import save workflow so new census data is compared against the existing registry before saving changes.
           </p>
         </div>
         <div className="flex gap-2 text-sky-800">
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Physician Fix</span>
-          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> Save Alert Fix</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><Layers size={12} className="mr-1 inline" /> Smart Reconcile</span>
+          <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm"><ShieldCheck size={12} className="mr-1 inline" /> No Hard Delete</span>
         </div>
       </div>
 
