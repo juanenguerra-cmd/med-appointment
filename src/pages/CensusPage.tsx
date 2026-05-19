@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { AlertTriangle, CheckCircle2, CheckSquare, ClipboardPaste, Save } from "lucide-react";
 import { Card } from "../components/Card";
@@ -67,6 +68,7 @@ export function CensusPage({
   censusImportSummary,
   setCensusImportSummary,
   isParsing,
+  setCensusSkipDuplicates,
   censusSearchQuery,
   setCensusSearchQuery,
   handleParseCensus,
@@ -74,6 +76,14 @@ export function CensusPage({
   deleteResident,
 }: CensusPageProps) {
   const summaryBanner = censusImportSummary ? getSummaryBanner(censusImportSummary) : null;
+
+  useEffect(() => {
+    // The census screen must always use the smart reconciliation save path.
+    // Keeping this false ensures App.tsx routes Confirm & Reconcile Registry through replaceResidents(),
+    // which compares the new census with the current registry and classifies created, updated,
+    // reactivated, discharged, and unchanged residents.
+    setCensusSkipDuplicates(false);
+  }, [setCensusSkipDuplicates]);
 
   return (
     <motion.section
