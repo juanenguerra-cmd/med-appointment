@@ -227,9 +227,9 @@ export function normalizeResidentKey(resident: Partial<Resident>) {
   const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ');
 
   // Census reconciliation should never silently collapse two different visible rows.
-  // MRN remains the strongest identity anchor, but pairing it with name prevents one bad
-  // or reused MRN value from reducing a 125-row census to 124 active residents.
-  if (mrn && mrn !== '—') return `mrn-name:${safeLower(mrn)}|${safeLower(name)}`;
+  // MRN remains the strongest identity anchor, but pairing it with name and room prevents
+  // same-name or shared-MRN edge cases from reducing the active census count.
+  if (mrn && mrn !== '—') return `mrn-name-room:${safeLower(mrn)}|${safeLower(name)}|${safeLower(room)}`;
 
   return `name-room:${safeLower(name)}|${safeLower(room)}`;
 }
