@@ -226,10 +226,10 @@ export function normalizeResidentKey(resident: Partial<Resident>) {
   const name = safeString(resident.name).trim().replace(/\s+/g, ' ');
   const room = safeString(resident.roomNumber).trim().replace(/\s+/g, ' ');
 
-  // Census reconciliation should never silently collapse two different visible rows.
-  // MRN remains the strongest identity anchor, but pairing it with name and room prevents
-  // same-name or shared-MRN edge cases from reducing the active census count.
-  if (mrn && mrn !== '—') return `mrn-name-room:${safeLower(mrn)}|${safeLower(name)}|${safeLower(room)}`;
+  // Stable reconciliation identity must survive room changes.
+  // MRN is the strongest anchor; name is retained as a guard against bad/reused MRNs.
+  // Do not include room in the MRN key because it causes a room change to create a duplicate active resident.
+  if (mrn && mrn !== '—') return `mrn-name:${safeLower(mrn)}|${safeLower(name)}`;
 
   return `name-room:${safeLower(name)}|${safeLower(room)}`;
 }
